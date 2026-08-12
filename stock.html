@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Vault & Gold Stock — CNINNI JEWELS</title>
+  <meta name="description" content="View real-time in-stock 1 Gram 24K Gold coins, bars, jewellery and gift packs at CNINNI JEWELS. Certified BIS hallmarked gold ready for immediate dispatch." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span class="nav-logo-main">Cninni</span>
+        <span class="nav-logo-sub">Pure Gold Jewels</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#collection">Collection</a></li>
+        <li><a href="stock.html" style="color: var(--gold); font-weight: 600;">Live Stock</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="nav-icon-btn" aria-label="Search" id="search-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+        <a href="#" class="nav-icon-btn" aria-label="Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="cart-badge">0</span>
+        </a>
+        <a href="#" class="nav-whatsapp" data-wa-general>
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+          </svg>
+          Order on WhatsApp
+        </a>
+        <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="index.html#collection">Collection</a>
+    <a href="stock.html" style="color: var(--gold);">Live Stock</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+    <a href="#" data-wa-general style="color: var(--gold); font-size: 1.2rem;">Order on WhatsApp</a>
+  </div>
+
+  <!-- ══ STOCK PAGE ══ -->
+  <main class="stock-page">
+
+    <!-- Stock Hero Header -->
+    <section class="stock-hero">
+      <div class="container">
+        <div style="text-align: center; max-width: 680px; margin: 0 auto;">
+          <div class="gold-rate-live" style="justify-content: center; margin-bottom: 12px;">
+            <div class="live-dot"></div>
+            <span class="t-label">Live Vault Inventory · Verified Today</span>
+          </div>
+          <h1 class="t-h1">Real-Time Gold Stock</h1>
+          <p class="t-body" style="margin-top: 12px;">
+            Transparent stock availability for pure 24K and 22K gold. Every piece is hallmarked, tamper-proof sealed and stored in certified vaults ready for instant dispatch.
+          </p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stock-stats-bar reveal">
+          <div class="stock-stat-card">
+            <div class="stock-stat-val">126 g</div>
+            <div class="stock-stat-lbl">Vault Stock Available</div>
+          </div>
+          <div class="stock-stat-card">
+            <div class="stock-stat-val">24K / 999</div>
+            <div class="stock-stat-lbl">Primary Gold Purity</div>
+          </div>
+          <div class="stock-stat-card">
+            <div class="stock-stat-val">₹9,240</div>
+            <div class="stock-stat-lbl">Today's Rate / Gram</div>
+          </div>
+          <div class="stock-stat-card">
+            <div class="stock-stat-val">100%</div>
+            <div class="stock-stat-lbl">BIS Hallmarked</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+
+      <!-- Stock Controls Bar -->
+      <div class="stock-controls">
+        <div class="stock-search-wrap">
+          <svg class="stock-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="stock-search" class="stock-search-input" placeholder="Search stock by name, SKU or purity..." />
+        </div>
+
+        <div class="filter-tabs" style="margin-bottom: 0;">
+          <button class="filter-tab active" data-filter="all">All Items</button>
+          <button class="filter-tab" data-filter="coins">Coins</button>
+          <button class="filter-tab" data-filter="bars">Bars</button>
+          <button class="filter-tab" data-filter="jewellery">Jewellery</button>
+          <button class="filter-tab" data-filter="gifts">Gifts</button>
+        </div>
+
+        <div class="stock-view-switch">
+          <button class="stock-view-btn active" id="view-grid-btn">Grid View</button>
+          <button class="stock-view-btn" id="view-table-btn">Vault Table View</button>
+        </div>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div class="product-grid" id="stock-grid-view">
+
+        <!-- Item 1 -->
+        <div class="product-card stock-grid-item" data-category="coins">
+          <div class="product-card-image">
+            <img src="assets/hero_gold_coin.png" alt="Signature Gold Coin" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 42 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-C01</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999</span>
+            </div>
+            <h3 class="product-card-name">Signature Gold Coin</h3>
+            <p class="product-card-weight">1.000 Gram · Hallmarked</p>
+            <div class="product-card-price">₹9,520</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Signature Gold Coin (SKU: CN-24K-C01)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="product-card stock-grid-item" data-category="coins">
+          <div class="product-card-image">
+            <img src="assets/featured_product.png" alt="Lakshmi Gold Coin" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 18 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-C02</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999</span>
+            </div>
+            <h3 class="product-card-name">Lakshmi Embossed Gold Coin</h3>
+            <p class="product-card-weight">1.000 Gram · Sacred Edition</p>
+            <div class="product-card-price">₹9,550</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Lakshmi Gold Coin (SKU: CN-24K-C02)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="product-card stock-grid-item" data-category="bars">
+          <div class="product-card-image">
+            <img src="assets/product_gold_bar.png" alt="Swiss Gold Bar" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 12 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-B01</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999.9</span>
+            </div>
+            <h3 class="product-card-name">Swiss Minted Gold Bar</h3>
+            <p class="product-card-weight">1.000 Gram · Sealed Blister</p>
+            <div class="product-card-price">₹9,620</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Swiss Gold Bar (SKU: CN-24K-B01)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 4 -->
+        <div class="product-card stock-grid-item" data-category="jewellery">
+          <div class="product-card-image">
+            <img src="assets/product_gold_pendant.png" alt="Filigree Gold Pendant" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 8 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-P01</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999</span>
+            </div>
+            <h3 class="product-card-name">Filigree Gold Pendant</h3>
+            <p class="product-card-weight">1.000 Gram · Handcrafted</p>
+            <div class="product-card-price">₹9,680</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Filigree Gold Pendant (SKU: CN-24K-P01)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 5 -->
+        <div class="product-card stock-grid-item" data-category="jewellery">
+          <div class="product-card-image">
+            <img src="assets/product_gold_bangle.png" alt="Classic Gold Bangle" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 15 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-22K-J01</span>
+              <div class="product-card-meta-dot"></div>
+              <span>22K / 916</span>
+            </div>
+            <h3 class="product-card-name">Classic Gold Bangle</h3>
+            <p class="product-card-weight">1.000 Gram · Minimal Wear</p>
+            <div class="product-card-price">₹8,750</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Classic Gold Bangle (SKU: CN-22K-J01)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 6 -->
+        <div class="product-card stock-grid-item" data-category="gifts">
+          <div class="product-card-image">
+            <img src="assets/product_gold_gift.png" alt="Gold Gift Box" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 25 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-G01</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999</span>
+            </div>
+            <h3 class="product-card-name">Velvet Box Gold Gift Set</h3>
+            <p class="product-card-weight">1.000 Gram · Premium Velvet</p>
+            <div class="product-card-price">₹9,820</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Gold Gift Set (SKU: CN-24K-G01)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 7 -->
+        <div class="product-card stock-grid-item" data-category="coins">
+          <div class="product-card-image">
+            <img src="assets/brand_story_lifestyle.png" alt="Lotus Gold Coin" loading="lazy" />
+            <span class="badge-lowstock" style="position:absolute; top:14px; left:14px;">Low Stock · 3 units left</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-C03</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999</span>
+            </div>
+            <h3 class="product-card-name">Lotus Floral Gold Coin</h3>
+            <p class="product-card-weight">1.000 Gram · Limited Batch</p>
+            <div class="product-card-price">₹9,580</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="Lotus Gold Coin (SKU: CN-24K-C03)">Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 8 -->
+        <div class="product-card stock-grid-item" data-category="bars">
+          <div class="product-card-image">
+            <img src="assets/product_gold_bar.png" alt="2g Gold Bar Bundle" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · 9 units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: CN-24K-B02</span>
+              <div class="product-card-meta-dot"></div>
+              <span>24K / 999.9</span>
+            </div>
+            <h3 class="product-card-name">2-Gram Pure Gold Bar Bundle</h3>
+            <p class="product-card-weight">2.000 Grams (2×1g) · Investor Pack</p>
+            <div class="product-card-price">₹18,990</div>
+            <div class="product-card-actions">
+              <a href="product.html" class="btn btn-primary">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="2g Gold Bar Bundle (SKU: CN-24K-B02)">Order</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /product-grid -->
+
+      <!-- TABLE VIEW (Hidden by default, toggled via JS) -->
+      <div class="stock-table-wrap" id="stock-table-view" style="display: none;">
+        <table class="stock-table">
+          <thead>
+            <tr>
+              <th>Stock Item</th>
+              <th>SKU Code</th>
+              <th>Purity</th>
+              <th>Weight</th>
+              <th>Vault Status</th>
+              <th>Live Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/hero_gold_coin.png" class="stock-thumb" alt="Signature Gold Coin" />
+                  <div>
+                    <strong style="color:var(--black);">Signature Gold Coin</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">BIS Hallmarked Certificate</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-C01</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (42)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,520</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Signature Gold Coin" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/featured_product.png" class="stock-thumb" alt="Lakshmi Gold Coin" />
+                  <div>
+                    <strong style="color:var(--black);">Lakshmi Embossed Gold Coin</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">Sacred Edition Packaging</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-C02</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (18)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,550</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Lakshmi Gold Coin" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/product_gold_bar.png" class="stock-thumb" alt="Swiss Gold Bar" />
+                  <div>
+                    <strong style="color:var(--black);">Swiss Minted Gold Bar</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">Sealed Blister Assay Card</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-B01</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999.9</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (12)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,620</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Swiss Gold Bar" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/product_gold_pendant.png" class="stock-thumb" alt="Filigree Gold Pendant" />
+                  <div>
+                    <strong style="color:var(--black);">Filigree Gold Pendant</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">Handcrafted Design</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-P01</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (8)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,680</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Filigree Gold Pendant" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/product_gold_bangle.png" class="stock-thumb" alt="Classic Gold Bangle" />
+                  <div>
+                    <strong style="color:var(--black);">Classic Gold Bangle</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">22K Jewellery Piece</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-22K-J01</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">22K / 916</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (15)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹8,750</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Classic Gold Bangle" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/product_gold_gift.png" class="stock-thumb" alt="Velvet Box Gold Gift Set" />
+                  <div>
+                    <strong style="color:var(--black);">Velvet Box Gold Gift Set</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">Festive Velvet Box Included</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-G01</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-instock">In Stock (25)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,820</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Velvet Box Gold Gift Set" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+
+            <tr class="stock-table-row">
+              <td>
+                <div class="stock-item-cell">
+                  <img src="assets/brand_story_lifestyle.png" class="stock-thumb" alt="Lotus Gold Coin" />
+                  <div>
+                    <strong style="color:var(--black);">Lotus Floral Gold Coin</strong>
+                    <div style="font-size:0.72rem; color:var(--mid);">Limited Batch Collector Coin</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="stock-sku">CN-24K-C03</span></td>
+              <td><span style="font-weight:500; color:var(--gold);">24K / 999</span></td>
+              <td>1.000 g</td>
+              <td><span class="badge-lowstock">Low Stock (3)</span></td>
+              <td><strong style="font-family:var(--serif); font-size:1.1rem;">₹9,580</strong></td>
+              <td>
+                <button class="btn btn-outline" data-wa-order="Lotus Gold Coin" style="padding:7px 14px; font-size:0.65rem;">Order WA</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BULK STOCK CALCULATOR SECTION -->
+      <div class="bulk-calc-card reveal">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+          <div>
+            <span class="t-label">Corporate &amp; Wedding Orders</span>
+            <h2 class="t-h2" style="margin-top: 6px;">Bulk Gold Stock Order Calculator</h2>
+            <p class="t-body" style="max-width: 480px; margin-top: 8px;">
+              Calculate live transparent pricing for bulk 1-Gram gold coin orders. Special making charge discounts apply for orders of 5+ grams.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: center; background: var(--bg-warm); padding: 8px 16px; border-radius: 100px; border: var(--border-light);">
+            <div class="live-dot"></div>
+            <span style="font-size:0.72rem; font-weight:500; color:var(--charcoal);">Live Rate: ₹9,240 / Gram</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center;">
+
+          <!-- Controls -->
+          <div>
+            <label class="form-label" for="bulk-qty">Select Quantity (Grams)</label>
+            <div style="display: flex; gap: 12px; margin-top: 8px; margin-bottom: 16px;">
+              <input type="number" id="bulk-qty" class="form-input" value="10" min="1" max="100" style="font-family:var(--serif); font-size:1.4rem; width: 130px; text-align:center;" />
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <button class="filter-tab bulk-quick-btn" data-qty="5">5g</button>
+                <button class="filter-tab bulk-quick-btn" data-qty="10">10g</button>
+                <button class="filter-tab bulk-quick-btn" data-qty="25">25g</button>
+                <button class="filter-tab bulk-quick-btn" data-qty="50">50g</button>
+              </div>
+            </div>
+            <p id="bulk-discount-note" style="font-size:0.78rem; color:var(--gold-dark); font-weight:500;">
+              🎉 Bulk discount applied! (20% off making charges)
+            </p>
+          </div>
+
+          <!-- Summary Box -->
+          <div style="background: var(--bg-warm); border: var(--border); border-radius: var(--radius); padding: 24px;">
+            <div style="font-size:0.65rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--mid); margin-bottom:16px;">Estimated Bulk Valuation</div>
+            
+            <div class="price-row">
+              <span class="price-row-label">Gold Value</span>
+              <span class="price-row-value" id="bulk-gold-val">₹92,400</span>
+            </div>
+            <div class="price-row">
+              <span class="price-row-label">Making Charges (Discounted)</span>
+              <span class="price-row-value" id="bulk-making-val">₹2,240</span>
+            </div>
+            <div class="price-row">
+              <span class="price-row-label">GST (3%)</span>
+              <span class="price-row-value" id="bulk-gst-val">₹2,839</span>
+            </div>
+            <div class="price-row total" style="margin-top:12px; padding-top:12px;">
+              <span class="price-row-label">Estimated Total</span>
+              <span class="price-row-value" id="bulk-grand-total" style="font-size:1.5rem;">₹97,479</span>
+            </div>
+
+            <button class="btn btn-gold" id="bulk-order-wa-btn" style="width:100%; justify-content:center; margin-top:20px;">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              Request Bulk Quote on WhatsApp
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">Cninni</div>
+          <div class="footer-brand-sub">Pure Gold Jewels</div>
+          <p class="footer-desc">
+            Purveyors of certified 1 Gram Gold coins, jewellery and gifts. Crafted for celebrations, gifting and timeless moments.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Navigation</div>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#collection">Collection</a></li>
+            <li><a href="stock.html">Live Stock</a></li>
+            <li><a href="product.html">Signature Coin</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="index.html#about">About Us</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li><a href="#" data-wa-general>WhatsApp Order</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#" data-wa-general>+91 98765 43210</a></li>
+            <li><a href="mailto:hello@cninni.com">hello@cninni.com</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2026 CNINNI JEWELS. All Rights Reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
