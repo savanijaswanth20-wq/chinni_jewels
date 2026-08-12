@@ -102,6 +102,18 @@ service cloud.firestore {
       allow update, delete: if isAdminOrStaff();
     }
 
+    // Testimonials Collection
+    match /testimonials/{testimonialId} {
+      allow read: if resource.data.isActive == true || isAdminOrStaff();
+      allow write: if isAdminOrStaff();
+    }
+
+    // Why Choose Us Collection
+    match /why_choose_us/{benefitId} {
+      allow read: if resource.data.isActive == true || isAdminOrStaff();
+      allow write: if isAdminOrStaff();
+    }
+
     // Audit Logs Collection
     match /audit_logs/{logId} {
       allow read: if isAdminOrStaff();
@@ -111,7 +123,7 @@ service cloud.firestore {
     // Settings Collection
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdminOrStaff();
     }
   }
 }

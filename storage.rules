@@ -22,15 +22,19 @@ service firebase.storage {
     // Product Images
     match /products/{productId}/{imageName} {
       allow read: if true;
-      allow write: if isAuthenticated() && isImage() && isUnderMaxSize(10);
-      allow delete: if isAuthenticated();
+      allow write, delete: if isAuthenticated() && isImage() && isUnderMaxSize(10);
+    }
+
+    // Media & Branding Assets (Logos, Hero, Categories, About, Testimonials, General Media)
+    match /{folder}/{imageName} {
+      allow read: if true;
+      allow write, delete: if isAuthenticated() && (folder in ['branding', 'hero', 'categories', 'about', 'testimonials', 'media', 'products']) && isImage() && isUnderMaxSize(10);
     }
 
     // User Profile Photos
     match /users/{userId}/{photoName} {
       allow read: if true;
-      allow write: if isOwner(userId) && isImage() && isUnderMaxSize(5);
-      allow delete: if isOwner(userId);
+      allow write, delete: if isOwner(userId) && isImage() && isUnderMaxSize(5);
     }
 
     // Documents
