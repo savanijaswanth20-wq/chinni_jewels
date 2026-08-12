@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CNINNI JEWELS — API Client
+   CHINNI JEWELS — API Client
    Connects existing UI to FastAPI Backend REST Endpoints
    ═══════════════════════════════════════════════════════════ */
 
@@ -15,7 +15,7 @@ class ApiClient {
         ...options.headers
       };
 
-      const token = localStorage.getItem('cninni_token');
+      const token = localStorage.getItem('chinni_token') || localStorage.getItem('cninni_token');
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }

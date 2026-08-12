@@ -16,12 +16,12 @@ def seed_database(db: Session):
     Base.metadata.create_all(bind=engine)
 
     # 1. Seed Admin User
-    admin = db.query(Profile).filter(Profile.email == "admin@cninni.com").first()
+    admin = db.query(Profile).filter((Profile.email == "admin@chinnijewels.com") | (Profile.email == "admin@cninni.com")).first()
     if not admin:
         admin = Profile(
-            full_name="CNINNI Admin",
-            email="admin@cninni.com",
-            phone="+919876543210",
+            full_name="CHINNI Admin",
+            email="admin@chinnijewels.com",
+            phone="+916304702907",
             hashed_password=get_password_hash("AdminSecret2026!"),
             role=UserRole.ADMIN.value,
             is_active=True
@@ -59,7 +59,7 @@ def seed_database(db: Session):
     products_seed = [
         {
             "name": "Signature Gold Coin",
-            "sku": "CN-24K-C01",
+            "sku": "CJ-24K-C01",
             "cat": "Gold Coins",
             "purity": "24K",
             "weight": 1.000,
@@ -70,7 +70,7 @@ def seed_database(db: Session):
         },
         {
             "name": "Lakshmi Embossed Gold Coin",
-            "sku": "CN-24K-C02",
+            "sku": "CJ-24K-C02",
             "cat": "Gold Coins",
             "purity": "24K",
             "weight": 1.000,
@@ -81,7 +81,7 @@ def seed_database(db: Session):
         },
         {
             "name": "Swiss Minted Gold Bar",
-            "sku": "CN-24K-B01",
+            "sku": "CJ-24K-B01",
             "cat": "Gold Bars",
             "purity": "24K",
             "weight": 1.000,
@@ -92,7 +92,7 @@ def seed_database(db: Session):
         },
         {
             "name": "Filigree Gold Pendant",
-            "sku": "CN-24K-P01",
+            "sku": "CJ-24K-P01",
             "cat": "Gold Jewellery",
             "purity": "24K",
             "weight": 1.000,
@@ -103,7 +103,7 @@ def seed_database(db: Session):
         },
         {
             "name": "Classic Gold Bangle",
-            "sku": "CN-22K-J01",
+            "sku": "CJ-22K-J01",
             "cat": "Gold Jewellery",
             "purity": "22K",
             "weight": 1.000,
@@ -114,7 +114,7 @@ def seed_database(db: Session):
         },
         {
             "name": "Velvet Box Gold Gift Set",
-            "sku": "CN-24K-G01",
+            "sku": "CJ-24K-G01",
             "cat": "Gold Gifts",
             "purity": "24K",
             "weight": 1.000,

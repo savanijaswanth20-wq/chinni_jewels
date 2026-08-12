@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════
-   CNINNI JEWELS — Main JavaScript
+   CHINNI JEWELS — Main JavaScript
    ═══════════════════════════════════════════════════════════ */
 
-const WA_NUMBER = '919876543210';
+const WA_NUMBER = '916304702907';
 
 /* ── Utility ── */
 function waLink(message) {
@@ -156,7 +156,7 @@ function waLink(message) {
   function updateQty(val) {
     const n = Math.max(1, Math.min(10, val));
     qtyInput.value = n;
-    sessionStorage.setItem('cninni_selected_qty', n);
+    sessionStorage.setItem('chinni_selected_qty', n);
     updateTotal(n);
   }
 
@@ -223,7 +223,7 @@ function waLink(message) {
 
   // Load checkout summary dynamically
   (async function loadCheckoutSummary() {
-    const qty = parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
+    const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
     let product = null;
 
     if (window.ApiClient) {
@@ -234,7 +234,7 @@ function waLink(message) {
     }
 
     if (product) {
-      sessionStorage.setItem('cninni_selected_product_id', product.id);
+      sessionStorage.setItem('chinni_selected_product_id', product.id);
       const goldVal = product.base_price * qty;
       const makingVal = product.making_charge * qty;
       const gstVal = Math.round((goldVal + makingVal) * (product.gst_percentage / 100));
@@ -312,13 +312,13 @@ function waLink(message) {
     const state = document.querySelector('#f-state')?.value.trim() || '';
     const pincode = document.querySelector('#f-pincode')?.value.trim() || '';
     const paymentPref = document.querySelector('#f-payment-preference')?.value || 'UPI';
-    const qty = parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
+    const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
 
     // Disable button & show loading status
     orderBtn.disabled = true;
     orderBtn.innerHTML = `Creating WhatsApp Order...`;
 
-    let productId = sessionStorage.getItem('cninni_selected_product_id');
+    let productId = sessionStorage.getItem('chinni_selected_product_id') || sessionStorage.getItem('cninni_selected_product_id');
     if (!productId && window.ApiClient) {
       const prodRes = await ApiClient.getProducts();
       if (prodRes.success && prodRes.data && prodRes.data.length > 0) {
@@ -353,14 +353,14 @@ function waLink(message) {
         orderId = res.data.order_number;
         waUrl = res.data.whatsapp_url;
         if (res.data.whatsapp_message) {
-          sessionStorage.setItem('cninni_wa_msg', res.data.whatsapp_message);
+          sessionStorage.setItem('chinni_wa_msg', res.data.whatsapp_message);
         }
       }
     }
 
-    sessionStorage.setItem('cninni_order_id', orderId);
-    sessionStorage.setItem('cninni_order_name', name);
-    sessionStorage.setItem('cninni_wa_url', waUrl);
+    sessionStorage.setItem('chinni_order_id', orderId);
+    sessionStorage.setItem('chinni_order_name', name);
+    sessionStorage.setItem('chinni_wa_url', waUrl);
 
     // Open WhatsApp deep link
     window.open(waUrl, '_blank');
@@ -377,13 +377,13 @@ function waLink(message) {
   const orderIdEl = document.querySelector('.order-id-value');
   if (!orderIdEl) return;
 
-  const storedId = sessionStorage.getItem('cninni_order_id') || generateOrderId();
+  const storedId = sessionStorage.getItem('chinni_order_id') || sessionStorage.getItem('cninni_order_id') || generateOrderId();
   orderIdEl.textContent = storedId;
 
   const waBtn = document.querySelector('#open-whatsapp-btn');
   if (waBtn) {
     waBtn.addEventListener('click', () => {
-      const waUrl = sessionStorage.getItem('cninni_wa_url') || waLink(`NEW ORDER: ${storedId}`);
+      const waUrl = sessionStorage.getItem('chinni_wa_url') || sessionStorage.getItem('cninni_wa_url') || waLink(`NEW ORDER: ${storedId}`);
       window.open(waUrl, '_blank');
     });
   }
@@ -405,14 +405,14 @@ function generateOrderId() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const productSlug = btn.dataset.waOrder || 'Signature Gold Coin';
-      sessionStorage.setItem('cninni_selected_product_slug', productSlug);
+      sessionStorage.setItem('chinni_selected_product_slug', productSlug);
       window.location.href = 'checkout.html';
     });
   });
 
   document.querySelectorAll('[data-wa-general]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const msg = `Hello! I'm interested in your 1 Gram Gold products at CNINNI JEWELS. Please help me.`;
+      const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI JEWELS. Please help me.`;
       window.open(waLink(msg), '_blank');
     });
   });
@@ -516,7 +516,7 @@ function generateOrderId() {
     bulkOrderBtn.addEventListener('click', () => {
       const qty = document.querySelector('#bulk-qty')?.value || 1;
       const total = document.querySelector('#bulk-grand-total')?.textContent || '';
-      const msg = `👑 *BULK STOCK INQUIRY — CNINNI JEWELS*\n\n` +
+      const msg = `👑 *BULK STOCK INQUIRY — CHINNI JEWELS*\n\n` +
         `Quantity: *${qty} Grams* (24K Pure Gold Coins)\n` +
         `Estimated Total: *${total}*\n\n` +
         `Hello! I would like to place a bulk gold stock order. Please share availability and payment terms.`;

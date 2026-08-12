@@ -22,7 +22,7 @@ class WhatsAppService:
     def generate_order_message(order: Any) -> str:
         """
         Generate structured text message containing COMPLETE ORDER INFORMATION.
-        Format strictly follows the professional CNINNI JEWELS WhatsApp order template.
+        Format strictly follows the professional CHINNI JEWELS WhatsApp order template.
         """
         # Handle dict or ORM object
         order_dict = order if isinstance(order, dict) else {

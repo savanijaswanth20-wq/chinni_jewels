@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "CNINNI JEWELS API"
+    PROJECT_NAME: str = "CHINNI JEWELS API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
     
@@ -14,11 +14,11 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     
-    JWT_SECRET_KEY: str = "cninni_jewels_super_secret_jwt_key_2026_pure_gold"
+    JWT_SECRET_KEY: str = "chinni_jewels_super_secret_jwt_key_2026_pure_gold"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     
-    WHATSAPP_BUSINESS_NUMBER: str = "919876543210"
+    WHATSAPP_BUSINESS_NUMBER: str = "916304702907"
     WHATSAPP_CLOUD_API_TOKEN: str = ""
     WHATSAPP_CLOUD_API_PHONE_ID: str = ""
     WHATSAPP_CLOUD_API_VERSION: str = "v18.0"

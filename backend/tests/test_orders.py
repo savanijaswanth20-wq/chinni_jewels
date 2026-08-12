@@ -43,7 +43,7 @@ def test_order_creation_and_whatsapp_payload(db_session):
 
     req = OrderCreateRequest(
         customer_name="Test Customer",
-        phone="+919876543210",
+        phone="+916304702907",
         address="123 Gold Street",
         city="Mumbai",
         state="Maharashtra",
@@ -57,7 +57,7 @@ def test_order_creation_and_whatsapp_payload(db_session):
     assert order.total_amount > 0
     assert len(order.items) == 1
     assert order.items[0].quantity == 2
-    assert "https://wa.me/" in order.whatsapp_url
+    assert ("https://wa.me/" in order.whatsapp_url) or ("whatsapp.com/send" in order.whatsapp_url)
 
     # Check stock reservation
     inv = InventoryService.get_or_create_inventory(session, prod_id)

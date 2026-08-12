@@ -32,7 +32,7 @@ run_db_migrations()
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Production-Ready REST API for CNINNI JEWELS 1-Gram Gold Business.",
+    description="Production-Ready REST API for CHINNI JEWELS 1-Gram Gold Business.",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -83,7 +83,7 @@ def serve_index():
     index_file = os.path.join(ROOT_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return {"brand": "CNINNI JEWELS", "docs": "/docs"}
+    return {"brand": "CHINNI JEWELS", "docs": "/docs"}
 
 @app.get("/{page_name}.html")
 def serve_html_page(page_name: str):
