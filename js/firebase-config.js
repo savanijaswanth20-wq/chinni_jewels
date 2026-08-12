@@ -12,9 +12,11 @@ const firebaseConfig = {
   measurementId: (window.ENV && window.ENV.VITE_FIREBASE_MEASUREMENT_ID) || "G-7KG58SP4Z8"
 };
 
-// Initialize Firebase
+window.firebaseConfig = firebaseConfig;
+
+// Initialize Firebase (Compat & Global)
 if (typeof firebase !== 'undefined') {
-  if (!firebase.apps.length) {
+  if (!firebase.apps || !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
     console.log("[Firebase] Successfully initialized CHINNI JEWELS Firebase App (Project: chnni-30b1b).");
   }
@@ -31,5 +33,5 @@ if (typeof firebase !== 'undefined') {
     }
   }
 } else {
-  console.warn("[Firebase] Firebase SDK scripts not loaded yet.");
+  console.log("[Firebase] Loading Firebase module configuration.");
 }
