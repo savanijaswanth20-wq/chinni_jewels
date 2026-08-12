@@ -2490,9 +2490,434 @@ ul { list-style: none; }
   margin-top: 56px;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   COMPREHENSIVE RESPONSIVE & MOBILE UX ENHANCEMENTS
+   Support Breakpoints: 1440px+ | 1280px | 1024px | 768px | 480px | 430px | 390px | 375px | 360px | 320px
+   ═══════════════════════════════════════════════════════════ */
+
+/* Global Anti-Overflow & Mobile Base */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+/* Touch Target Sizes & Tap Enhancements */
+a, button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+button, a.btn, .nav-icon-btn, .nav-hamburger {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ── 1. Desktop Large (>= 1440px) ── */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+    padding: 0 60px;
+  }
+}
+
+/* ── 2. Standard Laptops & Desktops (1025px - 1280px) ── */
+@media (max-width: 1280px) {
+  .container {
+    padding: 0 40px;
+  }
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── 3. Tablets & Small Laptops (769px - 1024px) ── */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 28px;
+  }
+  
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 40px 0 20px;
+  }
+
+  .hero-content {
+    text-align: center;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .hero-cta-group {
+    justify-content: center;
+  }
+
+  .hero-image {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .gold-rates-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .brand-story-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .product-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .checkout-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 36px;
+  }
+}
+
+/* ── 4. Mobile Devices & Small Tablets (<= 768px) ── */
 @media (max-width: 768px) {
+  :root {
+    --nav-h: 64px;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  /* Typography Fluid Scaling */
+  .t-display {
+    font-size: clamp(2rem, 7.5vw, 3.2rem);
+  }
+  .t-h1, .hero-heading {
+    font-size: clamp(1.8rem, 6.5vw, 2.6rem) !important;
+    line-height: 1.15;
+  }
+  .t-h2 {
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+  }
+  .t-h3 {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+  }
+
+  /* Navigation Bar */
+  .nav-inner {
+    height: var(--nav-h);
+  }
+  .nav-links {
+    display: none !important;
+  }
+
+  .nav-hamburger {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 10px;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: var(--black);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+
+  .nav-hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav-hamburger.open span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* Mobile Slide/Fade Navigation Drawer */
+  .mobile-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    background: rgba(13, 13, 13, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.96) translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    padding: 60px 24px 40px;
+  }
+
+  .mobile-nav.open {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0);
+  }
+
+  .mobile-nav a {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--white);
+    letter-spacing: 0.05em;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .mobile-nav a:hover,
+  .mobile-nav a:active {
+    color: var(--gold);
+    background: rgba(201, 168, 76, 0.1);
+  }
+
+  .mobile-nav-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--white);
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  /* Product Grid */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .product-card {
+    padding: 14px;
+  }
+
+  .product-img-wrap {
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  .product-img-wrap img {
+    object-fit: contain;
+    max-height: 100%;
+  }
+
+  /* Gold Rate Section */
+  .gold-rates-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Stock Table to Responsive Mobile Cards */
+  .stock-table-wrap {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .stock-table, .stock-table tbody, .stock-table tr, .stock-table td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .stock-table thead {
+    display: none !important;
+  }
+
+  .stock-table tr {
+    background: var(--white);
+    border: var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stock-table td {
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .stock-table td:last-child {
+    border-bottom: none !important;
+    padding-top: 12px !important;
+  }
+
+  .stock-table td::before {
+    content: attr(data-label);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+
   .stock-stats-bar { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .stock-controls { flex-direction: column; align-items: stretch; }
   .bulk-calc-card { padding: 28px 20px; }
+
+  /* Footer Stacked Layout */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px;
+    text-align: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+/* ── 5. Compact Mobile Screens (<= 480px) ── */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Hero Adjustments */
+  .hero-cta-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .hero-cta-group .btn,
+  .hero-cta-group a.btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
+
+  /* Gold Rate Section Stacked */
+  .gold-rates-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Sticky Purchase Bar for Mobile */
+  .sticky-buy-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: var(--border);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    z-index: 999;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Mobile Form Controls (Prevent iOS Auto-Zoom) */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+
+  /* Checkout Order Summary Prominence */
+  .checkout-summary-card {
+    padding: 20px 16px;
+  }
+
+  .checkout-summary-total {
+    font-size: 1.4rem !important;
+  }
+}
+
+/* ── 6. Ultra-Compact Mobile Screens (<= 360px & 320px) ── */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .hero-title, .hero-heading {
+    font-size: 1.7rem !important;
+  }
+
+  /* Switch product grid to single column on tiny screens if tight */
+  .product-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-name {
+    font-size: 0.95rem;
+  }
+
+  .nav-logo-main {
+    font-size: 1.3rem;
+  }
+}
+
+/* ── 7. Safe Area Insets for Modern Mobile Views (Notch & Dynamic Island) ── */
+@supports (padding: env(safe-area-inset-top)) {
+  .navbar {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .mobile-nav {
+    padding-top: calc(40px + env(safe-area-inset-top));
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── 8. Accessibility & Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

@@ -24,22 +24,53 @@ function waLink(message) {
     navbar.classList.toggle('scrolled', window.scrollY > 30);
   }, { passive: true });
 
-  // Mobile menu
+  // Mobile menu toggle & controls
   if (hamburger && mobileNav) {
-    hamburger.addEventListener('click', () => {
-      hamburger.classList.toggle('open');
-      mobileNav.classList.toggle('open');
-      document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+    function openMenu() {
+      hamburger.classList.add('open');
+      mobileNav.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      hamburger.classList.remove('open');
+      mobileNav.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (mobileNav.classList.contains('open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
     });
 
     // Close on link click
     mobileNav.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        hamburger.classList.remove('open');
-        mobileNav.classList.remove('open');
-        document.body.style.overflow = '';
-      });
+      link.addEventListener('click', () => closeMenu());
     });
+
+    // Close on backdrop / outside click
+    document.addEventListener('click', (e) => {
+      if (mobileNav.classList.contains('open') && !mobileNav.contains(e.target) && !hamburger.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+        closeMenu();
+      }
+    });
+
+    // Optional Close Button
+    const closeBtn = document.querySelector('#mobile-nav-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => closeMenu());
+    }
   }
 })();
 
