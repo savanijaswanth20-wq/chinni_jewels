@@ -722,9 +722,11 @@ class AdminApp {
 
   // --- Product Handlers ---
   openAddProductModal() {
+    this.activeProductImages = [];
     document.querySelector('#product-modal-form').reset();
     document.querySelector('#pm-id').value = '';
     document.querySelector('#product-modal-title').textContent = 'Add New Product';
+    this.renderProductModalPreviews();
     this.openModal('product-modal');
   }
 
@@ -733,6 +735,8 @@ class AdminApp {
     if (!res.success) return;
     const p = res.data.find(item => item.id === productId);
     if (!p) return;
+
+    this.activeProductImages = p.images && p.images.length ? [...p.images] : (p.imageUrl ? [p.imageUrl] : []);
 
     document.querySelector('#pm-id').value = p.id;
     document.querySelector('#pm-name').value = p.name;
@@ -746,7 +750,51 @@ class AdminApp {
     document.querySelector('#pm-description').value = p.description || '';
 
     document.querySelector('#product-modal-title').textContent = 'Edit Product';
+    this.renderProductModalPreviews();
     this.openModal('product-modal');
+  }
+
+  renderProductModalPreviews() {
+    const container = document.querySelector('#pm-images-preview');
+    if (!container) return;
+    container.innerHTML = '';
+
+    (this.activeProductImages || []).forEach((url, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 6px; margin-bottom: 6px;';
+      wrapper.innerHTML = `
+        <img src="${url}" style="width: 54px; height: 54px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);" />
+        <button type="button" onclick="app.removeProductImage(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">✕</button>
+      `;
+      container.appendChild(wrapper);
+    });
+
+    const filesInput = document.querySelector('#pm-images');
+    const files = filesInput?.files ? Array.from(filesInput.files) : [];
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 6px; margin-bottom: 6px;';
+        wrapper.innerHTML = `
+          <img src="${evt.target.result}" style="width: 54px; height: 54px; border-radius: 6px; object-fit: cover; border: 2px solid var(--gold);" />
+          <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.8); color: #fff; font-size: 8px; padding: 1px 3px; border-radius: 3px;">NEW</span>
+        `;
+        container.appendChild(wrapper);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  removeProductImage(idx) {
+    if (this.activeProductImages && this.activeProductImages[idx] !== undefined) {
+      this.activeProductImages.splice(idx, 1);
+      this.renderProductModalPreviews();
+    }
+  }
+
+  handleProductImageSelection(e) {
+    this.renderProductModalPreviews();
   }
 
   async handleSaveProduct(e) {
@@ -768,7 +816,8 @@ class AdminApp {
       gstPercentage: document.querySelector('#pm-gst').value,
       stockQuantity: document.querySelector('#pm-stock').value,
       lowStockThreshold: document.querySelector('#pm-threshold').value,
-      description: document.querySelector('#pm-description').value.trim()
+      description: document.querySelector('#pm-description').value.trim(),
+      images: this.activeProductImages || []
     };
 
     const filesInput = document.querySelector('#pm-images');

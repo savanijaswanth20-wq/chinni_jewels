@@ -331,14 +331,15 @@ class AdminDataService {
       const docRef = isNew ? this.db.collection("products").doc() : this.db.collection("products").doc(productId);
       const targetId = docRef.id;
 
-      // Handle image uploads
-      let images = productData.images || [];
+      // Handle image uploads & preserve existing images
+      let images = Array.isArray(productData.images) ? [...productData.images] : (productData.imageUrl ? [productData.imageUrl] : []);
       for (const file of imageFiles) {
         const uploadRes = await this.uploadProductImage(targetId, file);
         if (uploadRes.success) {
           images.push(uploadRes.url);
         }
       }
+      images = [...new Set(images.filter(Boolean))];
 
       const payload = {
         name: productData.name,
