@@ -45,7 +45,14 @@ class AdminApp {
         }
 
         const access = await window.AdminService.checkAdminAccess(res.user);
-        if (!access.authorized) {
+        if (access.authorized) {
+          const authScreen = document.querySelector('#admin-auth-screen');
+          const appContainer = document.querySelector('#admin-app');
+          if (authScreen) authScreen.style.display = 'none';
+          if (appContainer) appContainer.style.display = 'flex';
+          this.updateSidebarUserProfile(res.user, access.profile);
+          this.loadCurrentView();
+        } else {
           errorEl.textContent = "Access Denied: Your account does not have ADMIN or STAFF privileges.";
           errorEl.style.display = 'block';
           await window.AuthService.logout();
