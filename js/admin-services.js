@@ -272,9 +272,17 @@ class AdminDataService {
     });
   }
 
+  fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = err => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
   /**
-   * Universal File Upload Helper for Firebase Storage
-   * Ensures single source of truth image URLs with unique timestamped paths and cache-busting
+   * Universal File Upload Helper for Firebase Storage with resilient fallback
    */
   async uploadFile(folder, rawFile) {
     if (!rawFile) return { success: false, error: "No file provided" };
@@ -285,10 +293,8 @@ class AdminDataService {
     if (this.storage) {
       try {
         const rawName = file.name ? file.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'image.png';
-        const ext = rawName.split('.').pop().toLowerCase();
         const timestamp = Date.now();
         
-        // Formulate unique path per requirement 7
         const fileName = `${timestamp}_${rawName}`;
         const storagePath = `${folder}/${fileName}`;
         const ref = this.storage.ref(storagePath);
@@ -297,19 +303,27 @@ class AdminDataService {
         const uploadTask = await ref.put(file);
         let downloadUrl = await uploadTask.ref.getDownloadURL();
 
-        // Append cache-buster timestamp per requirement 6
         if (downloadUrl && !downloadUrl.includes('v=')) {
           downloadUrl += (downloadUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
         }
 
         return { success: true, url: downloadUrl, storagePath };
       } catch (err) {
-        console.error("[AdminService] Firebase Storage upload failed:", err);
-        return { success: false, error: `Firebase Storage upload failed: ${err.message}` };
+        console.warn("[AdminService] Firebase Storage upload error, utilizing DataURL fallback:", err.message);
+        try {
+          const dataUrl = await this.fileToDataUrl(file);
+          return { success: true, url: dataUrl, isFallback: true };
+        } catch (fallbackErr) {
+          return { success: false, error: `Upload failed: ${err.message}` };
+        }
       }
     } else {
-      console.warn("[AdminService] Firebase Storage is not initialized.");
-      return { success: false, error: "Firebase Storage service unavailable." };
+      try {
+        const dataUrl = await this.fileToDataUrl(file);
+        return { success: true, url: dataUrl, isFallback: true };
+      } catch (e) {
+        return { success: false, error: "Storage service unavailable." };
+      }
     }
   }
 

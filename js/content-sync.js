@@ -36,18 +36,18 @@
       syncGoldRatesUI(rates);
     }, (err) => console.warn("[ContentSync] Gold rates sync notice:", err.message));
 
-    // 3. Homepage & Hero Section Sync
+    // 3. Homepage & Section Images Sync
     try {
       const cachedHp = localStorage.getItem("cj_setting_homepage");
       if (cachedHp) {
         const parsed = JSON.parse(cachedHp);
-        if (parsed.hero) syncHeroSectionUI(parsed.hero);
+        syncHomepageUI(parsed);
       }
     } catch(e) {}
 
     window.addEventListener('cj_setting_updated', (e) => {
-      if (e.detail && e.detail.settingId === 'homepage' && e.detail.data && e.detail.data.hero) {
-        syncHeroSectionUI(e.detail.data.hero);
+      if (e.detail && e.detail.settingId === 'homepage' && e.detail.data) {
+        syncHomepageUI(e.detail.data);
       }
     });
 
@@ -55,22 +55,22 @@
       if (e.key === 'cj_setting_homepage' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (parsed.hero) syncHeroSectionUI(parsed.hero);
+          syncHomepageUI(parsed);
         } catch(err) {}
       }
     });
 
     db.collection("settings").doc("homepage").get().then((doc) => {
-      if (doc.exists && doc.data().hero) {
-        syncHeroSectionUI(doc.data().hero);
+      if (doc.exists) {
+        syncHomepageUI(doc.data());
       }
     }).catch(() => {});
 
     db.collection("settings").doc("homepage").onSnapshot((doc) => {
-      if (doc.exists && doc.data().hero) {
-        syncHeroSectionUI(doc.data().hero);
+      if (doc.exists) {
+        syncHomepageUI(doc.data());
       }
-    }, (err) => console.warn("[ContentSync] Hero settings sync notice:", err.message));
+    }, (err) => console.warn("[ContentSync] Homepage settings sync notice:", err.message));
 
     // 4. Branding & Contact Details Sync
     db.collection("settings").doc("branding").onSnapshot((doc) => {
@@ -225,6 +225,47 @@
     } else {
       const heroSec = document.querySelector('.hero');
       if (heroSec) heroSec.style.display = '';
+    }
+  function syncHomepageUI(data) {
+    if (!data) return;
+    if (data.hero) syncHeroSectionUI(data.hero);
+    if (data.featured) syncFeaturedSectionUI(data.featured);
+    if (data.story) syncStorySectionUI(data.story);
+  }
+
+  function syncFeaturedSectionUI(featured) {
+    if (!featured) return;
+    if (featured.eyebrow) {
+      const el = document.querySelector('.featured-eyebrow');
+      if (el) el.textContent = featured.eyebrow;
+    }
+    if (featured.title) {
+      const el = document.querySelector('.featured-title');
+      if (el) el.textContent = featured.title;
+    }
+    if (featured.desc) {
+      const el = document.querySelector('.featured-desc');
+      if (el) el.textContent = featured.desc;
+    }
+    if (featured.imageUrl) {
+      const imgEl = document.querySelector('.featured-image img');
+      if (imgEl) imgEl.src = featured.imageUrl;
+    }
+  }
+
+  function syncStorySectionUI(story) {
+    if (!story) return;
+    if (story.title) {
+      const el = document.querySelector('.brand-story-title');
+      if (el) el.textContent = story.title;
+    }
+    if (story.text) {
+      const el = document.querySelector('.brand-story-text');
+      if (el) el.textContent = story.text;
+    }
+    if (story.imageUrl) {
+      const imgEl = document.querySelector('.brand-story-image img');
+      if (imgEl) imgEl.src = story.imageUrl;
     }
   }
 

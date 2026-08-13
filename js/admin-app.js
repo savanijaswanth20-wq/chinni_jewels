@@ -53,12 +53,17 @@ class AdminApp {
       });
     }
 
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', async () => {
+    document.querySelectorAll('#logout-btn, .logout-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
         await window.AuthService.logout();
+        const authScreen = document.querySelector('#admin-auth-screen');
+        const appContainer = document.querySelector('#admin-app');
+        if (authScreen) authScreen.style.display = 'flex';
+        if (appContainer) appContainer.style.display = 'none';
         window.location.reload();
       });
-    }
+    });
 
     // Monitor Firebase Auth changes
     window.AuthService.onAuthChange(async (user, profile) => {
@@ -84,19 +89,57 @@ class AdminApp {
         appContainer.style.display = 'none';
       }
     });
+
+    // Bind user profile avatar photo upload listener
+    const avatarCard = document.querySelector('#sidebar-user-avatar');
+    const avatarInput = document.querySelector('#user-avatar-input');
+    if (avatarCard && avatarInput && !avatarCard.dataset.uploadBound) {
+      avatarCard.dataset.uploadBound = "true";
+      avatarCard.addEventListener('click', () => avatarInput.click());
+      avatarInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        this.showToast("Uploading profile photo...", "info");
+        const res = await window.AdminService.uploadFile('users', file);
+        if (res.success) {
+          localStorage.setItem('cj_admin_photo_url', res.url);
+          const photoEl = document.querySelector('#sidebar-user-photo');
+          const initialEl = document.querySelector('#sidebar-user-initial');
+          if (photoEl && initialEl) {
+            photoEl.src = res.url;
+            photoEl.style.display = 'block';
+            initialEl.style.display = 'none';
+          }
+          this.showToast("Profile photo updated successfully!", "success");
+        } else {
+          this.showToast(res.error || "Failed to upload profile photo", "error");
+        }
+      });
+    }
   }
 
   updateSidebarUserProfile(user, profile) {
     const nameEl = document.querySelector('#sidebar-user-name');
     const roleEl = document.querySelector('#sidebar-user-role');
-    const avatarEl = document.querySelector('#sidebar-user-avatar');
+    const initialEl = document.querySelector('#sidebar-user-initial');
+    const photoEl = document.querySelector('#sidebar-user-photo');
 
-    const name = profile?.fullName || user.displayName || user.email.split('@')[0];
-    const role = profile?.role || 'STAFF';
+    const name = profile?.fullName || user.displayName || (user.email ? user.email.split('@')[0] : 'Admin User');
+    const role = profile?.role || 'ADMIN';
+    const photo = profile?.photoURL || user.photoURL || localStorage.getItem('cj_admin_photo_url');
 
     if (nameEl) nameEl.textContent = name;
     if (roleEl) roleEl.textContent = role;
-    if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+
+    if (photo && photoEl && initialEl) {
+      photoEl.src = photo;
+      photoEl.style.display = 'block';
+      initialEl.style.display = 'none';
+    } else if (initialEl) {
+      initialEl.textContent = name.charAt(0).toUpperCase();
+      if (photoEl) photoEl.style.display = 'none';
+      initialEl.style.display = 'inline';
+    }
 
     // Restrict staff from user management
     const userNavItem = document.querySelector('[data-view="users"]');
@@ -302,17 +345,35 @@ class AdminApp {
 
   async loadHeroData() {
     const res = await window.AdminService.getSetting('homepage');
-    if (res.success && res.data && res.data.hero) {
-      const h = res.data.hero;
-      if (h.badge) document.querySelector('#hero-badge').value = h.badge;
-      if (h.heading) document.querySelector('#hero-heading').value = h.heading;
-      if (h.subtitle) document.querySelector('#hero-subtitle').value = h.subtitle;
-      if (h.btnPrimary) document.querySelector('#hero-btn-primary').value = h.btnPrimary;
-      if (h.btnSecondary) document.querySelector('#hero-btn-secondary').value = h.btnSecondary;
-      if (typeof h.visible === 'boolean') document.querySelector('#hero-visible').checked = h.visible;
-      if (h.imageUrl) {
-        const preview = document.querySelector('#hero-image-preview');
-        if (preview) preview.src = h.imageUrl;
+    if (res.success && res.data) {
+      if (res.data.hero) {
+        const h = res.data.hero;
+        if (h.badge && document.querySelector('#hero-badge')) document.querySelector('#hero-badge').value = h.badge;
+        if (h.heading && document.querySelector('#hero-heading')) document.querySelector('#hero-heading').value = h.heading;
+        if (h.subtitle && document.querySelector('#hero-subtitle')) document.querySelector('#hero-subtitle').value = h.subtitle;
+        if (h.btnPrimary && document.querySelector('#hero-btn-primary')) document.querySelector('#hero-btn-primary').value = h.btnPrimary;
+        if (h.btnSecondary && document.querySelector('#hero-btn-secondary')) document.querySelector('#hero-btn-secondary').value = h.btnSecondary;
+        if (typeof h.visible === 'boolean' && document.querySelector('#hero-visible')) document.querySelector('#hero-visible').checked = h.visible;
+        if (h.imageUrl && document.querySelector('#hero-image-preview')) {
+          document.querySelector('#hero-image-preview').src = h.imageUrl;
+        }
+      }
+      if (res.data.featured) {
+        const f = res.data.featured;
+        if (f.eyebrow && document.querySelector('#featured-eyebrow')) document.querySelector('#featured-eyebrow').value = f.eyebrow;
+        if (f.title && document.querySelector('#featured-title')) document.querySelector('#featured-title').value = f.title;
+        if (f.desc && document.querySelector('#featured-desc')) document.querySelector('#featured-desc').value = f.desc;
+        if (f.imageUrl && document.querySelector('#featured-image-preview')) {
+          document.querySelector('#featured-image-preview').src = f.imageUrl;
+        }
+      }
+      if (res.data.story) {
+        const s = res.data.story;
+        if (s.title && document.querySelector('#story-title')) document.querySelector('#story-title').value = s.title;
+        if (s.text && document.querySelector('#story-text')) document.querySelector('#story-text').value = s.text;
+        if (s.imageUrl && document.querySelector('#story-image-preview')) {
+          document.querySelector('#story-image-preview').src = s.imageUrl;
+        }
       }
     }
   }
@@ -631,6 +692,30 @@ class AdminApp {
       }
     });
 
+    document.querySelector('#featured-image-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const preview = document.querySelector('#featured-image-preview');
+          if (preview) preview.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.querySelector('#story-image-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const preview = document.querySelector('#story-image-preview');
+          if (preview) preview.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     document.querySelector('#media-direct-upload')?.addEventListener('change', (e) => this.handleDirectMediaUpload(e));
     document.querySelector('#pm-images')?.addEventListener('change', (e) => this.handleProductImageSelection(e));
   }
@@ -935,25 +1020,46 @@ class AdminApp {
     const saveBtn = document.querySelector('#save-hero-btn');
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Uploading & Saving Hero...';
+      saveBtn.textContent = 'Uploading & Saving Sections...';
     }
 
     try {
-      const oldImageUrl = document.querySelector('#hero-image-preview')?.src || '';
-      let imageUrl = oldImageUrl;
-      const fileInput = document.querySelector('#hero-image-input');
-
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        this.showToast("Uploading hero image to Firebase Storage...", "info");
-        const uploadRes = await window.AdminService.uploadFile('homepage', fileInput.files[0]);
+      // 1. Hero Image
+      let heroImageUrl = document.querySelector('#hero-image-preview')?.src || '';
+      const heroFileInput = document.querySelector('#hero-image-input');
+      if (heroFileInput && heroFileInput.files && heroFileInput.files[0]) {
+        this.showToast("Uploading hero image...", "info");
+        const uploadRes = await window.AdminService.uploadFile('homepage', heroFileInput.files[0]);
         if (uploadRes.success) {
-          imageUrl = uploadRes.url;
+          heroImageUrl = uploadRes.url;
           const preview = document.querySelector('#hero-image-preview');
-          if (preview) preview.src = imageUrl;
-          this.showToast("UPLOAD SUCCESSFUL ✓ Image uploaded to Firebase Storage", "success");
-        } else {
-          this.showToast(uploadRes.error || "Failed to upload hero image", "error");
-          return;
+          if (preview) preview.src = heroImageUrl;
+        }
+      }
+
+      // 2. Featured Image
+      let featuredImageUrl = document.querySelector('#featured-image-preview')?.src || '';
+      const featuredFileInput = document.querySelector('#featured-image-input');
+      if (featuredFileInput && featuredFileInput.files && featuredFileInput.files[0]) {
+        this.showToast("Uploading featured image...", "info");
+        const uploadRes = await window.AdminService.uploadFile('homepage', featuredFileInput.files[0]);
+        if (uploadRes.success) {
+          featuredImageUrl = uploadRes.url;
+          const preview = document.querySelector('#featured-image-preview');
+          if (preview) preview.src = featuredImageUrl;
+        }
+      }
+
+      // 3. Story Image
+      let storyImageUrl = document.querySelector('#story-image-preview')?.src || '';
+      const storyFileInput = document.querySelector('#story-image-input');
+      if (storyFileInput && storyFileInput.files && storyFileInput.files[0]) {
+        this.showToast("Uploading story image...", "info");
+        const uploadRes = await window.AdminService.uploadFile('about', storyFileInput.files[0]);
+        if (uploadRes.success) {
+          storyImageUrl = uploadRes.url;
+          const preview = document.querySelector('#story-image-preview');
+          if (preview) preview.src = storyImageUrl;
         }
       }
 
@@ -964,28 +1070,46 @@ class AdminApp {
         btnPrimary: document.querySelector('#hero-btn-primary')?.value?.trim() || '',
         btnSecondary: document.querySelector('#hero-btn-secondary')?.value?.trim() || '',
         visible: document.querySelector('#hero-visible')?.checked ?? true,
-        imageUrl: imageUrl,
+        imageUrl: heroImageUrl,
         updatedAt: new Date().toISOString()
       };
 
-      const res = await window.AdminService.saveSetting('homepage', { hero: heroData });
+      const featuredData = {
+        eyebrow: document.querySelector('#featured-eyebrow')?.value?.trim() || '',
+        title: document.querySelector('#featured-title')?.value?.trim() || '',
+        desc: document.querySelector('#featured-desc')?.value?.trim() || '',
+        imageUrl: featuredImageUrl,
+        updatedAt: new Date().toISOString()
+      };
+
+      const storyData = {
+        title: document.querySelector('#story-title')?.value?.trim() || '',
+        text: document.querySelector('#story-text')?.value?.trim() || '',
+        imageUrl: storyImageUrl,
+        updatedAt: new Date().toISOString()
+      };
+
+      const res = await window.AdminService.saveSetting('homepage', { 
+        hero: heroData, 
+        featured: featuredData, 
+        story: storyData 
+      });
 
       if (res.success) {
-        this.showToast("SAVED SUCCESSFUL ✓ Hero updated across all devices!", 'success');
-        if (fileInput) fileInput.value = '';
-        if (oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.includes('firebasestorage')) {
-          window.AdminService.deleteOldStorageFile(oldImageUrl);
-        }
+        this.showToast("SAVED SUCCESSFUL ✓ Section images & content updated across all devices!", 'success');
+        if (heroFileInput) heroFileInput.value = '';
+        if (featuredFileInput) featuredFileInput.value = '';
+        if (storyFileInput) storyFileInput.value = '';
       } else {
-        this.showToast(res.error || "Failed to save hero section", 'error');
+        this.showToast(res.error || "Failed to save section changes", 'error');
       }
     } catch (err) {
-      console.error("[AdminApp] Save hero error:", err);
-      this.showToast("Error saving hero: " + err.message, "error");
+      console.error("[AdminApp] Save sections error:", err);
+      this.showToast("Error saving sections: " + err.message, "error");
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Hero Changes';
+        saveBtn.textContent = 'Save Section Changes';
       }
     }
   }

@@ -207,10 +207,21 @@ class FirebaseAuthService {
    */
   async logout() {
     try {
-      await firebase.auth().signOut();
+      sessionStorage.removeItem('chinni_admin_session');
+      localStorage.removeItem('chinni_admin_session');
+      this.currentUser = null;
+      this.userProfile = null;
+      if (typeof firebase !== 'undefined' && firebase.auth) {
+        await firebase.auth().signOut();
+      }
+      this.notifyListeners();
       return { success: true };
     } catch (err) {
       console.error("[FirebaseAuth] Logout error:", err);
+      sessionStorage.removeItem('chinni_admin_session');
+      this.currentUser = null;
+      this.userProfile = null;
+      this.notifyListeners();
       return { success: false, error: err.message };
     }
   }

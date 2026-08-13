@@ -177,7 +177,11 @@
 
       <div class="sidebar-footer">
         <div class="admin-profile-card">
-          <div class="user-avatar" id="sidebar-user-avatar">A</div>
+          <div class="user-avatar" id="sidebar-user-avatar" title="Click to upload profile photo" style="cursor: pointer; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
+            <span id="sidebar-user-initial">A</span>
+            <img id="sidebar-user-photo" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <input type="file" id="user-avatar-input" accept="image/*" style="display: none;" />
           <div class="user-info">
             <div class="user-name" id="sidebar-user-name">Admin User</div>
             <span class="user-role-badge" id="sidebar-user-role">ADMIN</span>
@@ -315,15 +319,16 @@
           </div>
         </section>
 
-        <!-- 3. HERO EDITOR VIEW -->
+        <!-- 3. HERO & FRONTEND IMAGES EDITOR VIEW -->
         <section class="view-panel" id="view-hero">
           <div class="section-card">
             <div class="section-header">
-              <div class="section-header-title">Hero Section Content Editor</div>
-              <button class="btn btn-primary" id="save-hero-btn">Save Hero Changes</button>
+              <div class="section-header-title">Frontend Images & Section Editor</div>
+              <button class="btn btn-primary" id="save-hero-btn">Save Section Changes</button>
             </div>
             
             <form id="hero-editor-form">
+              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">1. Main Hero Banner</h3>
               <div class="form-group">
                 <label>Badge Text</label>
                 <input type="text" id="hero-badge" class="form-control" value="CRAFTED IN PURE GOLD" />
@@ -351,14 +356,65 @@
               </div>
 
               <div class="form-group">
-                <label>Hero Image Upload (Firebase Storage)</label>
+                <label>Hero Banner Image Upload</label>
                 <input type="file" id="hero-image-input" accept="image/*" class="form-control" />
                 <div style="margin-top: 0.75rem;">
-                  <img id="hero-image-preview" src="assets/hero_gold_coin.png" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border-color);" />
+                  <img id="hero-image-preview" src="assets/hero_gold_coin.png" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
                 </div>
               </div>
 
-              <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem;">
+              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;" />
+
+              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">2. Featured Product Showcase</h3>
+              <div class="form-group">
+                <label>Featured Eyebrow Text</label>
+                <input type="text" id="featured-eyebrow" class="form-control" value="1 Gram Collection — Featured" />
+              </div>
+              <div class="form-group">
+                <label>Featured Title</label>
+                <input type="text" id="featured-title" class="form-control" value="Signature Gold Coin" />
+              </div>
+              <div class="form-group">
+                <label>Featured Description</label>
+                <textarea id="featured-desc" class="form-control" rows="3">Our most beloved piece. The Signature Gold Coin is a testament to pure craftsmanship — each coin bearing intricate detail, certified purity and delivered in premium packaging.</textarea>
+              </div>
+              <div class="form-group">
+                <label>Featured Section Image Upload</label>
+                <input type="file" id="featured-image-input" accept="image/*" class="form-control" />
+                <div style="margin-top: 0.75rem;">
+                  <img id="featured-image-preview" src="assets/featured_product.png" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
+                </div>
+              </div>
+
+              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;" />
+
+              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">3. Brand Story / About Us</h3>
+              <div class="form-group">
+                <label>Story Title</label>
+                <input type="text" id="story-title" class="form-control" value="Gold for Every Meaningful Moment." />
+              </div>
+              <div class="form-group">
+                <label>Story Description Text</label>
+                <textarea id="story-text" class="form-control" rows="3">At CHINNI JEWELS, we believe that gold is more than a metal — it is an emotion. A token of love passed between hands at weddings, a blessing given on auspicious days, a memory gifted to someone precious.</textarea>
+              </div>
+              <div class="form-group">
+                <label>Brand Story Image Upload</label>
+                <input type="file" id="story-image-input" accept="image/*" class="form-control" />
+                <div style="margin-top: 0.75rem;">
+                  <img id="story-image-preview" src="assets/brand_story_lifestyle.png" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
+                </div>
+              </div>
+
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem;">
+                <label class="switch">
+                  <input type="checkbox" id="hero-visible" checked />
+                  <span class="slider"></span>
+                </label>
+                <span style="font-size: 0.9rem; font-weight: 600; color: #fff;">Show Website Sections</span>
+              </div>
+            </form>
+          </div>
+        </section>
                 <label class="switch">
                   <input type="checkbox" id="hero-visible" checked />
                   <span class="slider"></span>
