@@ -222,6 +222,9 @@ class AdminDataService {
    * 4. PRODUCT MANAGEMENT & STORAGE UPLOAD
    */
   async getProducts() {
+    if (window.SupabaseService) {
+      return await window.SupabaseService.getProducts();
+    }
     try {
       if (!this.db) return { success: true, data: [] };
       const snap = await this.db.collection("products").orderBy("createdAt", "desc").get();
@@ -281,49 +284,17 @@ class AdminDataService {
     });
   }
 
-  /**
-   * Universal File Upload Helper with resilient DataURL fallback
-   */
   async uploadFile(folder, rawFile) {
     if (!rawFile) return { success: false, error: "No file provided" };
-    
-    // Compress image if needed while retaining full visual quality
     const file = await this.compressImage(rawFile);
-
-    if (this.storage) {
-      try {
-        const rawName = file.name ? file.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'image.png';
-        const timestamp = Date.now();
-        
-        const fileName = `${timestamp}_${rawName}`;
-        const storagePath = `${folder}/${fileName}`;
-        const ref = this.storage.ref(storagePath);
-
-        console.log(`[AdminService] Uploading image to storage path: ${storagePath}`);
-        const uploadTask = await ref.put(file);
-        let downloadUrl = await uploadTask.ref.getDownloadURL();
-
-        if (downloadUrl && !downloadUrl.includes('v=')) {
-          downloadUrl += (downloadUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
-        }
-
-        return { success: true, url: downloadUrl, storagePath };
-      } catch (err) {
-        console.warn("[AdminService] Storage upload error, utilizing DataURL fallback:", err.message);
-        try {
-          const dataUrl = await this.fileToDataUrl(file);
-          return { success: true, url: dataUrl, isFallback: true };
-        } catch (fallbackErr) {
-          return { success: false, error: `Upload failed: ${err.message}` };
-        }
-      }
-    } else {
-      try {
-        const dataUrl = await this.fileToDataUrl(file);
-        return { success: true, url: dataUrl, isFallback: true };
-      } catch (e) {
-        return { success: false, error: "Storage service unavailable." };
-      }
+    if (window.SupabaseService) {
+      return await window.SupabaseService.uploadFile(folder, file);
+    }
+    try {
+      const dataUrl = await this.fileToDataUrl(file);
+      return { success: true, url: dataUrl, isFallback: true };
+    } catch (e) {
+      return { success: false, error: "Storage service unavailable." };
     }
   }
 
@@ -346,6 +317,9 @@ class AdminDataService {
   }
 
   async saveProduct(productId, productData, imageFiles = []) {
+    if (window.SupabaseService) {
+      return await window.SupabaseService.saveProduct(productId, productData, imageFiles);
+    }
     try {
       if (!this.db) throw new Error("Firestore not initialized");
       

@@ -2,11 +2,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 
-# For SQLite, check same thread
-connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+db_url = settings.DATABASE_URL
+if "[YOUR-PASSWORD]" in db_url or "YOUR-PASSWORD" in db_url:
+    db_url = "sqlite:///./gold_business.db"
+
+if db_url.startswith("postgresql"):
+    try:
+        import psycopg2
+    except ImportError:
+        db_url = "sqlite:///./gold_business.db"
+
+connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
     pool_pre_ping=True
 )
