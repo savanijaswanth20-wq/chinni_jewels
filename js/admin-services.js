@@ -68,7 +68,7 @@ class AdminDataService {
         entityId: entityId || "",
         oldData: oldData ? JSON.parse(JSON.stringify(oldData)) : null,
         newData: newData ? JSON.parse(JSON.stringify(newData)) : null,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        timestamp: new Date().toISOString()
       });
     } catch (err) {
       console.warn("[AdminService] Audit log write warning:", err.message);
@@ -195,7 +195,7 @@ class AdminDataService {
 
       const batch = this.db.batch();
       prevActiveSnap.forEach(doc => {
-        batch.update(doc.ref, { isActive: false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.update(doc.ref, { isActive: false, updatedAt: new Date().toISOString() });
       });
 
       // Create new active rate record (preserves historical rates!)
@@ -206,7 +206,7 @@ class AdminDataService {
         effectiveDate: new Date().toISOString(),
         isActive: true,
         createdBy: this.currentUser?.uid || "admin",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: new Date().toISOString()
       });
 
       await batch.commit();
@@ -380,11 +380,11 @@ class AdminDataService {
         isActive: productData.isActive !== false,
         images: images.length ? images : ["assets/hero_gold_coin.png"],
         imageUrl: images[0] || "assets/hero_gold_coin.png",
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       };
 
       if (isNew) {
-        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        payload.createdAt = new Date().toISOString();
         await docRef.set(payload);
 
         // Initialize inventory doc
@@ -395,7 +395,7 @@ class AdminDataService {
           reservedQuantity: 0,
           soldQuantity: 0,
           damagedQuantity: 0,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: new Date().toISOString()
         });
       } else {
         await docRef.update(payload);
@@ -414,7 +414,7 @@ class AdminDataService {
       if (!this.db) throw new Error("Firestore unavailable");
       await this.db.collection("products").doc(productId).update({
         isActive,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       });
       await this.logAudit("TOGGLE_PRODUCT_STATUS", "PRODUCT", productId, null, { isActive });
       return { success: true };
@@ -491,13 +491,13 @@ class AdminDataService {
           productId,
           availableQuantity: newAvailable,
           totalQuantity: Math.max(0, newTotal),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: new Date().toISOString()
         }, { merge: true });
 
         if (prodDoc.exists) {
           transaction.update(prodRef, {
             stockQuantity: newAvailable,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: new Date().toISOString()
           });
         }
 
@@ -512,7 +512,7 @@ class AdminDataService {
           newStock: newAvailable,
           reason,
           createdBy: this.currentUser?.uid || "admin",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: new Date().toISOString()
         });
 
         return { success: true, newStock: newAvailable };
@@ -574,7 +574,7 @@ class AdminDataService {
       const oldStatus = doc.data().orderStatus;
       await orderRef.update({
         orderStatus: newStatus,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       });
 
       await this.logAudit("UPDATE_ORDER_STATUS", "ORDER", orderId, { status: oldStatus }, { status: newStatus });
@@ -637,12 +637,7 @@ class AdminDataService {
     // 2. Non-blocking Firestore synchronization in background
     if (this.db) {
       const savePayload = { ...data };
-      if (firebase.firestore && firebase.firestore.FieldValue) {
-        savePayload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-      } else {
-        savePayload.updatedAt = new Date().toISOString();
-      }
-
+      savePayload.updatedAt = new Date().toISOString();
       this.db.collection("settings").doc(settingId).set(savePayload, { merge: true })
         .then(() => console.log(`[AdminService] Setting '${settingId}' synced to Firestore.`))
         .catch(err => console.warn(`[AdminService] Firestore sync notice for '${settingId}':`, err.message));
@@ -718,7 +713,7 @@ class AdminDataService {
 
       await this.db.collection("users").doc(targetUserId).update({
         role: newRole,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: new Date().toISOString()
       });
 
       await this.logAudit("UPDATE_USER_ROLE", "USER", targetUserId, null, { role: newRole });
@@ -767,7 +762,7 @@ class AdminDataService {
         slug: catData.slug,
         description: catData.description || '',
         isActive: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: new Date().toISOString()
       }, { merge: true });
       await this.logAudit("CREATE_CATEGORY", "CATEGORY", docRef.id, null, catData);
       return { success: true, id: docRef.id };

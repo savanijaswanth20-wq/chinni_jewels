@@ -6,37 +6,17 @@
 (function initLiveContentSync() {
   console.log("[ContentSync] Initializing live website content synchronization.");
 
-  // Check database availability
-  if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) {
-    console.log("[ContentSync] Waiting for Firebase initialization...");
-    window.addEventListener('load', () => setTimeout(startSyncListeners, 500));
-  } else {
-    startSyncListeners();
-  }
+  startSyncListeners();
 
   function startSyncListeners() {
-    const db = window.firebaseDb || (firebase.firestore ? firebase.firestore() : null);
-    if (!db) return;
+    // 1. Live Gold Rates Sync
+    if (window.ApiClient) {
+      window.ApiClient.getGoldRates().then(res => {
+        if (res.success && res.data) syncGoldRatesUI(res.data);
+      }).catch(() => {});
+    }
 
-    // 1. Maintenance Mode Guard
-    db.collection("settings").doc("site").onSnapshot((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        handleMaintenanceMode(data.maintenanceMode);
-      }
-    }, (err) => console.warn("[ContentSync] Site settings listener notice:", err.message));
-
-    // 2. Live Gold Rates Sync
-    db.collection("gold_rates").where("isActive", "==", true).onSnapshot((snap) => {
-      const rates = { '24K': 9240, '22K': 8470, '18K': 6930 };
-      snap.forEach(doc => {
-        const d = doc.data();
-        if (d.purity && d.ratePerGram) rates[d.purity] = d.ratePerGram;
-      });
-      syncGoldRatesUI(rates);
-    }, (err) => console.warn("[ContentSync] Gold rates sync notice:", err.message));
-
-    // 3. Homepage & Section Images Sync
+    // 2. Homepage & Section Images Sync
     try {
       const cachedHp = localStorage.getItem("cj_setting_homepage");
       if (cachedHp) {
@@ -60,38 +40,12 @@
       }
     });
 
-    db.collection("settings").doc("homepage").get().then((doc) => {
-      if (doc.exists) {
-        syncHomepageUI(doc.data());
-      }
-    }).catch(() => {});
-
-    db.collection("settings").doc("homepage").onSnapshot((doc) => {
-      if (doc.exists) {
-        syncHomepageUI(doc.data());
-      }
-    }, (err) => console.warn("[ContentSync] Homepage settings sync notice:", err.message));
-
-    // 4. Branding & Contact Details Sync
-    db.collection("settings").doc("branding").onSnapshot((doc) => {
-      if (doc.exists) {
-        syncBrandingUI(doc.data());
-      }
-    }, (err) => console.warn("[ContentSync] Branding settings sync notice:", err.message));
-
-    // 5. SEO Meta Settings Sync
-    db.collection("settings").doc("seo").onSnapshot((doc) => {
-      if (doc.exists) {
-        syncSEOUI(doc.data());
-      }
-    }, (err) => console.warn("[ContentSync] SEO sync notice:", err.message));
-
-    // 6. Products Collection Sync
-    db.collection("products").where("isActive", "==", true).onSnapshot((snap) => {
-      const products = [];
-      snap.forEach(d => products.push({ id: d.id, ...d.data() }));
-      syncProductsUI(products);
-    }, (err) => console.warn("[ContentSync] Products sync notice:", err.message));
+    // 3. Products Collection Sync
+    if (window.ApiClient) {
+      window.ApiClient.getProducts().then(res => {
+        if (res.success && res.data) syncProductsUI(res.data);
+      }).catch(() => {});
+    }
   }
 
   /**

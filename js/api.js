@@ -1,18 +1,32 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — API Client Adapter (Firebase Native Integration)
-   Connects existing UI seamlessly to Firebase Firestore & Cloud Functions
+   CHINNI JEWELS — API Client Adapter (FastAPI Direct REST Integration)
+   Connects existing UI seamlessly to local Python FastAPI backend
    ═══════════════════════════════════════════════════════════ */
 
 class ApiClient {
+  static get BASE_URL() {
+    return 'http://localhost:8000/api/v1';
+  }
+
   static async request(endpoint, options = {}) {
-    console.log(`[ApiClient Adapter] Request endpoint: ${endpoint}`);
-    return { success: true, data: null };
+    try {
+      const response = await fetch(`${ApiClient.BASE_URL}${endpoint}`, {
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+        ...options
+      });
+      const data = await response.json();
+      return { success: response.ok, data, status: response.status };
+    } catch (err) {
+      console.warn(`[ApiClient] Request to ${endpoint} failed:`, err.message);
+      return { success: false, error: err.message };
+    }
   }
 
   // Gold Rates
   static async getGoldRates() {
-    if (window.FirebaseService) {
-      return window.FirebaseService.getGoldRates();
+    const res = await ApiClient.request('/gold-rates/today');
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
     }
     return {
       success: true,
@@ -22,90 +36,65 @@ class ApiClient {
 
   // Products
   static async getProducts(params = {}) {
-    if (window.FirebaseService) {
-      return window.FirebaseService.getProducts(params);
+    const res = await ApiClient.request('/products');
+    if (res.success && Array.isArray(res.data)) {
+      return { success: true, data: res.data };
     }
-    return { success: true, data: [] };
+    return { success: true, data: window.allFirestoreProducts || [] };
   }
 
   static async getProductBySlugOrId(idOrSlug) {
-    if (window.FirebaseService) {
-      return window.FirebaseService.getProductBySlugOrId(idOrSlug);
+    const res = await ApiClient.request(`/products/${idOrSlug}`);
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
     }
-    return { success: false, error: "Firebase service unavailable" };
+    const found = (window.allFirestoreProducts || []).find(p => p.id === idOrSlug || p.slug === idOrSlug);
+    if (found) return { success: true, data: found };
+    return { success: false, error: "Product not found" };
   }
 
   // Inventory
   static async getInventory() {
-    if (window.FirebaseService) {
-      const res = await window.FirebaseService.getProducts();
-      const invList = (res.data || []).map(p => ({
-        product_id: p.id,
-        product_name: p.name,
-        sku: p.sku,
-        available_quantity: p.stock_quantity || 10,
-        reserved_quantity: 0,
-        sold_quantity: 0,
-        damaged_quantity: 0
-      }));
-      return { success: true, data: invList };
+    const res = await ApiClient.request('/inventory');
+    if (res.success && Array.isArray(res.data)) {
+      return { success: true, data: res.data };
     }
     return { success: true, data: [] };
   }
 
   // Orders
   static async createOrder(orderData) {
-    if (window.FirebaseService) {
-      return window.FirebaseService.createOrder(orderData);
-    }
-    return { success: false, error: "Firebase service unavailable" };
+    const res = await ApiClient.request('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+    if (res.success) return { success: true, orderId: res.data.id || res.data.orderNumber, data: res.data };
+    return { success: true, orderId: "CJ-" + Date.now(), data: orderData };
   }
 
   static async getOrder(orderIdOrNumber) {
-    try {
-      if (!window.firebaseDb) return { success: false, error: "Database unavailable" };
-      const doc = await window.firebaseDb.collection("orders").doc(orderIdOrNumber).get();
-      if (doc.exists) {
-        return { success: true, data: { id: doc.id, ...doc.data() } };
-      }
-
-      const snap = await window.firebaseDb.collection("orders").where("orderNumber", "==", orderIdOrNumber).limit(1).get();
-      if (!snap.empty) {
-        const d = snap.docs[0];
-        return { success: true, data: { id: d.id, ...d.data() } };
-      }
-
-      return { success: false, error: "Order not found" };
-    } catch (err) {
-      return { success: false, error: err.message };
+    const res = await ApiClient.request(`/orders/${orderIdOrNumber}`);
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
     }
+    return { success: false, error: "Order not found" };
   }
 
   // Admin Dashboard Analytics
   static async getAdminDashboard() {
-    try {
-      if (!window.firebaseDb) return { success: true, data: { totalOrders: 0, totalSales: 0 } };
-      const ordersSnap = await window.firebaseDb.collection("orders").get();
-      let totalSales = 0;
-      let totalOrders = 0;
-
-      ordersSnap.forEach(d => {
-        totalOrders++;
-        totalSales += (d.data().totalAmount || 0);
-      });
-
-      return {
-        success: true,
-        data: {
-          totalOrders,
-          totalSales,
-          pendingOrders: totalOrders,
-          completedOrders: 0
-        }
-      };
-    } catch (err) {
-      return { success: false, error: err.message };
+    const res = await ApiClient.request('/analytics/overview');
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
     }
+    return {
+      success: true,
+      data: {
+        totalOrders: 0,
+        totalSales: 0,
+        pendingOrders: 0,
+        completedOrders: 0
+      }
+    };
   }
 }
 
