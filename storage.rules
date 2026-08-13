@@ -25,10 +25,10 @@ service firebase.storage {
       allow write, delete: if isUnderMaxSize(10);
     }
 
-    // Media & Branding Assets (Logos, Hero, Categories, About, Testimonials, General Media)
+    // Media & Branding Assets (Logos, Hero, Homepage, Categories, About, Testimonials, General Media)
     match /{folder}/{imageName} {
       allow read: if true;
-      allow write, delete: if (folder in ['branding', 'hero', 'categories', 'about', 'testimonials', 'media', 'products']) && isUnderMaxSize(10);
+      allow write, delete: if (folder in ['branding', 'hero', 'homepage', 'categories', 'about', 'testimonials', 'media', 'products']) && isUnderMaxSize(10);
     }
 
     // User Profile Photos

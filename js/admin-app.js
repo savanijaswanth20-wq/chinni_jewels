@@ -938,54 +938,55 @@ class AdminApp {
       saveBtn.textContent = 'Uploading & Saving Hero...';
     }
 
-    const oldImageUrl = document.querySelector('#hero-image-preview')?.src || '';
-    let imageUrl = oldImageUrl;
-    const fileInput = document.querySelector('#hero-image-input');
+    try {
+      const oldImageUrl = document.querySelector('#hero-image-preview')?.src || '';
+      let imageUrl = oldImageUrl;
+      const fileInput = document.querySelector('#hero-image-input');
 
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-      this.showToast("Uploading hero image to Firebase Storage...", "info");
-      const uploadRes = await window.AdminService.uploadFile('homepage', fileInput.files[0]);
-      if (uploadRes.success) {
-        imageUrl = uploadRes.url;
-        const preview = document.querySelector('#hero-image-preview');
-        if (preview) preview.src = imageUrl;
-        this.showToast("UPLOAD SUCCESSFUL ✓ Image uploaded to Firebase Storage", "success");
-      } else {
-        this.showToast(uploadRes.error || "Failed to upload hero image", "error");
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.textContent = 'Save Hero Changes';
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        this.showToast("Uploading hero image to Firebase Storage...", "info");
+        const uploadRes = await window.AdminService.uploadFile('homepage', fileInput.files[0]);
+        if (uploadRes.success) {
+          imageUrl = uploadRes.url;
+          const preview = document.querySelector('#hero-image-preview');
+          if (preview) preview.src = imageUrl;
+          this.showToast("UPLOAD SUCCESSFUL ✓ Image uploaded to Firebase Storage", "success");
+        } else {
+          this.showToast(uploadRes.error || "Failed to upload hero image", "error");
+          return;
         }
-        return;
       }
-    }
 
-    const heroData = {
-      badge: document.querySelector('#hero-badge').value.trim(),
-      heading: document.querySelector('#hero-heading').value.trim(),
-      subtitle: document.querySelector('#hero-subtitle').value.trim(),
-      btnPrimary: document.querySelector('#hero-btn-primary').value.trim(),
-      btnSecondary: document.querySelector('#hero-btn-secondary').value.trim(),
-      visible: document.querySelector('#hero-visible').checked,
-      imageUrl: imageUrl,
-      updatedAt: new Date().toISOString()
-    };
+      const heroData = {
+        badge: document.querySelector('#hero-badge')?.value?.trim() || '',
+        heading: document.querySelector('#hero-heading')?.value?.trim() || '',
+        subtitle: document.querySelector('#hero-subtitle')?.value?.trim() || '',
+        btnPrimary: document.querySelector('#hero-btn-primary')?.value?.trim() || '',
+        btnSecondary: document.querySelector('#hero-btn-secondary')?.value?.trim() || '',
+        visible: document.querySelector('#hero-visible')?.checked ?? true,
+        imageUrl: imageUrl,
+        updatedAt: new Date().toISOString()
+      };
 
-    const res = await window.AdminService.saveSetting('homepage', { hero: heroData });
+      const res = await window.AdminService.saveSetting('homepage', { hero: heroData });
 
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Hero Changes';
-    }
-
-    if (res.success) {
-      this.showToast("UPLOAD SUCCESSFUL ✓ Hero image updated across all devices!", 'success');
-      if (fileInput) fileInput.value = '';
-      if (oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.includes('firebasestorage')) {
-        window.AdminService.deleteOldStorageFile(oldImageUrl);
+      if (res.success) {
+        this.showToast("SAVED SUCCESSFUL ✓ Hero updated across all devices!", 'success');
+        if (fileInput) fileInput.value = '';
+        if (oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.includes('firebasestorage')) {
+          window.AdminService.deleteOldStorageFile(oldImageUrl);
+        }
+      } else {
+        this.showToast(res.error || "Failed to save hero section", 'error');
       }
-    } else {
-      this.showToast(res.error || "Failed to save hero section", 'error');
+    } catch (err) {
+      console.error("[AdminApp] Save hero error:", err);
+      this.showToast("Error saving hero: " + err.message, "error");
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Hero Changes';
+      }
     }
   }
 

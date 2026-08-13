@@ -617,6 +617,7 @@ class AdminDataService {
       const current = localStorage.getItem(`cj_setting_${settingId}`);
       const merged = current ? { ...JSON.parse(current), ...data } : data;
       localStorage.setItem(`cj_setting_${settingId}`, JSON.stringify(merged));
+      window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId, data: merged } }));
     } catch (e) {}
 
     // 2. Non-blocking Firestore synchronization in background

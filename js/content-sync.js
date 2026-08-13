@@ -45,6 +45,21 @@
       }
     } catch(e) {}
 
+    window.addEventListener('cj_setting_updated', (e) => {
+      if (e.detail && e.detail.settingId === 'homepage' && e.detail.data && e.detail.data.hero) {
+        syncHeroSectionUI(e.detail.data.hero);
+      }
+    });
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'cj_setting_homepage' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.hero) syncHeroSectionUI(parsed.hero);
+        } catch(err) {}
+      }
+    });
+
     db.collection("settings").doc("homepage").get().then((doc) => {
       if (doc.exists && doc.data().hero) {
         syncHeroSectionUI(doc.data().hero);
@@ -160,13 +175,36 @@
     if (hero.heading) {
       const headingEl = document.querySelector('.hero-heading');
       if (headingEl) {
-        headingEl.innerHTML = hero.heading.replace(/\n/g, '<br><em>') + '</em>';
+        if (hero.heading.includes('\n')) {
+          const parts = hero.heading.split('\n');
+          headingEl.innerHTML = parts[0] + '<br><em>' + parts.slice(1).join(' ') + '</em>';
+        } else {
+          headingEl.innerHTML = hero.heading;
+        }
       }
     }
 
     if (hero.subtitle) {
       const subEl = document.querySelector('.hero-subtitle');
       if (subEl) subEl.textContent = hero.subtitle;
+    }
+
+    if (hero.btnPrimary) {
+      const btnPrimaryEl = document.querySelector('.hero-actions .btn-primary');
+      if (btnPrimaryEl) {
+        const svg = btnPrimaryEl.querySelector('svg');
+        btnPrimaryEl.textContent = hero.btnPrimary;
+        if (svg) btnPrimaryEl.prepend(svg);
+      }
+    }
+
+    if (hero.btnSecondary) {
+      const btnSecondaryEl = document.querySelector('.hero-actions .btn-outline');
+      if (btnSecondaryEl) {
+        const svg = btnSecondaryEl.querySelector('svg');
+        btnSecondaryEl.textContent = hero.btnSecondary;
+        if (svg) btnSecondaryEl.prepend(svg);
+      }
     }
 
     if (hero.imageUrl) {
