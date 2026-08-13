@@ -886,6 +886,44 @@ window.renderProductPageDetails = function(products) {
   const breadcrumbEl = document.querySelector('.product-breadcrumb span');
   if (breadcrumbEl) breadcrumbEl.textContent = activeProduct.name;
 
+  // Dynamic Price Breakdown
+  const weight = Number(activeProduct.weightGrams || activeProduct.weight) || 1.0;
+  const making = Number(activeProduct.makingCharge || activeProduct.making_charge) || 280;
+  const goldVal = 9240 * weight;
+  const subtotal = goldVal + (making * weight);
+  const gst = Math.round(subtotal * 0.03);
+  const total = Math.round(subtotal + gst);
+
+  const goldValEl = document.querySelector('.gold-value-price');
+  if (goldValEl) goldValEl.textContent = '₹' + Math.round(goldVal).toLocaleString('en-IN');
+
+  const makingEl = document.querySelector('.making-charges-price');
+  if (makingEl) makingEl.textContent = '₹' + Math.round(making * weight).toLocaleString('en-IN');
+
+  const gstEl = document.querySelector('.gst-price');
+  if (gstEl) gstEl.textContent = '₹' + gst.toLocaleString('en-IN');
+
+  const totalEl = document.querySelector('.total-price');
+  if (totalEl) totalEl.textContent = '₹' + total.toLocaleString('en-IN');
+
+  // Update Karat Badge
+  const badgeEl = document.querySelector('.product-karat-badge');
+  if (badgeEl) {
+    badgeEl.innerHTML = `
+      <span>${activeProduct.purity || '24K Gold'}</span>
+      <span style="color: var(--gold-light);">·</span>
+      <span>${(activeProduct.purity || '').includes('999') ? '999 Purity' : 'BIS Hallmarked'}</span>
+      <span style="color: var(--gold-light);">·</span>
+      <span>${weight} Gram</span>
+    `;
+  }
+
+  // Update WhatsApp Button
+  const waBtn = document.querySelector('.product-actions .btn-outline');
+  if (waBtn) {
+    waBtn.setAttribute('data-wa-order', `${activeProduct.name} (${weight}g, ${activeProduct.purity || '24K'})`);
+  }
+
   // Render Thumbnails
   const thumbsContainer = document.querySelector('.gallery-thumbs');
   if (thumbsContainer) {
@@ -897,7 +935,7 @@ window.renderProductPageDetails = function(products) {
       }
       return `
         <div class="thumb-item ${i === 0 ? 'active' : ''}">
-          <img src="${cacheBusted}" alt="${activeProduct.name} thumbnail ${i + 1}" />
+          <img src="${cacheBusted}" alt="${activeProduct.name} thumbnail ${i + 1}" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
         </div>
       `;
     }).join('');

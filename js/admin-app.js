@@ -651,6 +651,14 @@ class AdminApp {
     document.querySelector('#qa-view-orders')?.addEventListener('click', () => this.switchView('orders'));
     document.querySelector('#btn-view-all-orders')?.addEventListener('click', () => this.switchView('orders'));
     document.querySelector('#btn-add-category')?.addEventListener('click', () => this.handleCreateCategory());
+    document.querySelector('#btn-open-ai-image-editor')?.addEventListener('click', () => {
+      const activeUrl = (this.activeProductImages && this.activeProductImages[0]) || 'assets/hero_gold_coin.png';
+      if (window.AIEditor) {
+        window.AIEditor.openWithImage(activeUrl, null, (enhancedFile, dataUrl) => {
+          this.addAiEnhancedImage(dataUrl);
+        });
+      }
+    });
 
     // Save Buttons
     document.querySelector('#save-website-sections-btn')?.addEventListener('click', () => this.handleSaveWebsiteSections());
@@ -853,29 +861,43 @@ class AdminApp {
 
     (this.activeProductImages || []).forEach((url, idx) => {
       const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 6px; margin-bottom: 6px;';
+      wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 8px; margin-bottom: 8px;';
       wrapper.innerHTML = `
-        <img src="${url}" style="width: 54px; height: 54px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);" />
+        <img src="${url}" style="width: 58px; height: 58px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);" />
         <button type="button" onclick="app.removeProductImage(${idx})" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">✕</button>
+        <button type="button" onclick="window.AIEditor && window.AIEditor.openWithImage('${url}', this.parentElement.querySelector('img'), (file, dataUrl) => app.updateProductImageAt(${idx}, dataUrl))" style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.85); color: #f4d068; border: 1px solid rgba(212,175,55,0.4); padding: 2px 4px; border-radius: 3px; font-size: 9px; cursor: pointer;">✨ AI Edit</button>
       `;
       container.appendChild(wrapper);
     });
 
     const filesInput = document.querySelector('#pm-images');
     const files = filesInput?.files ? Array.from(filesInput.files) : [];
-    files.forEach(file => {
+    files.forEach((file, idx) => {
       const reader = new FileReader();
       reader.onload = (evt) => {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 6px; margin-bottom: 6px;';
+        wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 8px; margin-bottom: 8px;';
         wrapper.innerHTML = `
-          <img src="${evt.target.result}" style="width: 54px; height: 54px; border-radius: 6px; object-fit: cover; border: 2px solid var(--gold);" />
-          <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.8); color: #fff; font-size: 8px; padding: 1px 3px; border-radius: 3px;">NEW</span>
+          <img src="${evt.target.result}" style="width: 58px; height: 58px; border-radius: 6px; object-fit: cover; border: 2px solid var(--gold);" />
+          <span style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.8); color: #fff; font-size: 8px; padding: 1px 3px; border-radius: 3px;">NEW</span>
+          <button type="button" onclick="window.AIEditor && window.AIEditor.openWithImage('${evt.target.result}', this.parentElement.querySelector('img'), (enhancedFile, dataUrl) => app.addAiEnhancedImage(dataUrl))" style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.85); color: #f4d068; border: 1px solid rgba(212,175,55,0.4); padding: 2px 4px; border-radius: 3px; font-size: 9px; cursor: pointer;">✨ AI Edit</button>
         `;
         container.appendChild(wrapper);
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  updateProductImageAt(idx, dataUrl) {
+    if (!this.activeProductImages) this.activeProductImages = [];
+    this.activeProductImages[idx] = dataUrl;
+    this.renderProductModalPreviews();
+  }
+
+  addAiEnhancedImage(dataUrl) {
+    if (!this.activeProductImages) this.activeProductImages = [];
+    this.activeProductImages.push(dataUrl);
+    this.renderProductModalPreviews();
   }
 
   removeProductImage(idx) {

@@ -25,8 +25,9 @@
   <script src="js/supabase-config.js"></script>
   <script src="js/supabase-service.js"></script>
 
-  <!-- Core Services -->
+  <!-- Core Services & AI Tools -->
   <script src="js/admin-services.js"></script>
+  <script src="js/ai-image-editor.js"></script>
 </head>
 <body>
 
@@ -401,15 +402,6 @@
               </div>
 
               <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem;">
-                <label class="switch">
-                  <input type="checkbox" id="hero-visible" checked />
-                  <span class="slider"></span>
-                </label>
-                <span style="font-size: 0.9rem; font-weight: 600; color: #fff;">Show Website Sections</span>
-              </div>
-            </form>
-          </div>
-        </section>
                 <label class="switch">
                   <input type="checkbox" id="hero-visible" checked />
                   <span class="slider"></span>
@@ -905,7 +897,10 @@
           </div>
 
           <div class="form-group">
-            <label>Product Images</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0;">Product Images</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-open-ai-image-editor" style="background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); color: #000; font-weight: 700; border: none; font-size: 0.78rem; padding: 4px 10px;">✨ AI Image Studio & Enhancer</button>
+            </div>
             <input type="file" id="pm-images" accept="image/*" class="form-control" multiple />
             <div id="pm-images-preview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
           </div>
