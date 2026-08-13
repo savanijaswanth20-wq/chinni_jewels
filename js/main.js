@@ -724,10 +724,10 @@ function generateOrderId() {
  * Format image URL with cache buster query parameter to prevent browser/CDN stale image display
  */
 function getCacheBustedImageUrl(product) {
-  let url = product.imageUrl || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
+  let url = product.imageUrl || product.image_url || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
   if (!url) return "assets/hero_gold_coin.png";
   if (!url.includes('v=')) {
-    const v = product.updatedAt ? (product.updatedAt.seconds || Date.now()) : Date.now();
+    const v = product.updatedAt ? new Date(product.updatedAt).getTime() : Date.now();
     url += (url.includes('?') ? '&' : '?') + `v=${v}`;
   }
   return url;
@@ -737,8 +737,8 @@ function getCacheBustedImageUrl(product) {
  * Calculate estimated retail price based on gold rate & making charges
  */
 function calculateProductPrice(product, rate24k = 9240) {
-  const weight = Number(product.weightGrams) || 1.0;
-  const making = Number(product.makingCharge) || 280;
+  const weight = Number(product.weightGrams || product.weight) || 1.0;
+  const making = Number(product.makingCharge || product.making_charge) || 280;
   const purityMultiplier = (product.purity || '').includes('22K') ? (8470 / 9240) : ((product.purity || '').includes('18K') ? (6930 / 9240) : 1.0);
   const goldVal = rate24k * purityMultiplier * weight;
   const subtotal = goldVal + (making * weight);
@@ -761,7 +761,7 @@ window.renderCollectionProductsGrid = function(products) {
     return `
       <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}">
         <div class="product-card-image">
-          <img src="${imgUrl}" alt="${p.name} — CHINNI JEWELS" loading="lazy" />
+          <img src="${imgUrl}" alt="${p.name} — CHINNI JEWELS" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
           ${p.isFeatured ? '<span class="product-card-badge">Bestseller</span>' : ''}
           <button class="wishlist-btn" aria-label="Add to wishlist">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -804,7 +804,7 @@ window.renderStockGridAndTable = function(products) {
       return `
         <div class="product-card stock-grid-item" data-category="${cat}" data-product-id="${p.id}">
           <div class="product-card-image">
-            <img src="${imgUrl}" alt="${p.name}" loading="lazy" />
+            <img src="${imgUrl}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
             <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · ${stock} units</span>
             <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
           </div>
@@ -838,7 +838,7 @@ window.renderStockGridAndTable = function(products) {
         <tr class="stock-table-row" data-category="${cat}">
           <td>
             <div class="stock-item-cell">
-              <img src="${imgUrl}" class="stock-thumb" alt="${p.name}" />
+              <img src="${imgUrl}" class="stock-thumb" alt="${p.name}" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
               <div>
                 <div class="stock-item-name">${p.name}</div>
                 <div class="stock-item-sku">${p.sku || 'CN-24K-C01'}</div>
@@ -875,6 +875,10 @@ window.renderProductPageDetails = function(products) {
 
   const mainUrl = getCacheBustedImageUrl(activeProduct);
   mainImg.src = mainUrl;
+  mainImg.onerror = function() {
+    this.onerror = null;
+    this.src = 'assets/hero_gold_coin.png';
+  };
 
   const titleEl = document.querySelector('.product-title');
   if (titleEl) titleEl.textContent = activeProduct.name;

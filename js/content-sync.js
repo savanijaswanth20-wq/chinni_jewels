@@ -46,6 +46,18 @@
         if (res.success && res.data) syncProductsUI(res.data);
       }).catch(() => {});
     }
+
+    // 4. Supabase Realtime Subscription for Live Cross-Device Image & Product Sync
+    if (window.SupabaseService && window.SupabaseService.subscribeToProducts) {
+      window.SupabaseService.subscribeToProducts((updatedProducts) => {
+        console.log("[ContentSync] Realtime cross-device product image sync received!", updatedProducts);
+        syncProductsUI(updatedProducts);
+      });
+    }
+
+    window.addEventListener('cj_products_changed', (e) => {
+      if (e.detail) syncProductsUI(e.detail);
+    });
   }
 
   /**

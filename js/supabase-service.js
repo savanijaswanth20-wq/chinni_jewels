@@ -98,35 +98,62 @@ class SupabaseDataService {
     }
   }
 
-  // 2. PRODUCTS
+  // 2. PRODUCTS & REALTIME SYNC
   async getProducts() {
-    if (!this.db) return { success: false, data: [] };
+    if (!this.db) return { success: false, data: window.allFirestoreProducts || [] };
     try {
       const { data, error } = await this.db
         .from('products')
         .select('*, product_images(*)');
 
       if (error) throw error;
-      const formatted = (data || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        sku: p.sku,
-        weight: p.weight,
-        purity: p.purity,
-        sellingPrice: p.selling_price,
-        selling_price: p.selling_price,
-        stockQuantity: p.stock_quantity,
-        stock_quantity: p.stock_quantity,
-        featured: p.featured,
-        active: p.active,
-        images: (p.product_images || []).map(img => img.image_url),
-        imageUrl: (p.product_images && p.product_images[0]) ? p.product_images[0].image_url : 'assets/hero_gold_coin.png'
-      }));
+      const formatted = (data || []).map(p => {
+        let mainImg = p.image_url;
+        if (!mainImg && p.product_images && p.product_images.length) {
+          mainImg = p.product_images[0].image_url;
+        }
+        if (!mainImg) mainImg = 'assets/hero_gold_coin.png';
+
+        // Cache buster for cross-device consistency
+        const timestamp = p.updated_at ? new Date(p.updated_at).getTime() : Date.now();
+        if (mainImg && !mainImg.includes('v=')) {
+          mainImg += (mainImg.includes('?') ? '&' : '?') + `v=${timestamp}`;
+        }
+
+        const allImgs = (p.images && p.images.length) ? p.images : ((p.product_images && p.product_images.length) ? p.product_images.map(i => i.image_url) : [mainImg]);
+
+        return {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          sku: p.sku || `CJ-${String(p.id).slice(-4)}`,
+          weightGrams: Number(p.weight) || 1.0,
+          weight: Number(p.weight) || 1.0,
+          purity: p.purity || '24K',
+          sellingPrice: Number(p.selling_price) || 9520,
+          selling_price: Number(p.selling_price) || 9520,
+          makingCharge: Number(p.making_charge) || 280,
+          gstPercentage: Number(p.gst_percentage) || 3,
+          stockQuantity: Number(p.stock_quantity) || 10,
+          stock_quantity: Number(p.stock_quantity) || 10,
+          isFeatured: Boolean(p.featured),
+          featured: Boolean(p.featured),
+          isActive: p.active !== false,
+          active: p.active !== false,
+          description: p.description || '',
+          images: allImgs,
+          imageUrl: mainImg,
+          image_url: mainImg,
+          image_path: p.image_path || '',
+          updatedAt: p.updated_at || new Date().toISOString()
+        };
+      });
+
+      window.allFirestoreProducts = formatted;
       return { success: true, data: formatted };
     } catch (err) {
       console.warn("[SupabaseService] getProducts error:", err.message);
-      return { success: false, error: err.message, data: [] };
+      return { success: false, error: err.message, data: window.allFirestoreProducts || [] };
     }
   }
 
@@ -138,6 +165,12 @@ class SupabaseDataService {
       const { data, error } = isUuid ? await query.eq('id', idOrSlug).single() : await query.eq('slug', idOrSlug).single();
 
       if (error) throw error;
+      let mainImg = data.image_url || (data.product_images && data.product_images[0] ? data.product_images[0].image_url : 'assets/hero_gold_coin.png');
+      const timestamp = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
+      if (mainImg && !mainImg.includes('v=')) {
+        mainImg += (mainImg.includes('?') ? '&' : '?') + `v=${timestamp}`;
+      }
+
       return {
         success: true,
         data: {
@@ -145,12 +178,14 @@ class SupabaseDataService {
           name: data.name,
           slug: data.slug,
           sku: data.sku,
+          weightGrams: data.weight,
           weight: data.weight,
           purity: data.purity,
           sellingPrice: data.selling_price,
           stockQuantity: data.stock_quantity,
+          description: data.description,
           images: (data.product_images || []).map(img => img.image_url),
-          imageUrl: (data.product_images && data.product_images[0]) ? data.product_images[0].image_url : 'assets/hero_gold_coin.png'
+          imageUrl: mainImg
         }
       };
     } catch (err) {
@@ -162,26 +197,63 @@ class SupabaseDataService {
     if (!this.db) return { success: false, error: "Database unavailable" };
     try {
       const isNew = !productId;
+      const targetId = productId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `prod-${Date.now()}`);
       const slug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `prod-${Date.now()}`);
+      const timestamp = Date.now();
+
+      // Check if product exists & fetch old image_path for cleanup later
+      let oldStoragePath = null;
+      if (!isNew) {
+        const { data: existing } = await this.db.from('products').select('image_path, image_url').eq('id', targetId).single();
+        if (existing) oldStoragePath = existing.image_path;
+      }
+
+      // Upload new image files if provided
+      let primaryImageUrl = productData.imageUrl || (productData.images && productData.images[0]) || '';
+      let primaryStoragePath = productData.imagePath || '';
+      const uploadedUrls = [];
+
+      for (const file of imageFiles) {
+        const uploadRes = await this.uploadFile('products', file, targetId);
+        if (uploadRes.success) {
+          uploadedUrls.push(uploadRes.url);
+          if (!primaryImageUrl || imageFiles.indexOf(file) === 0) {
+            primaryImageUrl = uploadRes.url;
+            primaryStoragePath = uploadRes.storagePath;
+          }
+        }
+      }
+
+      if (!primaryImageUrl) primaryImageUrl = 'assets/hero_gold_coin.png';
+
+      // Ensure cache buster on primaryImageUrl
+      if (primaryImageUrl && !primaryImageUrl.includes('v=')) {
+        primaryImageUrl += (primaryImageUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
+      }
+
+      const allImages = [...new Set([...(uploadedUrls), ...(productData.images || []), primaryImageUrl].filter(Boolean))];
 
       const payload = {
         name: productData.name,
         slug: slug,
         sku: productData.sku || `CJ-${Date.now().toString().slice(-4)}`,
-        weight: productData.weight || 1.000,
+        description: productData.description || '',
+        weight: Number(productData.weightGrams || productData.weight) || 1.0,
         purity: productData.purity || '24K',
-        selling_price: productData.sellingPrice || productData.price || 9520,
-        stock_quantity: productData.stockQuantity || 10,
-        featured: productData.featured || false,
+        selling_price: Number(productData.sellingPrice || productData.price) || 9520,
+        stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
+        featured: Boolean(productData.featured || productData.isFeatured),
         active: productData.isActive !== false,
+        image_url: primaryImageUrl,
+        image_path: primaryStoragePath,
+        images: allImages,
         updated_at: new Date().toISOString()
       };
 
-      let targetId = productId;
       if (isNew) {
-        const { data, error } = await this.db.from('products').insert([payload]).select().single();
+        payload.id = targetId;
+        const { error } = await this.db.from('products').insert([payload]);
         if (error) throw error;
-        targetId = data.id;
 
         // Initialize inventory record
         await this.db.from('inventory').insert([{
@@ -193,23 +265,65 @@ class SupabaseDataService {
         if (error) throw error;
       }
 
-      // Upload new image files to Supabase Storage
-      for (const file of imageFiles) {
-        const uploadRes = await this.uploadFile('products', file);
-        if (uploadRes.success) {
-          await this.db.from('product_images').insert([{
-            product_id: targetId,
-            storage_path: uploadRes.storagePath,
-            image_url: uploadRes.url,
-            is_primary: true
-          }]);
+      // Insert into product_images table
+      if (uploadedUrls.length > 0) {
+        const imgInserts = uploadedUrls.map((url, idx) => ({
+          product_id: targetId,
+          storage_path: primaryStoragePath,
+          image_url: url,
+          is_primary: idx === 0
+        }));
+        await this.db.from('product_images').insert(imgInserts);
+      }
+
+      // Safe cleanup of old storage image AFTER database points to new image
+      if (oldStoragePath && primaryStoragePath && oldStoragePath !== primaryStoragePath) {
+        try {
+          await this.db.storage.from('products').remove([oldStoragePath]);
+        } catch (cleanErr) {
+          console.warn("[SupabaseService] Non-critical storage cleanup notice:", cleanErr.message);
         }
       }
 
-      return { success: true, id: targetId };
+      // Trigger local & realtime update
+      const refreshed = await this.getProducts();
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+
+      return {
+        success: true,
+        id: targetId,
+        imageUrl: primaryImageUrl,
+        message: 'Product & central database image updated successfully!'
+      };
     } catch (err) {
-      return { success: false, error: err.message };
+      console.error("[SupabaseService] saveProduct error:", err);
+      return { success: false, error: err.message || "Failed to save product in database" };
     }
+  }
+
+  subscribeToProducts(callback) {
+    if (!this.db || !this.db.channel) return;
+    if (this.productsChannel) {
+      try { this.db.removeChannel(this.productsChannel); } catch(e) {}
+    }
+
+    this.productsChannel = this.db
+      .channel('public:products')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload) => {
+        console.log("[SupabaseService] Realtime product update received:", payload);
+        const res = await this.getProducts();
+        if (res.success && typeof callback === 'function') {
+          callback(res.data);
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, async (payload) => {
+        console.log("[SupabaseService] Realtime product_images update received:", payload);
+        const res = await this.getProducts();
+        if (res.success && typeof callback === 'function') {
+          callback(res.data);
+        }
+      })
+      .subscribe();
   }
 
   // 3. GOLD RATES
@@ -317,10 +431,20 @@ class SupabaseDataService {
   }
 
   // 6. STORAGE FILE UPLOADER (UNIQUE TIMESTAMPS FOR CROSS-DEVICE CACHE SAFE URLS)
-  async uploadFile(bucketName, rawFile) {
+  async uploadFile(bucketName, rawFile, productId = 'general') {
     if (!rawFile) return { success: false, error: "No file provided" };
+
+    // STEP 4 Validation: JPG, JPEG, PNG, WebP
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (rawFile.type && !allowedTypes.includes(rawFile.type.toLowerCase())) {
+      return { success: false, error: "Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP." };
+    }
+
+    if (rawFile.size > 15 * 1024 * 1024) {
+      return { success: false, error: "Image file exceeds maximum limit of 15MB." };
+    }
+
     if (!this.db) {
-      // DataURL Fallback if Supabase not yet connected
       const reader = new FileReader();
       return new Promise((resolve) => {
         reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
@@ -329,37 +453,41 @@ class SupabaseDataService {
     }
 
     try {
+      const targetBucket = bucketName || 'products';
       const cleanName = rawFile.name ? rawFile.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'image.webp';
       const timestamp = Date.now();
-      const storagePath = `${timestamp}_${cleanName}`;
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const storagePath = `products/${productId}/${timestamp}-${randomStr}_${cleanName}`;
 
       const { data, error } = await this.db.storage
-        .from(bucketName || 'media')
+        .from(targetBucket)
         .upload(storagePath, rawFile, { cacheControl: '3600', upsert: true });
 
       if (error) throw error;
 
       // Get Public URL
       const { data: publicUrlData } = this.db.storage
-        .from(bucketName || 'media')
+        .from(targetBucket)
         .getPublicUrl(storagePath);
 
       let publicUrl = publicUrlData.publicUrl;
-      // Append cache-busting timestamp
+      // Append cache-busting timestamp URL param
       publicUrl += (publicUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
 
-      // Insert record into media table
-      await this.db.from('media').insert([{
-        file_name: cleanName,
-        storage_path: storagePath,
-        public_url: publicUrl,
-        file_type: rawFile.type,
-        file_size: rawFile.size
-      }]);
+      // Insert audit record into media table
+      try {
+        await this.db.from('media').insert([{
+          file_name: cleanName,
+          storage_path: storagePath,
+          public_url: publicUrl,
+          file_type: rawFile.type,
+          file_size: rawFile.size
+        }]);
+      } catch(mErr) {}
 
       return { success: true, url: publicUrl, storagePath };
     } catch (err) {
-      console.warn("[SupabaseService] Storage upload fallback notice:", err.message);
+      console.warn("[SupabaseService] Storage upload notice:", err.message);
       const reader = new FileReader();
       return new Promise((resolve) => {
         reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
