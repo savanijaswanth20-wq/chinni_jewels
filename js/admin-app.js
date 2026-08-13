@@ -65,7 +65,7 @@ class AdminApp {
       });
     });
 
-    // Monitor Firebase Auth changes
+    // Monitor Auth state changes
     window.AuthService.onAuthChange(async (user, profile) => {
       const authScreen = document.querySelector('#admin-auth-screen');
       const appContainer = document.querySelector('#admin-app');
@@ -912,7 +912,7 @@ class AdminApp {
     submitBtn.disabled = true;
     submitBtn.textContent = imageFiles.length ? 'Uploading Image(s)...' : 'Saving...';
     if (imageFiles.length) {
-      this.showToast("Uploading product image(s) to Firebase Storage...", "info");
+      this.showToast("Uploading product image(s)...", "info");
     }
 
     const res = await window.AdminService.saveProduct(id || null, payload, imageFiles);

@@ -9,15 +9,15 @@ class AdminDataService {
   }
 
   get db() {
-    return window.firebaseDb;
+    return window.firebaseDb || null;
   }
 
   get storage() {
-    return window.firebaseStorage;
+    return window.firebaseStorage || null;
   }
 
   get auth() {
-    return window.firebaseAuth;
+    return window.firebaseAuth || null;
   }
 
   /**
@@ -282,7 +282,7 @@ class AdminDataService {
   }
 
   /**
-   * Universal File Upload Helper for Firebase Storage with resilient fallback
+   * Universal File Upload Helper with resilient DataURL fallback
    */
   async uploadFile(folder, rawFile) {
     if (!rawFile) return { success: false, error: "No file provided" };
@@ -299,7 +299,7 @@ class AdminDataService {
         const storagePath = `${folder}/${fileName}`;
         const ref = this.storage.ref(storagePath);
 
-        console.log(`[AdminService] Uploading image to Firebase Storage path: ${storagePath}`);
+        console.log(`[AdminService] Uploading image to storage path: ${storagePath}`);
         const uploadTask = await ref.put(file);
         let downloadUrl = await uploadTask.ref.getDownloadURL();
 
@@ -309,7 +309,7 @@ class AdminDataService {
 
         return { success: true, url: downloadUrl, storagePath };
       } catch (err) {
-        console.warn("[AdminService] Firebase Storage upload error, utilizing DataURL fallback:", err.message);
+        console.warn("[AdminService] Storage upload error, utilizing DataURL fallback:", err.message);
         try {
           const dataUrl = await this.fileToDataUrl(file);
           return { success: true, url: dataUrl, isFallback: true };
@@ -328,7 +328,7 @@ class AdminDataService {
   }
 
   /**
-   * Safely delete old image from Firebase Storage after new image upload succeeds
+   * Safely delete old image after new image upload succeeds
    */
   async deleteOldStorageFile(oldUrl) {
     if (!oldUrl || !this.storage || !oldUrl.includes('firebasestorage.googleapis.com')) return;
@@ -559,10 +559,11 @@ class AdminDataService {
 
   async updateOrderStatus(orderId, newStatus) {
     try {
-      if (window.firebaseFunctions) {
-        const updateStatusFn = window.firebaseFunctions.httpsCallable("updateOrderStatus");
-        const res = await updateStatusFn({ orderId, newStatus });
-        if (res.data) return { success: true, ...res.data };
+      if (window.ApiClient) {
+        return window.ApiClient.request(`/orders/${orderId}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus })
+        });
       }
 
       // Firestore Fallback
