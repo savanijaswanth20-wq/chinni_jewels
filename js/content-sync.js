@@ -16,14 +16,24 @@
       }).catch(() => {});
     }
 
-    // 2. Homepage & Section Images Sync
-    try {
-      const cachedHp = localStorage.getItem("cj_setting_homepage");
-      if (cachedHp) {
-        const parsed = JSON.parse(cachedHp);
-        syncHomepageUI(parsed);
-      }
-    } catch(e) {}
+    // 2. Live Homepage & Section Images Sync from Supabase Database (Single Source of Truth)
+    if (window.SupabaseService && window.SupabaseService.getWebsiteSettings) {
+      window.SupabaseService.getWebsiteSettings().then(res => {
+        if (res.success && res.data && res.data.homepage) {
+          syncHomepageUI(res.data.homepage);
+        }
+      }).catch(() => {});
+    }
+
+    // 3. Supabase Realtime Listener for Section Images (Instant Cross-Device Sync)
+    if (window.SupabaseService && window.SupabaseService.subscribeToSettings) {
+      window.SupabaseService.subscribeToSettings((newSettings) => {
+        if (newSettings && newSettings.homepage) {
+          console.log("[ContentSync] Realtime section settings updated across devices:", newSettings.homepage);
+          syncHomepageUI(newSettings.homepage);
+        }
+      });
+    }
 
     window.addEventListener('cj_setting_updated', (e) => {
       if (e.detail && e.detail.settingId === 'homepage' && e.detail.data) {
@@ -31,23 +41,14 @@
       }
     });
 
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'cj_setting_homepage' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          syncHomepageUI(parsed);
-        } catch(err) {}
-      }
-    });
-
-    // 3. Products Collection Sync
+    // 4. Products Collection Sync
     if (window.ApiClient) {
       window.ApiClient.getProducts().then(res => {
         if (res.success && res.data) syncProductsUI(res.data);
       }).catch(() => {});
     }
 
-    // 4. Supabase Realtime Subscription for Live Cross-Device Image & Product Sync
+    // 5. Supabase Realtime Subscription for Live Cross-Device Product Image Sync
     if (window.SupabaseService && window.SupabaseService.subscribeToProducts) {
       window.SupabaseService.subscribeToProducts((updatedProducts) => {
         console.log("[ContentSync] Realtime cross-device product image sync received!", updatedProducts);
@@ -217,7 +218,13 @@
     }
     if (featured.imageUrl) {
       const imgEl = document.querySelector('.featured-image img');
-      if (imgEl) imgEl.src = featured.imageUrl;
+      if (imgEl) {
+        let finalUrl = featured.imageUrl;
+        if (finalUrl && !finalUrl.includes('v=')) {
+          finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
+        }
+        imgEl.src = finalUrl;
+      }
     }
   }
 
@@ -233,7 +240,13 @@
     }
     if (story.imageUrl) {
       const imgEl = document.querySelector('.brand-story-image img');
-      if (imgEl) imgEl.src = story.imageUrl;
+      if (imgEl) {
+        let finalUrl = story.imageUrl;
+        if (finalUrl && !finalUrl.includes('v=')) {
+          finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
+        }
+        imgEl.src = finalUrl;
+      }
     }
   }
 

@@ -430,6 +430,24 @@ class SupabaseDataService {
     }
   }
 
+  subscribeToSettings(callback) {
+    if (!this.db || !this.db.channel) return;
+    if (this.settingsChannel) {
+      try { this.db.removeChannel(this.settingsChannel); } catch(e) {}
+    }
+
+    this.settingsChannel = this.db
+      .channel('public:website_settings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'website_settings' }, async (payload) => {
+        console.log("[SupabaseService] Realtime website_settings updated:", payload);
+        const res = await this.getWebsiteSettings();
+        if (res.success && res.data && typeof callback === 'function') {
+          callback(res.data);
+        }
+      })
+      .subscribe();
+  }
+
   // 6. STORAGE FILE UPLOADER (UNIQUE TIMESTAMPS FOR CROSS-DEVICE CACHE SAFE URLS)
   async uploadFile(bucketName, rawFile, productId = 'general') {
     if (!rawFile) return { success: false, error: "No file provided" };
