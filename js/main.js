@@ -716,3 +716,231 @@ function generateOrderId() {
   }
 })();
 
+/* ══════════════════════════════════════════════════════════
+   DYNAMIC FIRESTORE PRODUCT RENDERERS (SINGLE SOURCE OF TRUTH)
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * Format image URL with cache buster query parameter to prevent browser/CDN stale image display
+ */
+function getCacheBustedImageUrl(product) {
+  let url = product.imageUrl || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
+  if (!url) return "assets/hero_gold_coin.png";
+  if (!url.includes('v=')) {
+    const v = product.updatedAt ? (product.updatedAt.seconds || Date.now()) : Date.now();
+    url += (url.includes('?') ? '&' : '?') + `v=${v}`;
+  }
+  return url;
+}
+
+/**
+ * Calculate estimated retail price based on gold rate & making charges
+ */
+function calculateProductPrice(product, rate24k = 9240) {
+  const weight = Number(product.weightGrams) || 1.0;
+  const making = Number(product.makingCharge) || 280;
+  const purityMultiplier = (product.purity || '').includes('22K') ? (8470 / 9240) : ((product.purity || '').includes('18K') ? (6930 / 9240) : 1.0);
+  const goldVal = rate24k * purityMultiplier * weight;
+  const subtotal = goldVal + (making * weight);
+  const gst = Math.round(subtotal * 0.03);
+  return Math.round(subtotal + gst);
+}
+
+/**
+ * 1. Render Homepage Collection Grid (index.html)
+ */
+window.renderCollectionProductsGrid = function(products) {
+  const container = document.querySelector('#collection .product-grid');
+  if (!container || !products || !products.length) return;
+
+  container.innerHTML = products.map((p, idx) => {
+    const imgUrl = getCacheBustedImageUrl(p);
+    const price = calculateProductPrice(p);
+    const cat = p.categoryId || (p.categoryName ? p.categoryName.toLowerCase() : 'coins');
+
+    return `
+      <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}">
+        <div class="product-card-image">
+          <img src="${imgUrl}" alt="${p.name} — CHINNI JEWELS" loading="lazy" />
+          ${p.isFeatured ? '<span class="product-card-badge">Bestseller</span>' : ''}
+          <button class="wishlist-btn" aria-label="Add to wishlist">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+        </div>
+        <div class="product-card-info">
+          <div class="product-card-meta">
+            <span>${p.purity || '24K'}</span>
+            <div class="product-card-meta-dot"></div>
+            <span>${p.purity ? p.purity : '999 Purity'}</span>
+          </div>
+          <h3 class="product-card-name">${p.name}</h3>
+          <p class="product-card-weight">${p.weightGrams || 1.0} Gram</p>
+          <div class="product-card-price">₹${price.toLocaleString('en-IN')}</div>
+          <div class="product-card-actions">
+            <a href="product.html?id=${p.id}" class="btn btn-primary" onclick="sessionStorage.setItem('chinni_selected_product_id', '${p.id}'); sessionStorage.setItem('chinni_selected_product_name', '${p.name}'); sessionStorage.setItem('chinni_selected_product_image', '${imgUrl}');">View Product</a>
+            <a href="#" class="btn btn-outline" data-wa-order="${p.name}">Order</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+/**
+ * 2. Render Live Stock Grid and Vault Table (stock.html)
+ */
+window.renderStockGridAndTable = function(products) {
+  const gridContainer = document.querySelector('#stock-grid-view');
+  const tableTbody = document.querySelector('#stock-table-tbody');
+  if (!products || !products.length) return;
+
+  if (gridContainer) {
+    gridContainer.innerHTML = products.map(p => {
+      const imgUrl = getCacheBustedImageUrl(p);
+      const price = calculateProductPrice(p);
+      const stock = p.stockQuantity !== undefined ? p.stockQuantity : 10;
+      const cat = p.categoryId || 'coins';
+
+      return `
+        <div class="product-card stock-grid-item" data-category="${cat}" data-product-id="${p.id}">
+          <div class="product-card-image">
+            <img src="${imgUrl}" alt="${p.name}" loading="lazy" />
+            <span class="badge-instock" style="position:absolute; top:14px; left:14px;">In Stock · ${stock} units</span>
+            <button class="wishlist-btn" aria-label="Add to wishlist"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>SKU: ${p.sku || 'CN-24K-C01'}</span>
+              <div class="product-card-meta-dot"></div>
+              <span>${p.purity || '24K / 999'}</span>
+            </div>
+            <h3 class="product-card-name">${p.name}</h3>
+            <p class="product-card-weight">${p.weightGrams || 1.0} Gram · Hallmarked</p>
+            <div class="product-card-price">₹${price.toLocaleString('en-IN')}</div>
+            <div class="product-card-actions">
+              <a href="product.html?id=${p.id}" class="btn btn-primary" onclick="sessionStorage.setItem('chinni_selected_product_id', '${p.id}'); sessionStorage.setItem('chinni_selected_product_name', '${p.name}'); sessionStorage.setItem('chinni_selected_product_image', '${imgUrl}');">View Item</a>
+              <a href="#" class="btn btn-outline" data-wa-order="${p.name} (SKU: ${p.sku || 'CN-24K'})">Order</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (tableTbody) {
+    tableTbody.innerHTML = products.map(p => {
+      const imgUrl = getCacheBustedImageUrl(p);
+      const price = calculateProductPrice(p);
+      const stock = p.stockQuantity !== undefined ? p.stockQuantity : 10;
+      const cat = p.categoryId || 'coins';
+
+      return `
+        <tr class="stock-table-row" data-category="${cat}">
+          <td>
+            <div class="stock-item-cell">
+              <img src="${imgUrl}" class="stock-thumb" alt="${p.name}" />
+              <div>
+                <div class="stock-item-name">${p.name}</div>
+                <div class="stock-item-sku">${p.sku || 'CN-24K-C01'}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="purity-pill">${p.purity || '24K / 999'}</span></td>
+          <td>${p.weightGrams || 1.0} g</td>
+          <td><span class="stock-status-pill in-stock">● In Stock (${stock})</span></td>
+          <td><strong style="color: #fff;">₹${price.toLocaleString('en-IN')}</strong></td>
+          <td>
+            <a href="#" class="btn btn-primary btn-sm" data-wa-order="${p.name}">Buy Now</a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+};
+
+/**
+ * 3. Render Product Page Main Image & Gallery (product.html)
+ */
+window.renderProductPageDetails = function(products) {
+  const mainImg = document.querySelector('#main-product-img');
+  if (!mainImg || !products || !products.length) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramId = urlParams.get('id');
+  const storedId = sessionStorage.getItem('chinni_selected_product_id');
+  const targetId = paramId || storedId;
+
+  let activeProduct = products.find(p => p.id === targetId) || products[0];
+  if (!activeProduct) return;
+
+  const mainUrl = getCacheBustedImageUrl(activeProduct);
+  mainImg.src = mainUrl;
+
+  const titleEl = document.querySelector('.product-title');
+  if (titleEl) titleEl.textContent = activeProduct.name;
+
+  const breadcrumbEl = document.querySelector('.product-breadcrumb span');
+  if (breadcrumbEl) breadcrumbEl.textContent = activeProduct.name;
+
+  // Render Thumbnails
+  const thumbsContainer = document.querySelector('.gallery-thumbs');
+  if (thumbsContainer) {
+    const imagesList = (activeProduct.images && activeProduct.images.length) ? activeProduct.images : [mainUrl];
+    thumbsContainer.innerHTML = imagesList.map((img, i) => {
+      let cacheBusted = img;
+      if (!cacheBusted.includes('v=')) {
+        cacheBusted += (cacheBusted.includes('?') ? '&' : '?') + `v=${Date.now()}`;
+      }
+      return `
+        <div class="thumb-item ${i === 0 ? 'active' : ''}">
+          <img src="${cacheBusted}" alt="${activeProduct.name} thumbnail ${i + 1}" />
+        </div>
+      `;
+    }).join('');
+
+    // Re-bind click handlers for thumbs
+    thumbsContainer.querySelectorAll('.thumb-item').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        thumbsContainer.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        const src = thumb.querySelector('img').src;
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+          mainImg.src = src;
+          mainImg.style.opacity = '1';
+        }, 150);
+      });
+    });
+  }
+};
+
+/**
+ * 4. Render Checkout Page Summary Image (checkout.html)
+ */
+window.renderCheckoutSummary = function(products) {
+  const checkoutImg = document.querySelector('#checkout-prod-img');
+  if (!checkoutImg) return;
+
+  const storedId = sessionStorage.getItem('chinni_selected_product_id');
+  const storedName = sessionStorage.getItem('chinni_selected_product_name');
+
+  let activeProduct = products?.find(p => p.id === storedId || p.name === storedName) || (products ? products[0] : null);
+  
+  if (activeProduct) {
+    const imgUrl = getCacheBustedImageUrl(activeProduct);
+    checkoutImg.src = imgUrl;
+    
+    const nameEl = document.querySelector('#checkout-prod-name');
+    if (nameEl) nameEl.textContent = activeProduct.name;
+
+    const metaEl = document.querySelector('#checkout-prod-meta');
+    if (metaEl) metaEl.textContent = `${activeProduct.purity || '24K'} · ${activeProduct.weightGrams || 1.0} Gram`;
+  }
+};
+
+// Initial invocation if products were already cached in memory
+if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
+  window.syncProductsUI?.(window.allFirestoreProducts);
+}
+
+

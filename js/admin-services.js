@@ -273,50 +273,58 @@ class AdminDataService {
   }
 
   /**
-   * Universal File Upload Helper with Fast Firebase Storage & Instant Fallback
+   * Universal File Upload Helper for Firebase Storage
+   * Ensures single source of truth image URLs with unique timestamped paths and cache-busting
    */
   async uploadFile(folder, rawFile) {
     if (!rawFile) return { success: false, error: "No file provided" };
     
-    // Compress image if needed for instant response
+    // Compress image if needed while retaining full visual quality
     const file = await this.compressImage(rawFile);
-
-    // Instant Data URL fallback Promise
-    const dataUrlPromise = new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
-    });
 
     if (this.storage) {
       try {
-        const ext = file.name ? file.name.split('.').pop() : 'jpg';
-        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-        const ref = this.storage.ref(`${folder}/${fileName}`);
+        const rawName = file.name ? file.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'image.png';
+        const ext = rawName.split('.').pop().toLowerCase();
+        const timestamp = Date.now();
         
-        const storagePromise = (async () => {
-          const uploadTask = await ref.put(file);
-          return await uploadTask.ref.getDownloadURL();
-        })();
+        // Formulate unique path per requirement 7
+        const fileName = `${timestamp}_${rawName}`;
+        const storagePath = `${folder}/${fileName}`;
+        const ref = this.storage.ref(storagePath);
 
-        // 2-second timeout deadline so user is never stuck waiting for slow storage
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Storage deadline reached")), 2000)
-        );
+        console.log(`[AdminService] Uploading image to Firebase Storage path: ${storagePath}`);
+        const uploadTask = await ref.put(file);
+        let downloadUrl = await uploadTask.ref.getDownloadURL();
 
-        const url = await Promise.race([storagePromise, timeoutPromise]);
-        return { success: true, url };
+        // Append cache-buster timestamp per requirement 6
+        if (downloadUrl && !downloadUrl.includes('v=')) {
+          downloadUrl += (downloadUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
+        }
+
+        return { success: true, url: downloadUrl, storagePath };
       } catch (err) {
-        console.warn(`[AdminService] Storage notice (${err.message}). Using instant Data URL.`);
+        console.error("[AdminService] Firebase Storage upload failed:", err);
+        return { success: false, error: `Firebase Storage upload failed: ${err.message}` };
       }
+    } else {
+      console.warn("[AdminService] Firebase Storage is not initialized.");
+      return { success: false, error: "Firebase Storage service unavailable." };
     }
+  }
 
-    const dataUrl = await dataUrlPromise;
-    if (dataUrl) {
-      return { success: true, url: dataUrl, isFallback: true };
+  /**
+   * Safely delete old image from Firebase Storage after new image upload succeeds
+   */
+  async deleteOldStorageFile(oldUrl) {
+    if (!oldUrl || !this.storage || !oldUrl.includes('firebasestorage.googleapis.com')) return;
+    try {
+      const storageRef = this.storage.refFromURL(oldUrl.split('?')[0]);
+      await storageRef.delete();
+      console.log(`[AdminService] Cleaned up old storage image: ${oldUrl}`);
+    } catch (e) {
+      console.warn("[AdminService] Safe cleanup warning for old image:", e.message);
     }
-    return { success: false, error: "Failed to read image file." };
   }
 
   async uploadProductImage(productId, file) {

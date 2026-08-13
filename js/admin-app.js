@@ -825,14 +825,17 @@ class AdminApp {
 
     const submitBtn = document.querySelector('#btn-save-product-submit');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    submitBtn.textContent = imageFiles.length ? 'Uploading Image(s)...' : 'Saving...';
+    if (imageFiles.length) {
+      this.showToast("Uploading product image(s) to Firebase Storage...", "info");
+    }
 
     const res = await window.AdminService.saveProduct(id || null, payload, imageFiles);
     submitBtn.disabled = false;
     submitBtn.textContent = 'Save Product';
 
     if (res.success) {
-      this.showToast(res.message, 'success');
+      this.showToast(`UPLOAD SUCCESSFUL ✓ ${res.message}`, 'success');
       this.closeModal('product-modal');
       await this.loadProductsData();
     } else {
@@ -932,19 +935,21 @@ class AdminApp {
     const saveBtn = document.querySelector('#save-hero-btn');
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving Hero...';
+      saveBtn.textContent = 'Uploading & Saving Hero...';
     }
 
-    let imageUrl = document.querySelector('#hero-image-preview')?.src || '';
+    const oldImageUrl = document.querySelector('#hero-image-preview')?.src || '';
+    let imageUrl = oldImageUrl;
     const fileInput = document.querySelector('#hero-image-input');
 
     if (fileInput && fileInput.files && fileInput.files[0]) {
-      this.showToast("Uploading hero image...", "info");
-      const uploadRes = await window.AdminService.uploadFile('hero', fileInput.files[0]);
+      this.showToast("Uploading hero image to Firebase Storage...", "info");
+      const uploadRes = await window.AdminService.uploadFile('homepage', fileInput.files[0]);
       if (uploadRes.success) {
         imageUrl = uploadRes.url;
         const preview = document.querySelector('#hero-image-preview');
         if (preview) preview.src = imageUrl;
+        this.showToast("UPLOAD SUCCESSFUL ✓ Image uploaded to Firebase Storage", "success");
       } else {
         this.showToast(uploadRes.error || "Failed to upload hero image", "error");
         if (saveBtn) {
@@ -962,7 +967,8 @@ class AdminApp {
       btnPrimary: document.querySelector('#hero-btn-primary').value.trim(),
       btnSecondary: document.querySelector('#hero-btn-secondary').value.trim(),
       visible: document.querySelector('#hero-visible').checked,
-      imageUrl: imageUrl
+      imageUrl: imageUrl,
+      updatedAt: new Date().toISOString()
     };
 
     const res = await window.AdminService.saveSetting('homepage', { hero: heroData });
@@ -973,8 +979,11 @@ class AdminApp {
     }
 
     if (res.success) {
-      this.showToast("Hero section updated live!", 'success');
+      this.showToast("UPLOAD SUCCESSFUL ✓ Hero image updated across all devices!", 'success');
       if (fileInput) fileInput.value = '';
+      if (oldImageUrl && oldImageUrl !== imageUrl && oldImageUrl.includes('firebasestorage')) {
+        window.AdminService.deleteOldStorageFile(oldImageUrl);
+      }
     } else {
       this.showToast(res.error || "Failed to save hero section", 'error');
     }

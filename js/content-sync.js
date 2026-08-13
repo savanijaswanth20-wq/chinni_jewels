@@ -171,7 +171,14 @@
 
     if (hero.imageUrl) {
       const imgEl = document.querySelector('.hero-image img');
-      if (imgEl) imgEl.src = hero.imageUrl;
+      if (imgEl) {
+        let finalUrl = hero.imageUrl;
+        if (finalUrl && !finalUrl.includes('v=')) {
+          const v = hero.updatedAt ? (hero.updatedAt.seconds || Date.now()) : Date.now();
+          finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${v}`;
+        }
+        imgEl.src = finalUrl;
+      }
     }
 
     if (hero.visible === false) {
@@ -219,11 +226,24 @@
   }
 
   /**
-   * Dynamically Render Products Grid
+   * Dynamically Render Products Grid across index.html, stock.html, product.html, checkout.html
    */
   function syncProductsUI(products) {
     if (!products || !products.length) return;
+    window.allFirestoreProducts = products;
     window.dispatchEvent(new CustomEvent('productsUpdated', { detail: products }));
+    if (typeof window.renderCollectionProductsGrid === 'function') {
+      window.renderCollectionProductsGrid(products);
+    }
+    if (typeof window.renderStockGridAndTable === 'function') {
+      window.renderStockGridAndTable(products);
+    }
+    if (typeof window.renderProductPageDetails === 'function') {
+      window.renderProductPageDetails(products);
+    }
+    if (typeof window.renderCheckoutSummary === 'function') {
+      window.renderCheckoutSummary(products);
+    }
   }
 
 })();
