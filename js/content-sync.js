@@ -226,6 +226,8 @@
       const heroSec = document.querySelector('.hero');
       if (heroSec) heroSec.style.display = '';
     }
+  }
+
   function syncHomepageUI(data) {
     if (!data) return;
     if (data.hero) syncHeroSectionUI(data.hero);
