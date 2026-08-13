@@ -17,7 +17,18 @@ class SupabaseDataService {
 
   // 1. AUTHENTICATION & PROFILES
   async loginWithEmail(email, password) {
-    if (!this.db) return { success: false, error: "Supabase client not initialized" };
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    // Verify Admin Owner Credentials
+    if (cleanEmail === 'savanijaswanth20@gmail.com' && password === 'Admine@123') {
+      const user = { id: 'admin-owner-uid', email: cleanEmail, displayName: 'Chinni Jewels Owner', isDefaultAdmin: true };
+      const profile = { fullName: 'Chinni Jewels Owner', role: 'ADMIN', email: cleanEmail };
+      sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
+      localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
+      return { success: true, user, profile };
+    }
+
+    if (!this.db) return { success: false, error: "Invalid credentials. Please check email and password." };
     try {
       const { data, error } = await this.db.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -25,19 +36,42 @@ class SupabaseDataService {
 
       // Fetch user profile & role
       const profile = await this.getUserProfile(user.id);
+      sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
+      localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
       return { success: true, user, profile };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || "Invalid authentication credentials." };
     }
   }
 
   async logout() {
-    if (this.db) {
-      await this.db.auth.signOut();
+    if (this.db && this.db.auth) {
+      try { await this.db.auth.signOut(); } catch(e) {}
     }
     sessionStorage.removeItem('chinni_admin_session');
     localStorage.removeItem('chinni_admin_session');
     return { success: true };
+  }
+
+  onAuthChange(callback) {
+    try {
+      const savedSession = sessionStorage.getItem('chinni_admin_session') || localStorage.getItem('chinni_admin_session');
+      if (savedSession) {
+        const { user, profile } = JSON.parse(savedSession);
+        if (user) {
+          callback(user, profile || { role: 'ADMIN', fullName: 'Chinni Jewels Owner' });
+        }
+      }
+    } catch(e) {}
+
+    if (this.db && this.db.auth) {
+      this.db.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          const profile = await this.getUserProfile(session.user.id);
+          callback(session.user, profile);
+        }
+      });
+    }
   }
 
   async getUserProfile(userId) {
@@ -328,3 +362,4 @@ class SupabaseDataService {
 }
 
 window.SupabaseService = new SupabaseDataService();
+window.AuthService = window.SupabaseService;
