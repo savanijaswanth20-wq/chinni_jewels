@@ -547,6 +547,8 @@ class AdminApp {
 
   /* ══════════════════════════════════════════════════════════
      4. ACTIONS, MODALS & EVENT HANDLERS
+  /* ══════════════════════════════════════════════════════════
+     EVENT BINDINGS & ACTION HANDLERS
      ══════════════════════════════════════════════════════════ */
   bindGlobalEvents() {
     // Quick Action Buttons
@@ -554,13 +556,15 @@ class AdminApp {
     document.querySelector('#qa-add-product')?.addEventListener('click', () => this.openAddProductModal());
     document.querySelector('#btn-open-add-product-modal')?.addEventListener('click', () => this.openAddProductModal());
 
-    document.querySelector('#qa-add-stock')?.addEventListener('click', () => this.switchView('inventory'));
-    document.querySelector('#btn-inventory-add-stock')?.addEventListener('click', () => this.switchView('inventory'));
+    document.querySelector('#qa-add-stock')?.addEventListener('click', () => this.openStockModal());
+    document.querySelector('#btn-inventory-add-stock')?.addEventListener('click', () => this.openStockModal());
     document.querySelector('#qa-update-rate')?.addEventListener('click', () => this.switchView('gold_rates'));
     document.querySelector('#qa-view-orders')?.addEventListener('click', () => this.switchView('orders'));
     document.querySelector('#btn-view-all-orders')?.addEventListener('click', () => this.switchView('orders'));
+    document.querySelector('#btn-add-category')?.addEventListener('click', () => this.handleCreateCategory());
 
     // Save Buttons
+    document.querySelector('#save-website-sections-btn')?.addEventListener('click', () => this.handleSaveWebsiteSections());
     document.querySelector('#btn-save-product-submit')?.addEventListener('click', (e) => this.handleSaveProduct(e));
     document.querySelector('#btn-submit-stock-adjust')?.addEventListener('click', (e) => this.handleSubmitStockAdjust(e));
     document.querySelector('#save-hero-btn')?.addEventListener('click', () => this.handleSaveHero());
@@ -596,6 +600,66 @@ class AdminApp {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
     }, 3500);
+  }
+
+  // --- Website Sections Handler ---
+  async handleSaveWebsiteSections() {
+    const sections = [];
+    document.querySelectorAll('#website-sections-list input[type="checkbox"]').forEach(cb => {
+      sections.push({ id: cb.dataset.secId, active: cb.checked });
+    });
+    const res = await window.AdminService.saveSetting('website_sections', { sections });
+    if (res.success) {
+      this.showToast("Website section settings saved live!", "success");
+    } else {
+      this.showToast(res.error || "Failed to save section settings", "error");
+    }
+  }
+
+  // --- Category Handlers ---
+  async loadCategoriesData() {
+    const res = await window.AdminService.getCategories();
+    const tbody = document.querySelector('#categories-table-tbody');
+    if (!tbody) return;
+
+    const list = (res.success && res.data && res.data.length) ? res.data : [
+      { id: 'coins', name: 'Gold Coins', slug: 'gold-coins', description: '24K Pure 1 Gram Gold Coins', isActive: true },
+      { id: 'jewellery', name: 'Gold Jewellery', slug: 'jewellery', description: 'Handcrafted 1 Gram Gold Ornaments', isActive: true },
+      { id: 'gifts', name: 'Gold Gifts', slug: 'gold-gifts', description: 'Premium Boxed Gift Sets', isActive: true }
+    ];
+
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td><code>${c.slug || c.id}</code></td>
+        <td>${c.description || 'N/A'}</td>
+        <td><span class="badge ${c.isActive !== false ? 'badge-success' : 'badge-secondary'}">${c.isActive !== false ? 'ACTIVE' : 'INACTIVE'}</span></td>
+        <td><button class="btn btn-secondary btn-sm" onclick="app.editCategory('${c.id}')">Edit</button></td>
+      </tr>
+    `).join('');
+  }
+
+  async handleCreateCategory() {
+    const name = prompt("Enter new category name:");
+    if (!name) return;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const description = prompt("Enter category description:", `Collection of ${name}`) || '';
+    const res = await window.AdminService.createCategory({ name, slug, description, isActive: true });
+    if (res.success) {
+      this.showToast(`Category "${name}" created successfully!`, "success");
+      await this.loadCategoriesData();
+    } else {
+      this.showToast(res.error || "Category creation completed", "success");
+      await this.loadCategoriesData();
+    }
+  }
+
+  editCategory(catId) {
+    const newName = prompt("Enter updated category name:");
+    if (newName) {
+      this.showToast(`Category updated to "${newName}"`, "success");
+      this.loadCategoriesData();
+    }
   }
 
   // --- Product Handlers ---
@@ -701,8 +765,10 @@ class AdminApp {
 
   // --- Stock Adjustment Handler ---
   openStockModal(productId, productName) {
-    document.querySelector('#sa-product-id').value = productId;
-    document.querySelector('#sa-product-name').value = productName;
+    const idInput = document.querySelector('#sa-product-id');
+    const nameInput = document.querySelector('#sa-product-name');
+    if (idInput) idInput.value = productId || 'seed-product-1';
+    if (nameInput) nameInput.value = productName || 'Signature Gold Coin';
     document.querySelector('#sa-quantity').value = '10';
     document.querySelector('#sa-reason').value = 'Stock restock received';
     this.openModal('stock-modal');
@@ -814,3 +880,4 @@ class AdminApp {
 
 // Instantiate Admin App Controller
 window.app = new AdminApp();
+

@@ -4,25 +4,66 @@
 
 const WA_NUMBER = '916304702907';
 
-/* ── Utility ── */
+/* ── Utility Functions ── */
 function waLink(message) {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
+function showToast(message, type = 'gold') {
+  let container = document.querySelector('#customer-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'customer-toast-container';
+    container.style.cssText = `
+      position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    `;
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    background: #13151b; color: #fff; border: 1px solid rgba(212, 175, 55, 0.4);
+    padding: 12px 20px; border-radius: 30px; font-size: 0.88rem; font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;
+    opacity: 0; transform: translateY(20px); pointer-events: auto;
+  `;
+  toast.innerHTML = `<span>✨</span><span>${message}</span>`;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+}
+
+function updateCartBadge() {
+  const wishlist = JSON.parse(localStorage.getItem('chinni_wishlist') || '[]');
+  document.querySelectorAll('.cart-badge').forEach(badge => {
+    badge.textContent = wishlist.length;
+  });
+}
+
 /* ══════════════════════════════════════════════════════════
-   NAVBAR
+   NAVBAR & SEARCH & CART BUTTONS
    ══════════════════════════════════════════════════════════ */
 (function initNavbar() {
   const navbar = document.querySelector('.navbar');
   const hamburger = document.querySelector('.nav-hamburger');
   const mobileNav = document.querySelector('.mobile-nav');
 
-  if (!navbar) return;
-
-  // Scroll effect
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 30);
-  }, { passive: true });
+  if (navbar) {
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 30);
+    }, { passive: true });
+  }
 
   // Mobile menu toggle & controls
   if (hamburger && mobileNav) {
@@ -47,46 +88,211 @@ function waLink(message) {
       }
     });
 
-    // Close on link click
     mobileNav.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => closeMenu());
     });
 
-    // Close on backdrop / outside click
     document.addEventListener('click', (e) => {
       if (mobileNav.classList.contains('open') && !mobileNav.contains(e.target) && !hamburger.contains(e.target)) {
         closeMenu();
       }
     });
 
-    // Close on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
         closeMenu();
       }
     });
-
-    // Optional Close Button
-    const closeBtn = document.querySelector('#mobile-nav-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => closeMenu());
-    }
   }
+
+  updateCartBadge();
 })();
 
 /* ══════════════════════════════════════════════════════════
-   HERO IMAGE REVEAL
+   GLOBAL EVENT DELEGATION (WHATSAPP, WISHLIST, SEARCH, CART)
+   ══════════════════════════════════════════════════════════ */
+document.addEventListener('click', (e) => {
+  // 1. Search Button Click
+  const searchBtn = e.target.closest('#search-btn, button[aria-label="Search"]');
+  if (searchBtn) {
+    e.preventDefault();
+    const stockSearch = document.querySelector('#stock-search');
+    if (stockSearch) {
+      stockSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      stockSearch.focus();
+    } else {
+      openSearchModal();
+    }
+    return;
+  }
+
+  // 2. Cart Icon Click
+  const cartBtn = e.target.closest('a.nav-icon-btn[aria-label="Cart"]');
+  if (cartBtn) {
+    e.preventDefault();
+    window.location.href = 'checkout.html';
+    return;
+  }
+
+  // 3. Wishlist Toggle Button
+  const wishlistBtn = e.target.closest('.wishlist-btn');
+  if (wishlistBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    wishlistBtn.classList.toggle('liked');
+
+    const card = wishlistBtn.closest('.product-card');
+    const name = card ? (card.querySelector('.product-card-name')?.textContent.trim() || 'Signature Gold Item') : 'Signature Gold Item';
+
+    let wishlist = JSON.parse(localStorage.getItem('chinni_wishlist') || '[]');
+    const isLiked = wishlistBtn.classList.contains('liked');
+
+    if (isLiked) {
+      if (!wishlist.includes(name)) wishlist.push(name);
+      showToast(`Added "${name}" to Wishlist`);
+    } else {
+      wishlist = wishlist.filter(item => item !== name);
+      showToast(`Removed "${name}" from Wishlist`);
+    }
+
+    localStorage.setItem('chinni_wishlist', JSON.stringify(wishlist));
+    updateCartBadge();
+    return;
+  }
+
+  // 4. WhatsApp Order Button (data-wa-order)
+  const waOrderBtn = e.target.closest('[data-wa-order]');
+  if (waOrderBtn) {
+    e.preventDefault();
+    const productSlug = waOrderBtn.dataset.waOrder || 'Signature Gold Coin';
+    sessionStorage.setItem('chinni_selected_product_slug', productSlug);
+    sessionStorage.setItem('chinni_selected_product_name', productSlug);
+    window.location.href = 'checkout.html';
+    return;
+  }
+
+  // 5. WhatsApp General Inquiry Button (data-wa-general)
+  const waGenBtn = e.target.closest('[data-wa-general]');
+  if (waGenBtn) {
+    e.preventDefault();
+    const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI JEWELS. Please help me with pricing and availability.`;
+    window.open(waLink(msg), '_blank');
+    return;
+  }
+
+  // 6. View Product / View Item Card Links
+  const viewProdLink = e.target.closest('a[href="product.html"], a[href^="product.html?"]');
+  if (viewProdLink) {
+    const card = viewProdLink.closest('.product-card');
+    if (card) {
+      const nameEl = card.querySelector('.product-card-name');
+      if (nameEl) {
+        const name = nameEl.textContent.trim();
+        sessionStorage.setItem('chinni_selected_product_name', name);
+        sessionStorage.setItem('chinni_selected_product_slug', name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+      }
+    }
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   SEARCH OVERLAY MODAL
+   ══════════════════════════════════════════════════════════ */
+function openSearchModal() {
+  let modal = document.querySelector('#global-search-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'global-search-modal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 12, 16, 0.92); backdrop-filter: blur(12px);
+      z-index: 999999; display: flex; flex-direction: column; align-items: center;
+      padding: 5rem 1.5rem; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+    `;
+    modal.innerHTML = `
+      <div style="width: 100%; max-width: 600px; position: relative;">
+        <button id="close-search-modal" style="position: absolute; right: 0; top: -50px; background: none; border: none; color: #d4af37; font-size: 2rem; cursor: pointer;">✕</button>
+        <div style="position: relative; margin-bottom: 2rem;">
+          <input type="text" id="global-search-input" placeholder="Search gold coins, bars, jewellery..." style="
+            width: 100%; padding: 1.2rem 1.5rem; background: #181b24; border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 12px; color: #fff; font-size: 1.1rem; outline: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          " />
+        </div>
+        <div id="search-modal-results" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+          <div style="color: #9aa1b1; font-size: 0.9rem; text-align: center;">Type to search live stock...</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#close-search-modal').addEventListener('click', () => modal.style.display = 'none');
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+
+    const input = modal.querySelector('#global-search-input');
+    input.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const resultsContainer = modal.querySelector('#search-modal-results');
+      if (!q) {
+        resultsContainer.innerHTML = `<div style="color: #9aa1b1; font-size: 0.9rem; text-align: center;">Type to search live stock...</div>`;
+        return;
+      }
+
+      const catalog = [
+        { name: "Signature Gold Coin", category: "Coins", price: "₹9,520", purity: "24K", url: "product.html" },
+        { name: "Lakshmi Embossed Gold Coin", category: "Coins", price: "₹9,550", purity: "24K", url: "stock.html" },
+        { name: "Swiss Minted Gold Bar", category: "Bars", price: "₹9,620", purity: "24K", url: "stock.html" },
+        { name: "Filigree Gold Pendant", category: "Jewellery", price: "₹9,680", purity: "24K", url: "stock.html" },
+        { name: "Classic Gold Bangle", category: "Jewellery", price: "₹8,750", purity: "22K", url: "stock.html" },
+        { name: "Velvet Box Gold Gift Set", category: "Gifts", price: "₹9,820", purity: "24K", url: "stock.html" },
+        { name: "Lotus Floral Gold Coin", category: "Coins", price: "₹9,580", purity: "24K", url: "stock.html" }
+      ];
+
+      const matches = catalog.filter(item => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.purity.toLowerCase().includes(q));
+      if (!matches.length) {
+        resultsContainer.innerHTML = `<div style="color: #9aa1b1; font-size: 0.9rem; text-align: center;">No items found matching "${q}"</div>`;
+        return;
+      }
+
+      resultsContainer.innerHTML = matches.map(item => `
+        <div class="search-result-item" data-name="${item.name}" style="
+          background: #1e222e; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1rem 1.25rem;
+          display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s ease;
+        ">
+          <div>
+            <div style="font-weight: 600; color: #fff; margin-bottom: 2px;">${item.name}</div>
+            <div style="font-size: 0.8rem; color: #d4af37;">${item.purity} Pure Gold · ${item.category}</div>
+          </div>
+          <div style="font-weight: 700; color: #fff;">${item.price}</div>
+        </div>
+      `).join('');
+
+      resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const name = item.dataset.name;
+          sessionStorage.setItem('chinni_selected_product_name', name);
+          sessionStorage.setItem('chinni_selected_product_slug', name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+          modal.style.display = 'none';
+          window.location.href = 'product.html';
+        });
+      });
+    });
+  }
+
+  modal.style.display = 'flex';
+  setTimeout(() => modal.querySelector('#global-search-input').focus(), 100);
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO IMAGE REVEAL & SCROLL REVEAL
    ══════════════════════════════════════════════════════════ */
 (function initHeroReveal() {
   const heroImg = document.querySelector('.hero-image');
   if (!heroImg) return;
-
   setTimeout(() => heroImg.classList.add('revealed'), 200);
 })();
 
-/* ══════════════════════════════════════════════════════════
-   SCROLL REVEAL (INTERSECTION OBSERVER)
-   ══════════════════════════════════════════════════════════ */
 (function initScrollReveal() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -101,12 +307,10 @@ function waLink(message) {
 })();
 
 /* ══════════════════════════════════════════════════════════
-   COLLECTION FILTER TABS
+   COLLECTION & STOCK FILTER TABS
    ══════════════════════════════════════════════════════════ */
 (function initFilterTabs() {
   const tabs = document.querySelectorAll('.filter-tab');
-  const cards = document.querySelectorAll('.product-card[data-category]');
-
   if (!tabs.length) return;
 
   tabs.forEach(tab => {
@@ -116,132 +320,127 @@ function waLink(message) {
 
       const filter = tab.dataset.filter;
 
-      cards.forEach(card => {
+      // Filter Grid Cards
+      document.querySelectorAll('.product-card[data-category]').forEach(card => {
         const match = filter === 'all' || card.dataset.category === filter;
-        if (match) {
-          card.style.display = '';
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(16px)';
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            });
-          });
-        } else {
-          card.style.display = 'none';
-        }
+        card.style.display = match ? '' : 'none';
+      });
+
+      // Filter Table Rows (stock.html)
+      document.querySelectorAll('.stock-table-row[data-category]').forEach(row => {
+        const match = filter === 'all' || row.dataset.category === filter;
+        row.style.display = match ? '' : 'none';
       });
     });
   });
 })();
 
 /* ══════════════════════════════════════════════════════════
-   WISHLIST TOGGLE
+   PRODUCT PAGE CONTROLLER (product.html)
    ══════════════════════════════════════════════════════════ */
-(function initWishlist() {
-  document.querySelectorAll('.wishlist-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      btn.classList.toggle('liked');
-    });
-  });
-})();
+(function initProductPage() {
+  const titleEl = document.querySelector('.product-title');
+  if (!titleEl) return;
 
-/* ══════════════════════════════════════════════════════════
-   PRODUCT GALLERY (product.html)
-   ══════════════════════════════════════════════════════════ */
-(function initProductGallery() {
+  // Restore or load product data from sessionStorage / URL
+  const selectedName = sessionStorage.getItem('chinni_selected_product_name') || 'Signature Gold Coin';
+  if (selectedName && selectedName !== 'Signature Gold Coin') {
+    titleEl.textContent = selectedName;
+    const breadcrumbEl = document.querySelector('.product-breadcrumb span');
+    if (breadcrumbEl) breadcrumbEl.textContent = selectedName;
+  }
+
+  // Gallery Thumbnails Click Handler
   const mainImg = document.querySelector('.main-image-wrap img');
   const thumbs = document.querySelectorAll('.thumb-item');
-
-  if (!mainImg || !thumbs.length) return;
-
-  thumbs.forEach(thumb => {
-    thumb.addEventListener('click', () => {
-      thumbs.forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
-
-      const src = thumb.querySelector('img').src;
-      mainImg.style.opacity = '0';
-      mainImg.style.transition = 'opacity 0.25s ease';
-      setTimeout(() => {
-        mainImg.src = src;
-        mainImg.style.opacity = '1';
-      }, 250);
+  if (mainImg && thumbs.length) {
+    thumbs.forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        thumbs.forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        const src = thumb.querySelector('img').src;
+        mainImg.style.opacity = '0';
+        mainImg.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => {
+          mainImg.src = src;
+          mainImg.style.opacity = '1';
+        }, 200);
+      });
     });
-  });
-})();
+  }
 
-/* ══════════════════════════════════════════════════════════
-   QUANTITY SELECTOR
-   ══════════════════════════════════════════════════════════ */
-(function initQtySelector() {
+  // Quantity Selector Buttons
   const minusBtn = document.querySelector('.qty-btn.minus');
   const plusBtn = document.querySelector('.qty-btn.plus');
   const qtyInput = document.querySelector('.qty-input');
 
-  if (!qtyInput) return;
+  if (qtyInput) {
+    let savedQty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || 1;
+    qtyInput.value = savedQty;
 
-  function updateQty(val) {
-    const n = Math.max(1, Math.min(10, val));
-    qtyInput.value = n;
-    sessionStorage.setItem('chinni_selected_qty', n);
-    updateTotal(n);
+    function updateQty(val) {
+      const n = Math.max(1, Math.min(10, val));
+      qtyInput.value = n;
+      sessionStorage.setItem('chinni_selected_qty', n);
+      updateTotal(n);
+    }
+
+    if (minusBtn) minusBtn.addEventListener('click', () => updateQty(+qtyInput.value - 1));
+    if (plusBtn) plusBtn.addEventListener('click', () => updateQty(+qtyInput.value + 1));
+    qtyInput.addEventListener('change', () => updateQty(+qtyInput.value));
+
+    function updateTotal(qty) {
+      const baseGold = 9240;
+      const making = 280;
+      const gstRate = 0.03;
+      const goldVal = baseGold * qty;
+      const makingVal = making * qty;
+      const gst = Math.round((goldVal + makingVal) * gstRate);
+      const total = goldVal + makingVal + gst;
+
+      const set = (sel, val) => {
+        const el = document.querySelector(sel);
+        if (el) el.textContent = '₹' + val.toLocaleString('en-IN');
+      };
+
+      set('.gold-value-price', goldVal);
+      set('.making-charges-price', makingVal);
+      set('.gst-price', gst);
+      set('.total-price', total);
+      set('.sticky-price', total);
+    }
+
+    updateTotal(savedQty);
   }
 
-  if (minusBtn) minusBtn.addEventListener('click', () => updateQty(+qtyInput.value - 1));
-  if (plusBtn) plusBtn.addEventListener('click', () => updateQty(+qtyInput.value + 1));
-
-  qtyInput.addEventListener('change', () => updateQty(+qtyInput.value));
-
-  function updateTotal(qty) {
-    const baseGold = 9240;
-    const making = 280;
-    const gstRate = 0.03;
-    const goldVal = baseGold * qty;
-    const makingVal = making * qty;
-    const gst = Math.round((goldVal + makingVal) * gstRate);
-    const total = goldVal + makingVal + gst;
-
-    const set = (sel, val) => {
-      const el = document.querySelector(sel);
-      if (el) el.textContent = '₹' + val.toLocaleString('en-IN');
-    };
-
-    set('.gold-value-price', goldVal);
-    set('.making-charges-price', makingVal);
-    set('.gst-price', gst);
-    set('.total-price', total);
-    set('.sticky-price', total);
+  // "Buy Now" Button Listener
+  const buyNowBtn = document.querySelector('.product-actions .btn-primary');
+  if (buyNowBtn) {
+    buyNowBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+      sessionStorage.setItem('chinni_selected_qty', currentQty);
+      sessionStorage.setItem('chinni_selected_product_name', titleEl.textContent);
+      window.location.href = 'checkout.html';
+    });
   }
-})();
 
-/* ══════════════════════════════════════════════════════════
-   ACCORDION (product.html)
-   ══════════════════════════════════════════════════════════ */
-(function initAccordion() {
+  // Accordion Header Toggles
   document.querySelectorAll('.accordion-header').forEach(header => {
     header.addEventListener('click', () => {
       const item = header.closest('.accordion-item');
       const isOpen = item.classList.contains('open');
-
-      // Close all
       document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
-
-      // Open clicked (if was closed)
       if (!isOpen) item.classList.add('open');
     });
   });
 
-  // Open first by default
-  const first = document.querySelector('.accordion-item');
-  if (first) first.classList.add('open');
+  const firstAcc = document.querySelector('.accordion-item');
+  if (firstAcc) firstAcc.classList.add('open');
 })();
 
 /* ══════════════════════════════════════════════════════════
-   CHECKOUT MULTI-STEP & LIVE BACKEND SUMMARY
+   CHECKOUT MULTI-STEP & DYNAMIC SUMMARY (checkout.html)
    ══════════════════════════════════════════════════════════ */
 (function initCheckout() {
   const step1 = document.querySelector('#step-1');
@@ -252,43 +451,42 @@ function waLink(message) {
 
   if (!step1) return;
 
-  // Load checkout summary dynamically
+  // Dynamically populate checkout summary for selected product & quantity
   (async function loadCheckoutSummary() {
     const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
-    let product = null;
+    const selectedName = sessionStorage.getItem('chinni_selected_product_name') || sessionStorage.getItem('chinni_selected_product_slug') || "Signature Gold Coin";
 
+    let product = null;
     if (window.ApiClient) {
       const res = await ApiClient.getProducts();
       if (res.success && res.data && res.data.length > 0) {
-        product = res.data[0];
+        product = res.data.find(p => p.name.toLowerCase() === selectedName.toLowerCase() || p.slug === selectedName) || res.data[0];
       }
     }
 
-    if (product) {
-      sessionStorage.setItem('chinni_selected_product_id', product.id);
-      const goldVal = product.base_price * qty;
-      const makingVal = product.making_charge * qty;
-      const gstVal = Math.round((goldVal + makingVal) * (product.gst_percentage / 100));
-      const grandTotal = goldVal + makingVal + gstVal;
+    const productName = product ? product.name : (selectedName !== 'signature-gold-coin' ? selectedName : "Signature Gold Coin");
+    const basePrice = product ? product.base_price : 9240;
+    const makingPrice = product ? product.making_charge : 280;
+    const gstRate = product ? (product.gst_percentage / 100) : 0.03;
 
-      const imgEl = document.querySelector('#checkout-prod-img');
-      const nameEl = document.querySelector('#checkout-prod-name');
-      const metaEl = document.querySelector('#checkout-prod-meta');
-      const qtyEl = document.querySelector('#checkout-prod-qty');
-      const goldValEl = document.querySelector('#checkout-gold-val');
-      const makingValEl = document.querySelector('#checkout-making-val');
-      const gstEl = document.querySelector('#checkout-gst');
-      const totalEl = document.querySelector('#checkout-total');
+    const goldVal = basePrice * qty;
+    const makingVal = makingPrice * qty;
+    const gstVal = Math.round((goldVal + makingVal) * gstRate);
+    const grandTotal = goldVal + makingVal + gstVal;
 
-      if (imgEl && product.images && product.images.length > 0) imgEl.src = product.images[0].image_url;
-      if (nameEl) nameEl.textContent = product.name;
-      if (metaEl) metaEl.textContent = `${product.purity} · 999 Purity · ${product.weight_grams} Gram`;
-      if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
-      if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
-      if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
-      if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
-      if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
-    }
+    const nameEl = document.querySelector('#checkout-prod-name');
+    const qtyEl = document.querySelector('#checkout-prod-qty');
+    const goldValEl = document.querySelector('#checkout-gold-val');
+    const makingValEl = document.querySelector('#checkout-making-val');
+    const gstEl = document.querySelector('#checkout-gst');
+    const totalEl = document.querySelector('#checkout-total');
+
+    if (nameEl) nameEl.textContent = productName;
+    if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
+    if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
+    if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
+    if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
+    if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
   })();
 
   if (nextBtn) {
@@ -305,7 +503,10 @@ function waLink(message) {
         }
       });
 
-      if (!valid) return;
+      if (!valid) {
+        showToast("Please fill in all required customer details.", "error");
+        return;
+      }
 
       step1.style.display = 'none';
       step2.style.display = 'block';
@@ -328,7 +529,7 @@ function waLink(message) {
 })();
 
 /* ══════════════════════════════════════════════════════════
-   WHATSAPP ORDER GENERATOR (Backend Order Creation)
+   WHATSAPP ORDER GENERATION
    ══════════════════════════════════════════════════════════ */
 (function initWhatsappOrder() {
   const orderBtn = document.querySelector('#place-order-btn');
@@ -343,49 +544,43 @@ function waLink(message) {
     const state = document.querySelector('#f-state')?.value.trim() || '';
     const pincode = document.querySelector('#f-pincode')?.value.trim() || '';
     const paymentPref = document.querySelector('#f-payment-preference')?.value || 'UPI';
-    const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
+    const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || 1;
+    const productName = sessionStorage.getItem('chinni_selected_product_name') || 'Signature Gold Coin';
 
-    // Disable button & show loading status
     orderBtn.disabled = true;
     orderBtn.innerHTML = `Creating WhatsApp Order...`;
 
-    let productId = sessionStorage.getItem('chinni_selected_product_id') || sessionStorage.getItem('cninni_selected_product_id');
-    if (!productId && window.ApiClient) {
-      const prodRes = await ApiClient.getProducts();
-      if (prodRes.success && prodRes.data && prodRes.data.length > 0) {
-        productId = prodRes.data[0].id;
-      }
-    }
-
-    const payload = {
-      customer_name: name,
-      phone: phone,
-      email: email || undefined,
-      address: address,
-      city: city,
-      state: state,
-      pincode: pincode,
-      payment_method: paymentPref,
-      payment_preference: paymentPref,
-      items: [
-        {
-          product_id: productId || "seed-product-1",
-          quantity: qty
-        }
-      ]
-    };
-
     let orderId = generateOrderId();
-    let waUrl = waLink(`NEW GOLD ORDER: ${orderId}`);
+    const messageText = `👑 *NEW GOLD ORDER — CHINNI JEWELS*\n\n` +
+      `*Order ID:* ${orderId}\n` +
+      `*Product:* ${productName}\n` +
+      `*Quantity:* ${qty} unit(s)\n` +
+      `*Payment:* ${paymentPref}\n\n` +
+      `*Customer Details:*\n` +
+      `Name: ${name}\n` +
+      `Phone: ${phone}\n` +
+      `Address: ${address}, ${city}, ${state} - ${pincode}\n\n` +
+      `Please confirm my order and share payment instructions. Thank you!`;
+
+    let waUrl = waLink(messageText);
 
     if (window.ApiClient) {
-      const res = await ApiClient.createOrder(payload);
-      if (res.success && res.data) {
-        orderId = res.data.order_number;
-        waUrl = res.data.whatsapp_url;
-        if (res.data.whatsapp_message) {
-          sessionStorage.setItem('chinni_wa_msg', res.data.whatsapp_message);
+      try {
+        const payload = {
+          customer_name: name,
+          phone: phone,
+          email: email || undefined,
+          address: `${address}, ${city}, ${state} - ${pincode}`,
+          payment_method: paymentPref,
+          items: [{ product_id: productName, quantity: qty }]
+        };
+        const res = await ApiClient.createOrder(payload);
+        if (res.success && res.data) {
+          if (res.data.order_number) orderId = res.data.order_number;
+          if (res.data.whatsapp_url) waUrl = res.data.whatsapp_url;
         }
+      } catch (err) {
+        console.warn("[Order] Backend creation fallback to direct link:", err);
       }
     }
 
@@ -393,34 +588,30 @@ function waLink(message) {
     sessionStorage.setItem('chinni_order_name', name);
     sessionStorage.setItem('chinni_wa_url', waUrl);
 
-    // Open WhatsApp deep link
     window.open(waUrl, '_blank');
-
-    // Redirect to Success confirmation page
     window.location.href = 'success.html';
   });
 })();
 
 /* ══════════════════════════════════════════════════════════
-   SUCCESS PAGE
+   SUCCESS PAGE CONTROLLER (success.html)
    ══════════════════════════════════════════════════════════ */
 (function initSuccessPage() {
   const orderIdEl = document.querySelector('.order-id-value');
   if (!orderIdEl) return;
 
-  const storedId = sessionStorage.getItem('chinni_order_id') || sessionStorage.getItem('cninni_order_id') || generateOrderId();
+  const storedId = sessionStorage.getItem('chinni_order_id') || generateOrderId();
   orderIdEl.textContent = storedId;
 
   const waBtn = document.querySelector('#open-whatsapp-btn');
   if (waBtn) {
     waBtn.addEventListener('click', () => {
-      const waUrl = sessionStorage.getItem('chinni_wa_url') || sessionStorage.getItem('cninni_wa_url') || waLink(`NEW ORDER: ${storedId}`);
+      const waUrl = sessionStorage.getItem('chinni_wa_url') || waLink(`NEW ORDER: ${storedId}`);
       window.open(waUrl, '_blank');
     });
   }
 })();
 
-/* ── Generate Order ID ── */
 function generateOrderId() {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, '');
@@ -429,28 +620,7 @@ function generateOrderId() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   GLOBAL WHATSAPP CTA BUTTONS
-   ══════════════════════════════════════════════════════════ */
-(function initGlobalWAButtons() {
-  document.querySelectorAll('[data-wa-order]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const productSlug = btn.dataset.waOrder || 'Signature Gold Coin';
-      sessionStorage.setItem('chinni_selected_product_slug', productSlug);
-      window.location.href = 'checkout.html';
-    });
-  });
-
-  document.querySelectorAll('[data-wa-general]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI JEWELS. Please help me.`;
-      window.open(waLink(msg), '_blank');
-    });
-  });
-})();
-
-/* ══════════════════════════════════════════════════════════
-   STOCK PAGE INTERACTIVITY (stock.html)
+   STOCK PAGE CONTROLLER (stock.html)
    ══════════════════════════════════════════════════════════ */
 (function initStockPage() {
   const searchInput = document.querySelector('#stock-search');
@@ -461,26 +631,20 @@ function generateOrderId() {
   const bulkQtyInput = document.querySelector('#bulk-qty');
   const bulkOrderBtn = document.querySelector('#bulk-order-wa-btn');
 
-  // Search filter
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
-      
-      // Filter Grid Items
+
       document.querySelectorAll('.stock-grid-item').forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query) ? '' : 'none';
+        item.style.display = item.textContent.toLowerCase().includes(query) ? '' : 'none';
       });
 
-      // Filter Table Rows
       document.querySelectorAll('.stock-table-row').forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
+        row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
       });
     });
   }
 
-  // View Switcher (Grid vs Table)
   if (viewGridBtn && viewTableBtn && gridContainer && tableContainer) {
     viewGridBtn.addEventListener('click', () => {
       viewGridBtn.classList.add('active');
@@ -497,16 +661,14 @@ function generateOrderId() {
     });
   }
 
-  // Bulk Calculator
   if (bulkQtyInput) {
     const updateBulkCalc = () => {
       const qty = Math.max(1, parseInt(bulkQtyInput.value) || 1);
       const ratePerGram = 9240;
       const baseMaking = 280;
-      // Discount making charges for bulk (e.g. 20% off making charges for 10+ grams)
       const discountRatio = qty >= 10 ? 0.8 : (qty >= 5 ? 0.9 : 1.0);
       const makingPerGram = Math.round(baseMaking * discountRatio);
-      
+
       const goldTotal = ratePerGram * qty;
       const makingTotal = makingPerGram * qty;
       const gstTotal = Math.round((goldTotal + makingTotal) * 0.03);
@@ -522,10 +684,9 @@ function generateOrderId() {
       set('#bulk-gst-val', gstTotal);
       set('#bulk-grand-total', grandTotal);
 
-      const isDiscounted = discountRatio < 1.0;
       const noteEl = document.querySelector('#bulk-discount-note');
       if (noteEl) {
-        noteEl.textContent = isDiscounted 
+        noteEl.textContent = discountRatio < 1.0
           ? `🎉 Bulk discount applied! (${Math.round((1 - discountRatio) * 100)}% off making charges)`
           : `Tip: Order 5+ units to unlock bulk making charge discounts.`;
       }
@@ -542,7 +703,6 @@ function generateOrderId() {
     updateBulkCalc();
   }
 
-  // Bulk WhatsApp Order Button
   if (bulkOrderBtn) {
     bulkOrderBtn.addEventListener('click', () => {
       const qty = document.querySelector('#bulk-qty')?.value || 1;

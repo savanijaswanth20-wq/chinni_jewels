@@ -610,6 +610,40 @@ class AdminDataService {
       return { success: false, error: err.message };
     }
   }
+
+  /**
+   * 12. CATEGORY MANAGEMENT
+   */
+  async getCategories() {
+    try {
+      if (!this.db) return { success: true, data: [] };
+      const snap = await this.db.collection("categories").get();
+      const list = [];
+      snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+      return { success: true, data: list };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  async createCategory(catData) {
+    try {
+      if (!this.db) return { success: true, id: catData.slug };
+      const docRef = this.db.collection("categories").doc(catData.slug || catData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+      await docRef.set({
+        name: catData.name,
+        slug: catData.slug,
+        description: catData.description || '',
+        isActive: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      await this.logAudit("CREATE_CATEGORY", "CATEGORY", docRef.id, null, catData);
+      return { success: true, id: docRef.id };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
 }
 
 window.AdminService = new AdminDataService();
+
