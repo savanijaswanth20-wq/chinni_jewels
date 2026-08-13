@@ -343,15 +343,15 @@ class AdminApp {
 
     tbody.innerHTML = res.data.map(p => `
       <tr>
-        <td><img src="${p.imageUrl || 'assets/hero_gold_coin.png'}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);" /></td>
-        <td><strong>${p.name}</strong></td>
-        <td><code>${p.sku || 'N/A'}</code></td>
-        <td>${p.weightGrams || 1.0} g</td>
-        <td>${p.purity || '24K'}</td>
-        <td>₹${p.makingCharge || 280}</td>
-        <td><strong>${p.stockQuantity || 0}</strong></td>
-        <td><span class="badge ${p.isActive !== false ? 'badge-success' : 'badge-secondary'}">${p.isActive !== false ? 'ACTIVE' : 'INACTIVE'}</span></td>
-        <td>
+        <td data-label="Image"><img src="${p.imageUrl || 'assets/hero_gold_coin.png'}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);" /></td>
+        <td data-label="Product Name"><strong>${p.name}</strong></td>
+        <td data-label="SKU"><code>${p.sku || 'N/A'}</code></td>
+        <td data-label="Weight">${p.weightGrams || 1.0} g</td>
+        <td data-label="Purity">${p.purity || '24K'}</td>
+        <td data-label="Making Charge">₹${p.makingCharge || 280}</td>
+        <td data-label="Stock"><strong>${p.stockQuantity || 0}</strong></td>
+        <td data-label="Status"><span class="badge ${p.isActive !== false ? 'badge-success' : 'badge-secondary'}">${p.isActive !== false ? 'ACTIVE' : 'INACTIVE'}</span></td>
+        <td data-label="Action">
           <button class="btn btn-secondary btn-sm" onclick="app.editProduct('${p.id}')">Edit</button>
           <button class="btn ${p.isActive !== false ? 'btn-danger' : 'btn-primary'} btn-sm" onclick="app.toggleProduct('${p.id}', ${!(p.isActive !== false)})">${p.isActive !== false ? 'Deactivate' : 'Activate'}</button>
         </td>
@@ -400,13 +400,13 @@ class AdminApp {
 
     tbody.innerHTML = res.data.map(i => `
       <tr>
-        <td><strong>${i.name}</strong></td>
-        <td><code>${i.sku}</code></td>
-        <td><strong style="font-size: 1.1rem; color: #fff;">${i.availableQuantity}</strong></td>
-        <td>${i.reservedQuantity}</td>
-        <td>${i.soldQuantity}</td>
-        <td><span class="badge ${i.status === 'IN_STOCK' ? 'badge-success' : (i.status === 'LOW_STOCK' ? 'badge-warning' : 'badge-danger')}">${i.status.replace(/_/g, ' ')}</span></td>
-        <td>
+        <td data-label="Product"><strong>${i.name}</strong></td>
+        <td data-label="SKU"><code>${i.sku}</code></td>
+        <td data-label="Available Stock"><strong style="font-size: 1.1rem; color: #fff;">${i.availableQuantity}</strong></td>
+        <td data-label="Reserved">${i.reservedQuantity}</td>
+        <td data-label="Sold">${i.soldQuantity}</td>
+        <td data-label="Status"><span class="badge ${i.status === 'IN_STOCK' ? 'badge-success' : (i.status === 'LOW_STOCK' ? 'badge-warning' : 'badge-danger')}">${i.status.replace(/_/g, ' ')}</span></td>
+        <td data-label="Action">
           <button class="btn btn-primary btn-sm" onclick="app.openStockModal('${i.productId}', '${i.name.replace(/'/g, "\\'")}')">+ Adjust Stock</button>
         </td>
       </tr>
@@ -425,14 +425,14 @@ class AdminApp {
 
     tbody.innerHTML = res.data.map(o => `
       <tr>
-        <td><strong>${o.orderNumber || o.id}</strong></td>
-        <td>${o.customerName || 'Customer'}</td>
-        <td>${o.phone || 'N/A'}</td>
-        <td>₹${(o.totalAmount || 0).toLocaleString('en-IN')}</td>
-        <td><span class="badge badge-info">${o.paymentMethod || 'UPI'}</span></td>
-        <td><span class="badge ${o.orderStatus === 'CONFIRMED' ? 'badge-success' : (o.orderStatus === 'CANCELLED' ? 'badge-danger' : 'badge-warning')}">${o.orderStatus || 'PENDING'}</span></td>
-        <td>${o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-IN') : 'Today'}</td>
-        <td>
+        <td data-label="Order ID"><strong>${o.orderNumber || o.id}</strong></td>
+        <td data-label="Customer">${o.customerName || 'Customer'}</td>
+        <td data-label="Phone">${o.phone || 'N/A'}</td>
+        <td data-label="Total">₹${(o.totalAmount || 0).toLocaleString('en-IN')}</td>
+        <td data-label="Payment"><span class="badge badge-info">${o.paymentMethod || 'UPI'}</span></td>
+        <td data-label="Status"><span class="badge ${o.orderStatus === 'CONFIRMED' ? 'badge-success' : (o.orderStatus === 'CANCELLED' ? 'badge-danger' : 'badge-warning')}">${o.orderStatus || 'PENDING'}</span></td>
+        <td data-label="Date">${o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-IN') : 'Today'}</td>
+        <td data-label="Action">
           <button class="btn btn-secondary btn-sm" onclick="app.updateStatusPrompt('${o.id}', '${o.orderStatus}')">Change Status</button>
         </td>
       </tr>
@@ -450,11 +450,11 @@ class AdminApp {
 
     tbody.innerHTML = res.data.map(c => `
       <tr>
-        <td><strong>${c.fullName || c.name || 'Customer'}</strong></td>
-        <td>${c.email || 'N/A'}</td>
-        <td>${c.phone || 'N/A'}</td>
-        <td><span class="badge badge-secondary">${c.role || 'CUSTOMER'}</span></td>
-        <td><span class="badge badge-success">ACTIVE</span></td>
+        <td data-label="Customer Name"><strong>${c.fullName || c.name || 'Customer'}</strong></td>
+        <td data-label="Email">${c.email || 'N/A'}</td>
+        <td data-label="Phone">${c.phone || 'N/A'}</td>
+        <td data-label="Role"><span class="badge badge-secondary">${c.role || 'CUSTOMER'}</span></td>
+        <td data-label="Status"><span class="badge badge-success">ACTIVE</span></td>
       </tr>
     `).join('');
   }
@@ -529,10 +529,10 @@ class AdminApp {
 
     tbody.innerHTML = res.data.map(u => `
       <tr>
-        <td><strong>${u.fullName || 'User'}</strong></td>
-        <td>${u.email}</td>
-        <td><span class="badge ${u.role === 'ADMIN' ? 'badge-success' : 'badge-info'}">${u.role || 'STAFF'}</span></td>
-        <td>
+        <td data-label="User Name"><strong>${u.fullName || 'User'}</strong></td>
+        <td data-label="Email">${u.email}</td>
+        <td data-label="Role"><span class="badge ${u.role === 'ADMIN' ? 'badge-success' : 'badge-info'}">${u.role || 'STAFF'}</span></td>
+        <td data-label="Action">
           <button class="btn btn-secondary btn-sm" onclick="app.changeRolePrompt('${u.id}', '${u.role}')">Change Role</button>
         </td>
       </tr>
@@ -596,6 +596,27 @@ class AdminApp {
 
     // Order status filter dropdown
     document.querySelector('#order-status-filter')?.addEventListener('change', () => this.loadOrdersData());
+
+    // Admin Mobile Sidebar Drawer Toggle
+    const mobileToggle = document.querySelector('#mobile-toggle-btn');
+    const sidebar = document.querySelector('.admin-sidebar');
+    const backdrop = document.querySelector('.sidebar-backdrop');
+
+    if (mobileToggle && sidebar) {
+      const toggleFn = () => {
+        sidebar.classList.toggle('open');
+        if (backdrop) backdrop.classList.toggle('active');
+      };
+      mobileToggle.addEventListener('click', toggleFn);
+      backdrop?.addEventListener('click', toggleFn);
+
+      document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          backdrop?.classList.remove('active');
+        });
+      });
+    }
 
     // File Input Listeners & Previews
     document.querySelector('#hero-image-input')?.addEventListener('change', (e) => {
