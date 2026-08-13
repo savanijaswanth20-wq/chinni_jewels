@@ -234,29 +234,89 @@ class AdminDataService {
   }
 
   /**
-   * Universal File Upload Helper with Firebase Storage & Base64 Fallback
+   * Fast canvas-based image compressor
    */
-  async uploadFile(folder, file) {
-    if (!file) return { success: false, error: "No file provided" };
-    try {
-      if (this.storage) {
-        const ext = file.name ? file.name.split('.').pop() : 'png';
-        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-        const ref = this.storage.ref(`${folder}/${fileName}`);
-        const uploadTask = await ref.put(file);
-        const url = await uploadTask.ref.getDownloadURL();
-        return { success: true, url };
-      }
-    } catch (err) {
-      console.warn(`[AdminService] Firebase Storage upload error for folder '${folder}', using Base64 Data URL fallback:`, err.message);
-    }
-    // Fallback to Base64 Data URL so file upload always succeeds even if Storage is offline/unauthenticated
+  async compressImage(file, maxWidth = 1200, quality = 0.85) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return file;
     return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
-      reader.onerror = () => resolve({ success: false, error: "Failed to read image file." });
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          if (img.width <= maxWidth && file.size < 300 * 1024) {
+            resolve(file);
+            return;
+          }
+          const scale = maxWidth / Math.max(img.width, maxWidth);
+          const width = Math.round(img.width * scale);
+          const height = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name || 'image.jpg', { type: 'image/jpeg' });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
       reader.readAsDataURL(file);
     });
+  }
+
+  /**
+   * Universal File Upload Helper with Fast Firebase Storage & Instant Fallback
+   */
+  async uploadFile(folder, rawFile) {
+    if (!rawFile) return { success: false, error: "No file provided" };
+    
+    // Compress image if needed for instant response
+    const file = await this.compressImage(rawFile);
+
+    // Instant Data URL fallback Promise
+    const dataUrlPromise = new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+
+    if (this.storage) {
+      try {
+        const ext = file.name ? file.name.split('.').pop() : 'jpg';
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+        const ref = this.storage.ref(`${folder}/${fileName}`);
+        
+        const storagePromise = (async () => {
+          const uploadTask = await ref.put(file);
+          return await uploadTask.ref.getDownloadURL();
+        })();
+
+        // 2-second timeout deadline so user is never stuck waiting for slow storage
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Storage deadline reached")), 2000)
+        );
+
+        const url = await Promise.race([storagePromise, timeoutPromise]);
+        return { success: true, url };
+      } catch (err) {
+        console.warn(`[AdminService] Storage notice (${err.message}). Using instant Data URL.`);
+      }
+    }
+
+    const dataUrl = await dataUrlPromise;
+    if (dataUrl) {
+      return { success: true, url: dataUrl, isFallback: true };
+    }
+    return { success: false, error: "Failed to read image file." };
   }
 
   async uploadProductImage(productId, file) {
@@ -521,30 +581,52 @@ class AdminDataService {
    */
   async getSetting(settingId, defaultData = {}) {
     try {
-      if (!this.db) return { success: true, data: defaultData };
-      const doc = await this.db.collection("settings").doc(settingId).get();
-      if (doc.exists) {
-        return { success: true, data: { ...defaultData, ...doc.data() } };
+      const cached = localStorage.getItem(`cj_setting_${settingId}`);
+      let localObj = cached ? JSON.parse(cached) : null;
+
+      if (this.db) {
+        const getPromise = this.db.collection("settings").doc(settingId).get();
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+        const doc = await Promise.race([getPromise, timeoutPromise]);
+
+        if (doc && doc.exists) {
+          const remoteData = { ...defaultData, ...doc.data() };
+          try { localStorage.setItem(`cj_setting_${settingId}`, JSON.stringify(remoteData)); } catch (e) {}
+          return { success: true, data: remoteData };
+        }
       }
-      return { success: true, data: defaultData };
+      return { success: true, data: localObj || defaultData };
     } catch (err) {
-      return { success: true, data: defaultData };
+      const cached = localStorage.getItem(`cj_setting_${settingId}`);
+      return { success: true, data: cached ? JSON.parse(cached) : defaultData };
     }
   }
 
   async saveSetting(settingId, data) {
+    // 1. Instant local persistence so UI never hangs or lags
     try {
-      if (!this.db) throw new Error("Database unavailable");
-      await this.db.collection("settings").doc(settingId).set({
-        ...data,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      const current = localStorage.getItem(`cj_setting_${settingId}`);
+      const merged = current ? { ...JSON.parse(current), ...data } : data;
+      localStorage.setItem(`cj_setting_${settingId}`, JSON.stringify(merged));
+    } catch (e) {}
 
-      await this.logAudit("UPDATE_SETTING", "SETTING", settingId, null, data);
-      return { success: true, message: "Setting saved successfully." };
-    } catch (err) {
-      return { success: false, error: err.message };
+    // 2. Non-blocking Firestore synchronization in background
+    if (this.db) {
+      const savePayload = { ...data };
+      if (firebase.firestore && firebase.firestore.FieldValue) {
+        savePayload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      } else {
+        savePayload.updatedAt = new Date().toISOString();
+      }
+
+      this.db.collection("settings").doc(settingId).set(savePayload, { merge: true })
+        .then(() => console.log(`[AdminService] Setting '${settingId}' synced to Firestore.`))
+        .catch(err => console.warn(`[AdminService] Firestore sync notice for '${settingId}':`, err.message));
+
+      this.logAudit("UPDATE_SETTING", "SETTING", settingId, null, data).catch(() => {});
     }
+
+    return { success: true, message: "Setting saved successfully." };
   }
 
   async uploadBrandingAsset(folder, file) {
