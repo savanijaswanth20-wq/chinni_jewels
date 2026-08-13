@@ -239,24 +239,33 @@ function openSearchModal() {
         return;
       }
 
-      const catalog = [
-        { name: "Signature Gold Coin", category: "Coins", price: "₹9,520", purity: "24K", url: "product.html" },
-        { name: "Lakshmi Embossed Gold Coin", category: "Coins", price: "₹9,550", purity: "24K", url: "stock.html" },
-        { name: "Swiss Minted Gold Bar", category: "Bars", price: "₹9,620", purity: "24K", url: "stock.html" },
-        { name: "Filigree Gold Pendant", category: "Jewellery", price: "₹9,680", purity: "24K", url: "stock.html" },
-        { name: "Classic Gold Bangle", category: "Jewellery", price: "₹8,750", purity: "22K", url: "stock.html" },
-        { name: "Velvet Box Gold Gift Set", category: "Gifts", price: "₹9,820", purity: "24K", url: "stock.html" },
-        { name: "Lotus Floral Gold Coin", category: "Coins", price: "₹9,580", purity: "24K", url: "stock.html" }
+      const liveProducts = window.allFirestoreProducts || [];
+      const defaultCatalog = [
+        { name: "Signature Gold Coin", category: "Coins", price: "₹9,520", purity: "24K", id: "sig-gold-coin" },
+        { name: "Lakshmi Embossed Gold Coin", category: "Coins", price: "₹9,550", purity: "24K", id: "lakshmi-gold-coin" },
+        { name: "Swiss Minted Gold Bar", category: "Bars", price: "₹9,620", purity: "24K", id: "swiss-gold-bar" },
+        { name: "Filigree Gold Pendant", category: "Jewellery", price: "₹9,680", purity: "24K", id: "filigree-pendant" },
+        { name: "Classic Gold Bangle", category: "Jewellery", price: "₹8,750", purity: "22K", id: "classic-bangle" },
+        { name: "Velvet Box Gold Gift Set", category: "Gifts", price: "₹9,820", purity: "24K", id: "velvet-gift-set" },
+        { name: "Lotus Floral Gold Coin", category: "Coins", price: "₹9,580", purity: "24K", id: "lotus-gold-coin" }
       ];
 
-      const matches = catalog.filter(item => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.purity.toLowerCase().includes(q));
+      const itemsToSearch = liveProducts.length ? liveProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        category: p.categoryName || p.purity || 'Coins',
+        price: '₹' + calculateProductPrice(p).toLocaleString('en-IN'),
+        purity: p.purity || '24K'
+      })) : defaultCatalog;
+
+      const matches = itemsToSearch.filter(item => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.purity.toLowerCase().includes(q));
       if (!matches.length) {
         resultsContainer.innerHTML = `<div style="color: #9aa1b1; font-size: 0.9rem; text-align: center;">No items found matching "${q}"</div>`;
         return;
       }
 
       resultsContainer.innerHTML = matches.map(item => `
-        <div class="search-result-item" data-name="${item.name}" style="
+        <div class="search-result-item" data-id="${item.id || ''}" data-name="${item.name}" style="
           background: #1e222e; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1rem 1.25rem;
           display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s ease;
         ">
@@ -271,6 +280,8 @@ function openSearchModal() {
       resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
         item.addEventListener('click', () => {
           const name = item.dataset.name;
+          const id = item.dataset.id;
+          if (id) sessionStorage.setItem('chinni_selected_product_id', id);
           sessionStorage.setItem('chinni_selected_product_name', name);
           sessionStorage.setItem('chinni_selected_product_slug', name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
           modal.style.display = 'none';
@@ -390,13 +401,12 @@ function openSearchModal() {
     qtyInput.addEventListener('change', () => updateQty(+qtyInput.value));
 
     function updateTotal(qty) {
-      const baseGold = 9240;
-      const making = 280;
-      const gstRate = 0.03;
-      const goldVal = baseGold * qty;
-      const makingVal = making * qty;
-      const gst = Math.round((goldVal + makingVal) * gstRate);
-      const total = goldVal + makingVal + gst;
+      const storedId = sessionStorage.getItem('chinni_selected_product_id');
+      const selectedName = titleEl ? titleEl.textContent : 'Signature Gold Coin';
+      const products = window.allFirestoreProducts || [];
+      const activeProduct = products.find(p => p.id === storedId || p.name === selectedName) || null;
+
+      const { goldVal, makingVal, gstVal, grandTotal } = computeProductTotals(activeProduct, qty);
 
       const set = (sel, val) => {
         const el = document.querySelector(sel);
@@ -405,9 +415,9 @@ function openSearchModal() {
 
       set('.gold-value-price', goldVal);
       set('.making-charges-price', makingVal);
-      set('.gst-price', gst);
-      set('.total-price', total);
-      set('.sticky-price', total);
+      set('.gst-price', gstVal);
+      set('.total-price', grandTotal);
+      set('.sticky-price', grandTotal);
     }
 
     updateTotal(savedQty);
@@ -420,7 +430,7 @@ function openSearchModal() {
       e.preventDefault();
       const currentQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
       sessionStorage.setItem('chinni_selected_qty', currentQty);
-      sessionStorage.setItem('chinni_selected_product_name', titleEl.textContent);
+      if (titleEl) sessionStorage.setItem('chinni_selected_product_name', titleEl.textContent);
       window.location.href = 'checkout.html';
     });
   }
@@ -454,39 +464,48 @@ function openSearchModal() {
   // Dynamically populate checkout summary for selected product & quantity
   (async function loadCheckoutSummary() {
     const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || parseInt(sessionStorage.getItem('cninni_selected_qty')) || 1;
+    const storedId = sessionStorage.getItem('chinni_selected_product_id');
     const selectedName = sessionStorage.getItem('chinni_selected_product_name') || sessionStorage.getItem('chinni_selected_product_slug') || "Signature Gold Coin";
 
     let product = null;
+    let rates24k = 9240;
+
     if (window.ApiClient) {
-      const res = await ApiClient.getProducts();
-      if (res.success && res.data && res.data.length > 0) {
-        product = res.data.find(p => p.name.toLowerCase() === selectedName.toLowerCase() || p.slug === selectedName) || res.data[0];
-      }
+      try {
+        const ratesRes = await ApiClient.getGoldRates();
+        if (ratesRes && ratesRes.success && ratesRes.data && ratesRes.data['24K']) {
+          rates24k = Number(ratesRes.data['24K']) || 9240;
+        }
+      } catch(e) {}
+
+      try {
+        const res = await ApiClient.getProducts();
+        if (res && res.success && res.data && res.data.length > 0) {
+          product = res.data.find(p => p.id === storedId || p.name.toLowerCase() === selectedName.toLowerCase() || p.slug === selectedName) || res.data[0];
+        }
+      } catch(e) {}
     }
 
     const productName = product ? product.name : (selectedName !== 'signature-gold-coin' ? selectedName : "Signature Gold Coin");
-    const basePrice = product ? product.base_price : 9240;
-    const makingPrice = product ? product.making_charge : 280;
-    const gstRate = product ? (product.gst_percentage / 100) : 0.03;
-
-    const goldVal = basePrice * qty;
-    const makingVal = makingPrice * qty;
-    const gstVal = Math.round((goldVal + makingVal) * gstRate);
-    const grandTotal = goldVal + makingVal + gstVal;
+    const { goldVal, makingVal, gstVal, grandTotal, weight, purity } = computeProductTotals(product, qty, rates24k);
 
     const nameEl = document.querySelector('#checkout-prod-name');
+    const metaEl = document.querySelector('#checkout-prod-meta');
     const qtyEl = document.querySelector('#checkout-prod-qty');
     const goldValEl = document.querySelector('#checkout-gold-val');
     const makingValEl = document.querySelector('#checkout-making-val');
     const gstEl = document.querySelector('#checkout-gst');
     const totalEl = document.querySelector('#checkout-total');
+    const imgEl = document.querySelector('#checkout-prod-img');
 
     if (nameEl) nameEl.textContent = productName;
+    if (metaEl && product) metaEl.textContent = `${purity} · ${weight} Gram`;
     if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
     if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
     if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
     if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
     if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
+    if (imgEl && product) imgEl.src = getCacheBustedImageUrl(product);
   })();
 
   if (nextBtn) {
@@ -737,13 +756,35 @@ function getCacheBustedImageUrl(product) {
  * Calculate estimated retail price based on gold rate & making charges
  */
 function calculateProductPrice(product, rate24k = 9240) {
-  const weight = Number(product.weightGrams || product.weight) || 1.0;
-  const making = Number(product.makingCharge || product.making_charge) || 280;
-  const purityMultiplier = (product.purity || '').includes('22K') ? (8470 / 9240) : ((product.purity || '').includes('18K') ? (6930 / 9240) : 1.0);
+  const weight = Number(product?.weightGrams || product?.weight) || 1.0;
+  const making = Number(product?.makingCharge || product?.making_charge) || 280;
+  const purityMultiplier = (product?.purity || '').includes('22K') ? (8470 / 9240) : ((product?.purity || '').includes('18K') ? (6930 / 9240) : 1.0);
   const goldVal = rate24k * purityMultiplier * weight;
   const subtotal = goldVal + (making * weight);
   const gst = Math.round(subtotal * 0.03);
   return Math.round(subtotal + gst);
+}
+
+/**
+ * Compute detailed product price breakdown for given quantity
+ */
+function computeProductTotals(product, qty = 1, rates24k = 9240) {
+  const purity = product?.purity || '24K';
+  const weight = Number(product?.weightGrams || product?.weight) || 1.0;
+  const makingCharge = Number(product?.makingCharge || product?.making_charge) || 280;
+  const gstRate = (Number(product?.gstPercentage || product?.gst_percentage) || 3) / 100;
+
+  let goldRatePerGram = rates24k;
+  if (purity.includes('22K')) goldRatePerGram = Math.round(rates24k * (8470 / 9240));
+  else if (purity.includes('18K')) goldRatePerGram = Math.round(rates24k * (6930 / 9240));
+
+  const goldVal = Math.round(goldRatePerGram * weight * qty);
+  const makingVal = Math.round(makingCharge * weight * qty);
+  const subtotal = goldVal + makingVal;
+  const gstVal = Math.round(subtotal * gstRate);
+  const grandTotal = subtotal + gstVal;
+
+  return { goldVal, makingVal, gstVal, grandTotal, weight, purity };
 }
 
 /**
@@ -887,24 +928,23 @@ window.renderProductPageDetails = function(products) {
   if (breadcrumbEl) breadcrumbEl.textContent = activeProduct.name;
 
   // Dynamic Price Breakdown
-  const weight = Number(activeProduct.weightGrams || activeProduct.weight) || 1.0;
-  const making = Number(activeProduct.makingCharge || activeProduct.making_charge) || 280;
-  const goldVal = 9240 * weight;
-  const subtotal = goldVal + (making * weight);
-  const gst = Math.round(subtotal * 0.03);
-  const total = Math.round(subtotal + gst);
+  const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || (document.querySelector('.qty-input') ? (parseInt(document.querySelector('.qty-input').value) || 1) : 1);
+  const { goldVal, makingVal, gstVal, grandTotal, weight } = computeProductTotals(activeProduct, qty);
 
   const goldValEl = document.querySelector('.gold-value-price');
-  if (goldValEl) goldValEl.textContent = '₹' + Math.round(goldVal).toLocaleString('en-IN');
+  if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
 
   const makingEl = document.querySelector('.making-charges-price');
-  if (makingEl) makingEl.textContent = '₹' + Math.round(making * weight).toLocaleString('en-IN');
+  if (makingEl) makingEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
 
   const gstEl = document.querySelector('.gst-price');
-  if (gstEl) gstEl.textContent = '₹' + gst.toLocaleString('en-IN');
+  if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
 
   const totalEl = document.querySelector('.total-price');
-  if (totalEl) totalEl.textContent = '₹' + total.toLocaleString('en-IN');
+  if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
+
+  const stickyEl = document.querySelector('.sticky-price');
+  if (stickyEl) stickyEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
 
   // Update Karat Badge
   const badgeEl = document.querySelector('.product-karat-badge');
@@ -963,6 +1003,7 @@ window.renderCheckoutSummary = function(products) {
   const checkoutImg = document.querySelector('#checkout-prod-img');
   if (!checkoutImg) return;
 
+  const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || 1;
   const storedId = sessionStorage.getItem('chinni_selected_product_id');
   const storedName = sessionStorage.getItem('chinni_selected_product_name');
 
@@ -976,7 +1017,22 @@ window.renderCheckoutSummary = function(products) {
     if (nameEl) nameEl.textContent = activeProduct.name;
 
     const metaEl = document.querySelector('#checkout-prod-meta');
-    if (metaEl) metaEl.textContent = `${activeProduct.purity || '24K'} · ${activeProduct.weightGrams || 1.0} Gram`;
+    if (metaEl) metaEl.textContent = `${activeProduct.purity || '24K'} · ${activeProduct.weightGrams || activeProduct.weight || 1.0} Gram`;
+
+    const qtyEl = document.querySelector('#checkout-prod-qty');
+    if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
+
+    const { goldVal, makingVal, gstVal, grandTotal } = computeProductTotals(activeProduct, qty);
+
+    const goldValEl = document.querySelector('#checkout-gold-val');
+    const makingValEl = document.querySelector('#checkout-making-val');
+    const gstEl = document.querySelector('#checkout-gst');
+    const totalEl = document.querySelector('#checkout-total');
+
+    if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
+    if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
+    if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
+    if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
   }
 };
 

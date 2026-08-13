@@ -407,6 +407,31 @@ class SupabaseDataService {
     }
   }
 
+  async getOrder(orderIdOrNumber) {
+    if (!this.db) return { success: false, error: "Database unavailable" };
+    try {
+      const isUuid = (orderIdOrNumber || '').includes('-');
+      const query = this.db.from('orders').select('*, order_items(*)');
+      const { data, error } = isUuid ? await query.eq('id', orderIdOrNumber).single() : await query.eq('order_number', orderIdOrNumber).single();
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  async getOrders() {
+    if (!this.db) return { success: true, data: [] };
+    try {
+      const { data, error } = await this.db.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (err) {
+      return { success: false, error: err.message, data: [] };
+    }
+  }
+
   // 5. WEBSITE SETTINGS & HOMEPAGE
   async getWebsiteSettings() {
     if (!this.db) return { success: false };

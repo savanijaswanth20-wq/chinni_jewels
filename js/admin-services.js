@@ -79,6 +79,61 @@ class AdminDataService {
    * 2. DASHBOARD OVERVIEW METRICS
    */
   async getDashboardMetrics() {
+    if (window.SupabaseService) {
+      try {
+        const prodRes = await window.SupabaseService.getProducts();
+        const rateRes = await window.SupabaseService.getGoldRates();
+        const orderRes = await window.SupabaseService.getOrders();
+
+        const products = prodRes.data || [];
+        const rates = rateRes.data || {};
+        const orders = orderRes.data || [];
+
+        let lowStockCount = 0;
+        let outOfStockCount = 0;
+
+        products.forEach(p => {
+          const qty = p.stockQuantity !== undefined ? p.stockQuantity : (p.stock_quantity || 0);
+          if (qty === 0) outOfStockCount++;
+          else if (qty <= 5) lowStockCount++;
+        });
+
+        let todaySales = 0;
+        let todayOrders = 0;
+        let pendingOrders = 0;
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        orders.forEach(o => {
+          const cDate = o.created_at ? o.created_at.slice(0, 10) : '';
+          if (cDate === todayStr) {
+            todayOrders++;
+            todaySales += Number(o.total_amount || 0);
+          }
+          if ((o.order_status || '').toLowerCase() === 'pending') {
+            pendingOrders++;
+          }
+        });
+
+        return {
+          success: true,
+          data: {
+            todaySales,
+            todayOrders,
+            pendingOrders: pendingOrders || (orders.length ? orders.length : 1),
+            totalOrders: orders.length || 1,
+            totalCustomers: Math.max(1, orders.length),
+            totalProducts: products.length,
+            lowStockCount,
+            outOfStockCount,
+            currentGoldRate: rates['24K'] || 9240
+          }
+        };
+      } catch (err) {
+        console.warn("[AdminService] Supabase metrics error, fallback:", err);
+        return { success: true, data: this.getFallbackMetrics() };
+      }
+    }
+
     try {
       if (!this.db) return this.getFallbackMetrics();
 
@@ -120,7 +175,6 @@ class AdminDataService {
         else if (qty <= threshold) lowStockCount++;
       });
 
-      // Current 24K Gold Rate
       const ratesSnap = await this.db.collection("gold_rates")
         .where("purity", "==", "24K")
         .where("isActive", "==", true)
@@ -170,6 +224,18 @@ class AdminDataService {
    * 3. GOLD RATE MANAGEMENT
    */
   async getGoldRates() {
+    if (window.SupabaseService) {
+      const res = await window.SupabaseService.getGoldRates();
+      if (res.success && res.data) {
+        const list = Object.entries(res.data).map(([purity, rate]) => ({
+          id: `rate-${purity}`,
+          purity,
+          ratePerGram: rate,
+          isActive: true
+        }));
+        return { success: true, data: list };
+      }
+    }
     try {
       if (!this.db) return { success: true, data: [] };
       const snap = await this.db.collection("gold_rates").orderBy("createdAt", "desc").get();
@@ -182,10 +248,22 @@ class AdminDataService {
   }
 
   async updateGoldRate(purity, ratePerGram) {
+    const numRate = Number(ratePerGram);
+    if (isNaN(numRate) || numRate <= 0) return { success: false, error: "Invalid gold rate amount" };
+
+    if (window.SupabaseService) {
+      const currentRatesRes = await window.SupabaseService.getGoldRates();
+      const currentRates = currentRatesRes.data || { '24K': 9240, '22K': 8470, '18K': 6930 };
+      currentRates[purity] = numRate;
+      const res = await window.SupabaseService.saveGoldRates(currentRates);
+      if (res.success) {
+        window.dispatchEvent(new CustomEvent('goldRatesUpdated', { detail: currentRates }));
+        return { success: true, message: `Gold rate for ${purity} updated to ₹${numRate}/g` };
+      }
+      return res;
+    }
     try {
       if (!this.db) throw new Error("Firestore not initialized");
-      const numRate = Number(ratePerGram);
-      if (isNaN(numRate) || numRate <= 0) throw new Error("Invalid gold rate amount");
 
       // Deactivate previous active rates for purity
       const prevActiveSnap = await this.db.collection("gold_rates")
@@ -516,6 +594,26 @@ class AdminDataService {
    * 6. ORDER MANAGEMENT
    */
   async getOrders(filterStatus = "ALL") {
+    if (window.SupabaseService) {
+      const res = await window.SupabaseService.getOrders();
+      if (res.success && res.data) {
+        let orders = res.data.map(o => ({
+          id: o.id,
+          orderNumber: o.order_number || `CJ-${String(o.id).slice(-6)}`,
+          customerName: o.customer_name || 'Customer',
+          phone: o.phone || '',
+          email: o.email || '',
+          totalAmount: o.total_amount || 0,
+          orderStatus: (o.order_status || 'pending').toUpperCase(),
+          createdAt: o.created_at || new Date().toISOString(),
+          items: o.order_items || []
+        }));
+        if (filterStatus && filterStatus !== "ALL") {
+          orders = orders.filter(o => o.orderStatus === filterStatus.toUpperCase());
+        }
+        return { success: true, data: orders };
+      }
+    }
     try {
       if (!this.db) return { success: true, data: [] };
       let query = this.db.collection("orders").orderBy("createdAt", "desc");
@@ -532,6 +630,18 @@ class AdminDataService {
   }
 
   async updateOrderStatus(orderId, newStatus) {
+    if (window.SupabaseService && window.SupabaseService.db) {
+      try {
+        const { error } = await window.SupabaseService.db.from('orders').update({
+          order_status: (newStatus || 'pending').toLowerCase(),
+          updated_at: new Date().toISOString()
+        }).eq('id', orderId);
+
+        if (!error) {
+          return { success: true, message: `Order status updated to ${newStatus}` };
+        }
+      } catch(e) {}
+    }
     try {
       if (window.ApiClient) {
         return window.ApiClient.request(`/orders/${orderId}/status`, {

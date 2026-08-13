@@ -256,19 +256,5 @@
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/content-sync.js"></script>
-  <script>
-    // Compute GST on load
-    (function() {
-      const gstEl = document.querySelector('.gst-price');
-      if (gstEl) {
-        const gst = Math.round((9240 + 280) * 0.03);
-        gstEl.textContent = '₹' + gst.toLocaleString('en-IN');
-        const total = 9240 + 280 + gst;
-        document.querySelector('.total-price').textContent = '₹' + total.toLocaleString('en-IN');
-        const sticky = document.querySelector('.sticky-price');
-        if (sticky) sticky.textContent = '₹' + total.toLocaleString('en-IN');
-      }
-    })();
-  </script>
 </body>
 </html>

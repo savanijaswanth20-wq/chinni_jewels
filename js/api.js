@@ -78,7 +78,7 @@ class ApiClient {
 
   static async getOrder(orderIdOrNumber) {
     if (window.SupabaseService) {
-      return await window.SupabaseService.getProductBySlugOrId(orderIdOrNumber);
+      return await window.SupabaseService.getOrder(orderIdOrNumber);
     }
     return { success: false, error: "Order not found" };
   }

@@ -212,16 +212,5 @@
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/content-sync.js"></script>
-  <script>
-    // Compute GST
-    (function() {
-      const gst = Math.round((9240 + 280) * 0.03);
-      const total = 9240 + 280 + gst;
-      const gstEl = document.querySelector('#checkout-gst');
-      const totalEl = document.querySelector('#checkout-total');
-      if (gstEl) gstEl.textContent = '₹' + gst.toLocaleString('en-IN');
-      if (totalEl) totalEl.textContent = '₹' + total.toLocaleString('en-IN');
-    })();
-  </script>
 </body>
 </html>
