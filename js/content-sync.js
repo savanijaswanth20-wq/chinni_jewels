@@ -37,6 +37,20 @@
     }, (err) => console.warn("[ContentSync] Gold rates sync notice:", err.message));
 
     // 3. Homepage & Hero Section Sync
+    try {
+      const cachedHp = localStorage.getItem("cj_setting_homepage");
+      if (cachedHp) {
+        const parsed = JSON.parse(cachedHp);
+        if (parsed.hero) syncHeroSectionUI(parsed.hero);
+      }
+    } catch(e) {}
+
+    db.collection("settings").doc("homepage").get().then((doc) => {
+      if (doc.exists && doc.data().hero) {
+        syncHeroSectionUI(doc.data().hero);
+      }
+    }).catch(() => {});
+
     db.collection("settings").doc("homepage").onSnapshot((doc) => {
       if (doc.exists && doc.data().hero) {
         syncHeroSectionUI(doc.data().hero);
