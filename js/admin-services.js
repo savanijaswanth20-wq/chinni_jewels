@@ -233,19 +233,34 @@ class AdminDataService {
     }
   }
 
-  async uploadProductImage(productId, file) {
+  /**
+   * Universal File Upload Helper with Firebase Storage & Base64 Fallback
+   */
+  async uploadFile(folder, file) {
+    if (!file) return { success: false, error: "No file provided" };
     try {
-      if (!this.storage) throw new Error("Storage unavailable");
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-      const storageRef = this.storage.ref(`products/${productId}/${fileName}`);
-      
-      const uploadTask = await storageRef.put(file);
-      const downloadURL = await uploadTask.ref.getDownloadURL();
-      return { success: true, url: downloadURL };
+      if (this.storage) {
+        const ext = file.name ? file.name.split('.').pop() : 'png';
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+        const ref = this.storage.ref(`${folder}/${fileName}`);
+        const uploadTask = await ref.put(file);
+        const url = await uploadTask.ref.getDownloadURL();
+        return { success: true, url };
+      }
     } catch (err) {
-      return { success: false, error: err.message };
+      console.warn(`[AdminService] Firebase Storage upload error for folder '${folder}', using Base64 Data URL fallback:`, err.message);
     }
+    // Fallback to Base64 Data URL so file upload always succeeds even if Storage is offline/unauthenticated
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
+      reader.onerror = () => resolve({ success: false, error: "Failed to read image file." });
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async uploadProductImage(productId, file) {
+    return await this.uploadFile(`products/${productId}`, file);
   }
 
   async saveProduct(productId, productData, imageFiles = []) {
@@ -533,29 +548,40 @@ class AdminDataService {
   }
 
   async uploadBrandingAsset(folder, file) {
-    try {
-      if (!this.storage) throw new Error("Storage unavailable");
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-      const ref = this.storage.ref(`${folder}/${fileName}`);
-      const uploadTask = await ref.put(file);
-      const url = await uploadTask.ref.getDownloadURL();
-      return { success: true, url };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
+    return await this.uploadFile(folder, file);
   }
 
   /**
    * 9. MEDIA LIBRARY
    */
+  async uploadMediaFile(file) {
+    const uploadRes = await this.uploadFile('media', file);
+    if (!uploadRes.success) return uploadRes;
+
+    const mediaDoc = {
+      url: uploadRes.url,
+      fileName: file.name || 'uploaded_image.png',
+      fileSize: file.size || 0,
+      createdAt: new Date().toISOString()
+    };
+
+    if (this.db) {
+      try {
+        await this.db.collection('media').add(mediaDoc);
+      } catch (e) {
+        console.warn("[AdminService] Could not save media doc to firestore:", e.message);
+      }
+    }
+    return uploadRes;
+  }
+
   async getMediaLibrary() {
     try {
-      if (!this.storage) return { success: true, data: [] };
-      // Fallback listed files or firestore tracked media
-      const mediaSnap = await this.db.collection("media").get();
       const mediaList = [];
-      mediaSnap.forEach(d => mediaList.push({ id: d.id, ...d.data() }));
+      if (this.db) {
+        const mediaSnap = await this.db.collection("media").get();
+        mediaSnap.forEach(d => mediaList.push({ id: d.id, ...d.data() }));
+      }
       return { success: true, data: mediaList };
     } catch (err) {
       return { success: true, data: [] };

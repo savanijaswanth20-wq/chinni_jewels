@@ -300,16 +300,20 @@ class AdminApp {
     `).join('');
   }
 
-  // --- HERO DATA ---
   async loadHeroData() {
     const res = await window.AdminService.getSetting('homepage');
-    if (res.success && res.data.hero) {
+    if (res.success && res.data && res.data.hero) {
       const h = res.data.hero;
       if (h.badge) document.querySelector('#hero-badge').value = h.badge;
       if (h.heading) document.querySelector('#hero-heading').value = h.heading;
       if (h.subtitle) document.querySelector('#hero-subtitle').value = h.subtitle;
       if (h.btnPrimary) document.querySelector('#hero-btn-primary').value = h.btnPrimary;
       if (h.btnSecondary) document.querySelector('#hero-btn-secondary').value = h.btnSecondary;
+      if (typeof h.visible === 'boolean') document.querySelector('#hero-visible').checked = h.visible;
+      if (h.imageUrl) {
+        const preview = document.querySelector('#hero-image-preview');
+        if (preview) preview.src = h.imageUrl;
+      }
     }
   }
 
@@ -466,23 +470,40 @@ class AdminApp {
 
   // --- MEDIA LIBRARY ---
   async loadMediaLibraryData() {
-    const res = await window.AdminService.getProducts();
     const grid = document.querySelector('#media-library-grid');
-    if (!res.success || !res.data.length) {
-      grid.innerHTML = `<p style="color: var(--text-muted);">No images found in library.</p>`;
+    if (!grid) return;
+
+    grid.innerHTML = `<p style="color: var(--text-muted);">Loading media assets...</p>`;
+
+    const [prodRes, mediaRes] = await Promise.all([
+      window.AdminService.getProducts(),
+      window.AdminService.getMediaLibrary()
+    ]);
+
+    const images = [];
+    if (mediaRes.success && mediaRes.data) {
+      mediaRes.data.forEach(m => {
+        if (m.url) images.push(m.url);
+      });
+    }
+    if (prodRes.success && prodRes.data) {
+      prodRes.data.forEach(p => {
+        if (p.images && Array.isArray(p.images)) images.push(...p.images);
+        else if (p.imageUrl) images.push(p.imageUrl);
+      });
+    }
+
+    const uniqueImages = [...new Set(images)];
+
+    if (!uniqueImages.length) {
+      grid.innerHTML = `<p style="color: var(--text-muted);">No images found in library. Click "+ Upload File" above to upload image assets.</p>`;
       return;
     }
 
-    const images = [];
-    res.data.forEach(p => {
-      if (p.images) images.push(...p.images);
-      else if (p.imageUrl) images.push(p.imageUrl);
-    });
-
-    grid.innerHTML = images.map(url => `
-      <div style="position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
+    grid.innerHTML = uniqueImages.map(url => `
+      <div style="position: relative; width: 110px; height: 110px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #111;">
         <img src="${url}" style="width:100%; height:100%; object-fit: cover;" />
-        <button onclick="navigator.clipboard.writeText('${url}'); app.showToast('Image URL copied to clipboard!', 'success');" style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #fff; border: none; padding: 3px 6px; border-radius: 4px; font-size: 0.65rem; cursor: pointer;">Copy</button>
+        <button onclick="navigator.clipboard.writeText('${url}'); app.showToast('Image URL copied to clipboard!', 'success');" style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 4px; font-size: 0.65rem; cursor: pointer;">Copy URL</button>
       </div>
     `).join('');
   }
@@ -575,6 +596,22 @@ class AdminApp {
 
     // Order status filter dropdown
     document.querySelector('#order-status-filter')?.addEventListener('change', () => this.loadOrdersData());
+
+    // File Input Listeners & Previews
+    document.querySelector('#hero-image-input')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const preview = document.querySelector('#hero-image-preview');
+          if (preview) preview.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.querySelector('#media-direct-upload')?.addEventListener('change', (e) => this.handleDirectMediaUpload(e));
+    document.querySelector('#pm-images')?.addEventListener('change', (e) => this.handleProductImageSelection(e));
   }
 
   openModal(modalId) {
@@ -822,16 +859,86 @@ class AdminApp {
 
   // --- Setting Save Handlers ---
   async handleSaveHero() {
+    const saveBtn = document.querySelector('#save-hero-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving Hero...';
+    }
+
+    let imageUrl = document.querySelector('#hero-image-preview')?.src || '';
+    const fileInput = document.querySelector('#hero-image-input');
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      this.showToast("Uploading hero image...", "info");
+      const uploadRes = await window.AdminService.uploadFile('hero', fileInput.files[0]);
+      if (uploadRes.success) {
+        imageUrl = uploadRes.url;
+        const preview = document.querySelector('#hero-image-preview');
+        if (preview) preview.src = imageUrl;
+      } else {
+        this.showToast(uploadRes.error || "Failed to upload hero image", "error");
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Hero Changes';
+        }
+        return;
+      }
+    }
+
     const heroData = {
       badge: document.querySelector('#hero-badge').value.trim(),
       heading: document.querySelector('#hero-heading').value.trim(),
       subtitle: document.querySelector('#hero-subtitle').value.trim(),
       btnPrimary: document.querySelector('#hero-btn-primary').value.trim(),
       btnSecondary: document.querySelector('#hero-btn-secondary').value.trim(),
-      visible: document.querySelector('#hero-visible').checked
+      visible: document.querySelector('#hero-visible').checked,
+      imageUrl: imageUrl
     };
+
     const res = await window.AdminService.saveSetting('homepage', { hero: heroData });
-    if (res.success) this.showToast("Hero section updated live!", 'success');
+
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Hero Changes';
+    }
+
+    if (res.success) {
+      this.showToast("Hero section updated live!", 'success');
+      if (fileInput) fileInput.value = '';
+    } else {
+      this.showToast(res.error || "Failed to save hero section", 'error');
+    }
+  }
+
+  handleProductImageSelection(e) {
+    const container = document.querySelector('#pm-images-preview');
+    if (!container) return;
+    container.innerHTML = '';
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const img = document.createElement('img');
+        img.src = evt.target.result;
+        img.style.cssText = 'width: 50px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);';
+        container.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async handleDirectMediaUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    this.showToast("Uploading media asset...", "info");
+    const res = await window.AdminService.uploadMediaFile(file);
+    if (res.success) {
+      this.showToast("Media file uploaded successfully!", "success");
+      e.target.value = '';
+      await this.loadMediaLibraryData();
+    } else {
+      this.showToast(res.error || "Failed to upload media file", "error");
+    }
   }
 
   async handleSaveBrand() {
