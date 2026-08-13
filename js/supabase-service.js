@@ -233,13 +233,14 @@ class SupabaseDataService {
 
       const allImages = [...new Set([...(uploadedUrls), ...(productData.images || []), primaryImageUrl].filter(Boolean))];
 
-      const payload = {
+      const fullPayload = {
         name: productData.name,
         slug: slug,
         sku: productData.sku || `CJ-${Date.now().toString().slice(-4)}`,
         description: productData.description || '',
         weight: Number(productData.weightGrams || productData.weight) || 1.0,
         purity: productData.purity || '24K',
+        making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
         selling_price: Number(productData.sellingPrice || productData.price) || 9520,
         stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
         featured: Boolean(productData.featured || productData.isFeatured),
@@ -250,39 +251,57 @@ class SupabaseDataService {
         updated_at: new Date().toISOString()
       };
 
+      const cleanPayload = {
+        name: productData.name,
+        slug: slug,
+        sku: productData.sku || `CJ-${Date.now().toString().slice(-4)}`,
+        description: productData.description || '',
+        weight: Number(productData.weightGrams || productData.weight) || 1.0,
+        purity: productData.purity || '24K',
+        making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
+        selling_price: Number(productData.sellingPrice || productData.price) || 9520,
+        stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
+        featured: Boolean(productData.featured || productData.isFeatured),
+        active: productData.isActive !== false,
+        updated_at: new Date().toISOString()
+      };
+
       if (isNew) {
-        payload.id = targetId;
-        const { error } = await this.db.from('products').insert([payload]);
-        if (error) throw error;
+        fullPayload.id = targetId;
+        cleanPayload.id = targetId;
+        let { error } = await this.db.from('products').insert([fullPayload]);
+        if (error) {
+          console.warn("[SupabaseService] Insert retry with clean schema payload:", error.message);
+          const { error: err2 } = await this.db.from('products').insert([cleanPayload]);
+          if (err2) throw err2;
+        }
 
         // Initialize inventory record
-        await this.db.from('inventory').insert([{
-          product_id: targetId,
-          available_quantity: payload.stock_quantity
-        }]);
-      } else {
-        const { error } = await this.db.from('products').update(payload).eq('id', targetId);
-        if (error) throw error;
-      }
-
-      // Insert into product_images table
-      if (uploadedUrls.length > 0) {
-        const imgInserts = uploadedUrls.map((url, idx) => ({
-          product_id: targetId,
-          storage_path: primaryStoragePath,
-          image_url: url,
-          is_primary: idx === 0
-        }));
-        await this.db.from('product_images').insert(imgInserts);
-      }
-
-      // Safe cleanup of old storage image AFTER database points to new image
-      if (oldStoragePath && primaryStoragePath && oldStoragePath !== primaryStoragePath) {
         try {
-          await this.db.storage.from('products').remove([oldStoragePath]);
-        } catch (cleanErr) {
-          console.warn("[SupabaseService] Non-critical storage cleanup notice:", cleanErr.message);
+          await this.db.from('inventory').insert([{
+            product_id: targetId,
+            available_quantity: cleanPayload.stock_quantity
+          }]);
+        } catch(iErr) {}
+      } else {
+        let { error } = await this.db.from('products').update(fullPayload).eq('id', targetId);
+        if (error) {
+          console.warn("[SupabaseService] Update retry with clean schema payload:", error.message);
+          const { error: err2 } = await this.db.from('products').update(cleanPayload).eq('id', targetId);
+          if (err2) throw err2;
         }
+      }
+
+      // Insert/update primary image in product_images table
+      if (primaryImageUrl) {
+        try {
+          await this.db.from('product_images').insert([{
+            product_id: targetId,
+            storage_path: primaryStoragePath,
+            image_url: primaryImageUrl,
+            is_primary: true
+          }]);
+        } catch(piErr) {}
       }
 
       // Trigger local & realtime update
@@ -293,7 +312,7 @@ class SupabaseDataService {
         success: true,
         id: targetId,
         imageUrl: primaryImageUrl,
-        message: 'Product & central database image updated successfully!'
+        message: 'Product & photos updated successfully!'
       };
     } catch (err) {
       console.error("[SupabaseService] saveProduct error:", err);
@@ -434,31 +453,80 @@ class SupabaseDataService {
 
   // 5. WEBSITE SETTINGS & HOMEPAGE
   async getWebsiteSettings() {
-    if (!this.db) return { success: false };
+    const cached = localStorage.getItem('cj_setting_homepage');
+    const localData = cached ? JSON.parse(cached) : null;
+
+    if (!this.db) return { success: true, data: { homepage: localData } };
     try {
       const { data, error } = await this.db.from('website_settings').select('*').eq('id', 'main').single();
       if (error) throw error;
-      return { success: true, data };
+
+      let homepageData = data.homepage;
+      if (typeof homepageData === 'string') {
+        try { homepageData = JSON.parse(homepageData); } catch(e) {}
+      }
+      if (!homepageData) {
+        homepageData = localData || {
+          hero: {
+            badge: 'Crafted in Pure Gold',
+            heading: data.hero_title || 'Pure Gold.\nSimply Yours.',
+            subtitle: data.hero_subtitle || 'Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.',
+            imageUrl: data.hero_image_url || 'assets/hero_gold_coin.png'
+          },
+          featured: {
+            eyebrow: '1 Gram Collection — Featured',
+            title: 'Signature Gold Coin',
+            desc: 'Our most beloved piece. The Signature Gold Coin is a testament to pure craftsmanship.',
+            imageUrl: 'assets/featured_product.png'
+          },
+          story: {
+            title: 'Gold for Every Meaningful Moment.',
+            text: 'At CHINNI JEWELS, we believe that gold is more than a metal — it is an emotion.',
+            imageUrl: 'assets/brand_story_lifestyle.png'
+          }
+        };
+      }
+
+      try { localStorage.setItem('cj_setting_homepage', JSON.stringify(homepageData)); } catch(e) {}
+      return { success: true, data: { ...data, homepage: homepageData } };
     } catch (e) {
-      return { success: false };
+      return { success: true, data: { homepage: localData } };
     }
   }
 
   async saveWebsiteSettings(settings) {
-    if (!this.db) {
-      window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId: 'homepage', data: settings.homepage } }));
-      return { success: true };
-    }
+    const homepageData = settings.homepage || settings;
     try {
-      const { error } = await this.db.from('website_settings').upsert({ id: 'main', ...settings, updated_at: new Date().toISOString() });
+      localStorage.setItem('cj_setting_homepage', JSON.stringify(homepageData));
+      window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId: 'homepage', data: homepageData } }));
+    } catch (e) {}
+
+    if (!this.db) return { success: true };
+
+    try {
+      const payload = {
+        id: 'main',
+        homepage: homepageData,
+        hero_title: homepageData.hero?.heading || '',
+        hero_subtitle: homepageData.hero?.subtitle || '',
+        hero_image_url: homepageData.hero?.imageUrl || '',
+        updated_at: new Date().toISOString()
+      };
+
+      let { error } = await this.db.from('website_settings').upsert(payload);
       if (error) {
-        await this.db.from('website_settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('id', 'main');
+        const fallbackPayload = {
+          id: 'main',
+          hero_title: homepageData.hero?.heading || '',
+          hero_subtitle: homepageData.hero?.subtitle || '',
+          hero_image_url: homepageData.hero?.imageUrl || '',
+          updated_at: new Date().toISOString()
+        };
+        await this.db.from('website_settings').upsert(fallbackPayload);
       }
-      window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId: 'homepage', data: settings.homepage } }));
       return { success: true };
     } catch (err) {
-      console.warn("[SupabaseService] saveWebsiteSettings fallback notice:", err.message);
-      window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId: 'homepage', data: settings.homepage } }));
+      console.warn("[SupabaseService] saveWebsiteSettings notice:", err.message);
       return { success: true };
     }
   }

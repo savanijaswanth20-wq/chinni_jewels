@@ -688,46 +688,32 @@ class AdminDataService {
    * 8. SETTINGS & WEBSITE CMS MANAGEMENT
    */
   async getSetting(settingId, defaultData = {}) {
+    if (window.SupabaseService && settingId === 'homepage') {
+      const res = await window.SupabaseService.getWebsiteSettings();
+      if (res.success && res.data && res.data.homepage) {
+        return { success: true, data: res.data.homepage };
+      }
+    }
     try {
       const cached = localStorage.getItem(`cj_setting_${settingId}`);
       let localObj = cached ? JSON.parse(cached) : null;
-
-      if (this.db) {
-        const getPromise = this.db.collection("settings").doc(settingId).get();
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
-        const doc = await Promise.race([getPromise, timeoutPromise]);
-
-        if (doc && doc.exists) {
-          const remoteData = { ...defaultData, ...doc.data() };
-          try { localStorage.setItem(`cj_setting_${settingId}`, JSON.stringify(remoteData)); } catch (e) {}
-          return { success: true, data: remoteData };
-        }
-      }
       return { success: true, data: localObj || defaultData };
     } catch (err) {
-      const cached = localStorage.getItem(`cj_setting_${settingId}`);
-      return { success: true, data: cached ? JSON.parse(cached) : defaultData };
+      return { success: true, data: defaultData };
     }
   }
 
   async saveSetting(settingId, data) {
-    // 1. Instant local persistence so UI never hangs or lags
+    let merged = data;
     try {
       const current = localStorage.getItem(`cj_setting_${settingId}`);
-      const merged = current ? { ...JSON.parse(current), ...data } : data;
+      merged = current ? { ...JSON.parse(current), ...data } : data;
       localStorage.setItem(`cj_setting_${settingId}`, JSON.stringify(merged));
       window.dispatchEvent(new CustomEvent('cj_setting_updated', { detail: { settingId, data: merged } }));
     } catch (e) {}
 
-    // 2. Non-blocking Firestore synchronization in background
-    if (this.db) {
-      const savePayload = { ...data };
-      savePayload.updatedAt = new Date().toISOString();
-      this.db.collection("settings").doc(settingId).set(savePayload, { merge: true })
-        .then(() => console.log(`[AdminService] Setting '${settingId}' synced to Firestore.`))
-        .catch(err => console.warn(`[AdminService] Firestore sync notice for '${settingId}':`, err.message));
-
-      this.logAudit("UPDATE_SETTING", "SETTING", settingId, null, data).catch(() => {});
+    if (window.SupabaseService && settingId === 'homepage') {
+      await window.SupabaseService.saveWebsiteSettings({ homepage: merged });
     }
 
     return { success: true, message: "Setting saved successfully." };
