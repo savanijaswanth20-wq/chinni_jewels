@@ -1048,16 +1048,30 @@ if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
    ══════════════════════════════════════════════════════════ */
 (function initVideoControllers() {
   document.addEventListener('DOMContentLoaded', () => {
-    // Hero Video Mobile Autoplay & Endless Playback Fix
+    // Hero Video Mobile Autoplay, Error Handling & Poster Fallback
     const heroVideo = document.getElementById('hero-video');
+    const heroFallbackImg = document.getElementById('hero-fallback-img');
+
     if (heroVideo) {
       heroVideo.muted = true;
       heroVideo.defaultMuted = true;
       heroVideo.loop = true;
       
+      const showFallback = () => {
+        heroVideo.style.display = 'none';
+        if (heroFallbackImg) {
+          heroFallbackImg.classList.remove('hidden');
+          heroFallbackImg.style.display = 'block';
+        }
+      };
+
+      heroVideo.addEventListener('error', showFallback);
+      
       const tryPlay = () => {
         if (heroVideo.paused) {
-          heroVideo.play().catch(() => {});
+          heroVideo.play().catch(() => {
+            // Video autoplay handled smoothly with poster fallback
+          });
         }
       };
 

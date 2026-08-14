@@ -99,11 +99,11 @@
       </div>
     </div>
 
-    <div class="hero-image">
-      <video id="hero-video" class="hero-video-element" autoplay loop muted playsinline webkit-playsinline preload="auto" poster="assets/hero_gold_coin.png">
+    <div class="hero-image" id="hero-video-container">
+      <video id="hero-video" class="hero-video-element" autoplay loop muted playsinline webkit-playsinline preload="metadata" poster="assets/hero_gold_coin.png">
         <source src="assets/showcase.mp4" type="video/mp4" />
-        <img src="assets/hero_gold_coin.png" alt="Premium 1 Gram Gold Coin — CHINNI JEWELS" />
       </video>
+      <img id="hero-fallback-img" class="hero-fallback-element hidden" src="assets/hero_gold_coin.png" alt="Premium 1 Gram Gold Coin — CHINNI JEWELS" />
       <div class="hero-image-overlay"></div>
     </div>
   </section>
