@@ -745,7 +745,7 @@ function generateOrderId() {
 function getCacheBustedImageUrl(product) {
   let url = product.imageUrl || product.image_url || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
   if (!url) return "assets/hero_gold_coin.png";
-  if (!url.includes('v=')) {
+  if (!url.startsWith('data:') && !url.includes('v=')) {
     const v = product.updatedAt ? new Date(product.updatedAt).getTime() : Date.now();
     url += (url.includes('?') ? '&' : '?') + `v=${v}`;
   }

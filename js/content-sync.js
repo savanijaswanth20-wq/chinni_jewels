@@ -182,7 +182,7 @@
           this.src = 'assets/hero_gold_coin.png';
         };
         let finalUrl = hero.imageUrl;
-        if (finalUrl && !finalUrl.includes('v=')) {
+        if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
           const v = hero.updatedAt ? (hero.updatedAt.seconds || Date.now()) : Date.now();
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${v}`;
         }
@@ -228,7 +228,7 @@
           this.src = 'assets/featured_product.png';
         };
         let finalUrl = featured.imageUrl;
-        if (finalUrl && !finalUrl.includes('v=')) {
+        if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
         }
         imgEl.src = finalUrl;
@@ -257,7 +257,7 @@
           this.onerror = null;
           this.src = 'assets/brand_story_banner.jpg';
         };
-        if (finalUrl && !finalUrl.includes('v=')) {
+        if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
         }
         imgEl.src = finalUrl;

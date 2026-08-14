@@ -116,7 +116,7 @@ class SupabaseDataService {
 
         // Cache buster for cross-device consistency
         const timestamp = p.updated_at ? new Date(p.updated_at).getTime() : Date.now();
-        if (mainImg && !mainImg.includes('v=')) {
+        if (mainImg && !mainImg.startsWith('data:') && !mainImg.includes('v=')) {
           mainImg += (mainImg.includes('?') ? '&' : '?') + `v=${timestamp}`;
         }
 
@@ -167,7 +167,7 @@ class SupabaseDataService {
       if (error) throw error;
       let mainImg = data.image_url || (data.product_images && data.product_images[0] ? data.product_images[0].image_url : 'assets/hero_gold_coin.png');
       const timestamp = data.updated_at ? new Date(data.updated_at).getTime() : Date.now();
-      if (mainImg && !mainImg.includes('v=')) {
+      if (mainImg && !mainImg.startsWith('data:') && !mainImg.includes('v=')) {
         mainImg += (mainImg.includes('?') ? '&' : '?') + `v=${timestamp}`;
       }
 
@@ -227,7 +227,7 @@ class SupabaseDataService {
       if (!primaryImageUrl) primaryImageUrl = 'assets/hero_gold_coin.png';
 
       // Ensure cache buster on primaryImageUrl
-      if (primaryImageUrl && !primaryImageUrl.includes('v=')) {
+      if (primaryImageUrl && !primaryImageUrl.startsWith('data:') && !primaryImageUrl.includes('v=')) {
         primaryImageUrl += (primaryImageUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
       }
 
