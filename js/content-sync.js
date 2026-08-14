@@ -242,6 +242,13 @@
       const imgEl = document.querySelector('.brand-story-image img');
       if (imgEl) {
         let finalUrl = story.imageUrl;
+        if (finalUrl.includes('brand_story_lifestyle.png')) {
+          finalUrl = 'assets/brand_story_banner.jpg';
+        }
+        imgEl.onerror = function() {
+          this.onerror = null;
+          this.src = 'assets/brand_story_banner.jpg';
+        };
         if (finalUrl && !finalUrl.includes('v=')) {
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
         }
