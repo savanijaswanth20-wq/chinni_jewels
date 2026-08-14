@@ -887,6 +887,25 @@
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
+              <label>Product Badge Tag (e.g. BESTSELLER, GIFT, NEW)</label>
+              <select id="pm-badge" class="form-control">
+                <option value="">None</option>
+                <option value="BESTSELLER">Bestseller</option>
+                <option value="GIFT">Gift / Gift Box</option>
+                <option value="NEW">New Arrival</option>
+                <option value="HOT">Hot Deal</option>
+                <option value="LIMITED">Limited Edition</option>
+                <option value="FEATURED">Featured</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Manual Price (₹) <span style="font-size: 0.72rem; color: var(--text-muted);">(Leave blank to auto-calculate from 24K rate)</span></label>
+              <input type="number" id="pm-price" class="form-control" placeholder="Auto calculated if empty" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
               <label>Initial Stock Quantity</label>
               <input type="number" id="pm-stock" class="form-control" value="25" required />
             </div>
@@ -894,6 +913,15 @@
               <label>Low Stock Threshold</label>
               <input type="number" id="pm-threshold" class="form-control" value="5" required />
             </div>
+          </div>
+
+          <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff; font-size: 0.88rem;">
+              <input type="checkbox" id="pm-featured" /> Featured Product on Homepage
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff; font-size: 0.88rem;">
+              <input type="checkbox" id="pm-active" checked /> Product Active in Catalog
+            </label>
           </div>
 
           <div class="form-group">
@@ -958,6 +986,39 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="app.closeModal('stock-modal')">Cancel</button>
         <button class="btn btn-primary" id="btn-submit-stock-adjust">Apply Adjustment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       CATEGORY ADD / EDIT MODAL
+       ══════════════════════════════════════════════════════════ -->
+  <div class="admin-modal-backdrop" id="category-modal">
+    <div class="admin-modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="category-modal-title">Create Product Category</h3>
+        <button class="modal-close-btn" onclick="app.closeModal('category-modal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="category-modal-form">
+          <input type="hidden" id="cm-id" />
+          <div class="form-group">
+            <label>Category Name</label>
+            <input type="text" id="cm-name" class="form-control" placeholder="e.g. Gold Coins, Gold Jewellery" required />
+          </div>
+          <div class="form-group">
+            <label>URL Slug</label>
+            <input type="text" id="cm-slug" class="form-control" placeholder="e.g. gold-coins, jewellery" required />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="cm-description" class="form-control" rows="2" placeholder="Brief category description..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeModal('category-modal')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-category-submit">Save Category</button>
       </div>
     </div>
   </div>

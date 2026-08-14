@@ -796,14 +796,16 @@ window.renderCollectionProductsGrid = function(products) {
 
   container.innerHTML = products.map((p, idx) => {
     const imgUrl = getCacheBustedImageUrl(p);
-    const price = calculateProductPrice(p);
+    const price = (p.sellingPrice || p.price) ? Number(p.sellingPrice || p.price) : calculateProductPrice(p);
     const cat = p.categoryId || (p.categoryName ? p.categoryName.toLowerCase() : 'coins');
+    const badgeText = p.badge || p.badgeTag || (p.isFeatured ? 'Bestseller' : '');
+    const badgeHtml = badgeText ? `<span class="product-card-badge">${badgeText}</span>` : '';
 
     return `
       <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}">
         <div class="product-card-image">
           <img src="${imgUrl}" alt="${p.name} — CHINNI JEWELS" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
-          ${p.isFeatured ? '<span class="product-card-badge">Bestseller</span>' : ''}
+          ${badgeHtml}
           <button class="wishlist-btn" aria-label="Add to wishlist">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </button>
@@ -1040,5 +1042,218 @@ window.renderCheckoutSummary = function(products) {
 if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
   window.syncProductsUI?.(window.allFirestoreProducts);
 }
+
+/* ══════════════════════════════════════════════════════════
+   HERO & SHOWCASE VIDEO CONTROLLERS
+   ══════════════════════════════════════════════════════════ */
+(function initVideoControllers() {
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Hero Video Sound Toggle
+    const heroVideo = document.getElementById('hero-video');
+    const heroSoundBtn = document.getElementById('hero-sound-btn');
+
+    if (heroVideo && heroSoundBtn) {
+      heroSoundBtn.addEventListener('click', () => {
+        heroVideo.muted = !heroVideo.muted;
+        const isMuted = heroVideo.muted;
+        heroSoundBtn.querySelector('.icon-muted')?.classList.toggle('hidden', !isMuted);
+        heroSoundBtn.querySelector('.icon-unmuted')?.classList.toggle('hidden', isMuted);
+        const textSpan = heroSoundBtn.querySelector('.sound-text');
+        if (textSpan) textSpan.textContent = isMuted ? 'Sound Off' : 'Sound On';
+        showToast(isMuted ? 'Hero video sound muted' : 'Hero video sound enabled ✨');
+      });
+    }
+
+    // 2. Main Showcase Video Section Controller
+    const scVideo = document.getElementById('main-showcase-video');
+    const centerPlayBtn = document.getElementById('showcase-center-play');
+    const ctrlPlayBtn = document.getElementById('v-play-pause');
+    const trackBar = document.getElementById('v-track-bar');
+    const fillBar = document.getElementById('v-fill-bar');
+    const timerText = document.getElementById('v-timer-text');
+    const soundBtn = document.getElementById('v-sound-toggle');
+    const fsBtn = document.getElementById('v-fullscreen-btn');
+
+    if (scVideo) {
+      function togglePlay() {
+        if (scVideo.paused) {
+          scVideo.play().catch(() => {});
+        } else {
+          scVideo.pause();
+        }
+      }
+
+      function updatePlayState() {
+        const isPaused = scVideo.paused;
+        [centerPlayBtn, ctrlPlayBtn].forEach(btn => {
+          if (!btn) return;
+          btn.querySelector('.icon-play')?.classList.toggle('hidden', !isPaused);
+          btn.querySelector('.icon-pause')?.classList.toggle('hidden', isPaused);
+        });
+        if (centerPlayBtn) {
+          centerPlayBtn.classList.toggle('visible', isPaused);
+        }
+      }
+
+      function formatTime(seconds) {
+        if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+
+      if (centerPlayBtn) centerPlayBtn.addEventListener('click', togglePlay);
+      if (ctrlPlayBtn) ctrlPlayBtn.addEventListener('click', togglePlay);
+      scVideo.addEventListener('click', togglePlay);
+
+      scVideo.addEventListener('play', updatePlayState);
+      scVideo.addEventListener('pause', updatePlayState);
+
+      scVideo.addEventListener('timeupdate', () => {
+        if (scVideo.duration) {
+          const pct = (scVideo.currentTime / scVideo.duration) * 100;
+          if (fillBar) fillBar.style.width = `${pct}%`;
+          if (timerText) timerText.textContent = `${formatTime(scVideo.currentTime)} / ${formatTime(scVideo.duration)}`;
+        }
+      });
+
+      if (trackBar) {
+        trackBar.addEventListener('click', (e) => {
+          const rect = trackBar.getBoundingClientRect();
+          const pos = (e.clientX - rect.left) / rect.width;
+          if (scVideo.duration) {
+            scVideo.currentTime = pos * scVideo.duration;
+          }
+        });
+      }
+
+      if (soundBtn) {
+        soundBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          scVideo.muted = !scVideo.muted;
+          const isMuted = scVideo.muted;
+          soundBtn.querySelector('.icon-muted')?.classList.toggle('hidden', !isMuted);
+          soundBtn.querySelector('.icon-unmuted')?.classList.toggle('hidden', isMuted);
+          showToast(isMuted ? 'Showcase audio muted' : 'Showcase audio enabled ✨');
+        });
+      }
+
+      if (fsBtn) {
+        fsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (scVideo.requestFullscreen) {
+            scVideo.requestFullscreen();
+          } else if (scVideo.webkitRequestFullscreen) {
+            scVideo.webkitRequestFullscreen();
+          }
+        });
+      }
+    }
+
+    // 2b. Secondary (Right) 16:9 Showcase Video Controller
+    const sc2Video = document.getElementById('secondary-showcase-video');
+    const centerPlay2Btn = document.getElementById('showcase-right-play');
+    const ctrlPlay2Btn = document.getElementById('v2-play-pause');
+    const trackBar2 = document.getElementById('v2-track-bar');
+    const fillBar2 = document.getElementById('v2-fill-bar');
+    const timerText2 = document.getElementById('v2-timer-text');
+    const soundBtn2 = document.getElementById('v2-sound-toggle');
+    const fsBtn2 = document.getElementById('v2-fullscreen-btn');
+
+    if (sc2Video) {
+      function togglePlay2() {
+        if (sc2Video.paused) {
+          sc2Video.play().catch(() => {});
+        } else {
+          sc2Video.pause();
+        }
+      }
+
+      function updatePlayState2() {
+        const isPaused = sc2Video.paused;
+        [centerPlay2Btn, ctrlPlay2Btn].forEach(btn => {
+          if (!btn) return;
+          btn.querySelector('.icon-play')?.classList.toggle('hidden', !isPaused);
+          btn.querySelector('.icon-pause')?.classList.toggle('hidden', isPaused);
+        });
+        if (centerPlay2Btn) {
+          centerPlay2Btn.classList.toggle('visible', isPaused);
+        }
+      }
+
+      function formatTime2(seconds) {
+        if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+
+      if (centerPlay2Btn) centerPlay2Btn.addEventListener('click', togglePlay2);
+      if (ctrlPlay2Btn) ctrlPlay2Btn.addEventListener('click', togglePlay2);
+      sc2Video.addEventListener('click', togglePlay2);
+
+      sc2Video.addEventListener('play', updatePlayState2);
+      sc2Video.addEventListener('pause', updatePlayState2);
+
+      sc2Video.addEventListener('timeupdate', () => {
+        if (sc2Video.duration) {
+          const pct = (sc2Video.currentTime / sc2Video.duration) * 100;
+          if (fillBar2) fillBar2.style.width = `${pct}%`;
+          if (timerText2) timerText2.textContent = `${formatTime2(sc2Video.currentTime)} / ${formatTime2(sc2Video.duration)}`;
+        }
+      });
+
+      if (trackBar2) {
+        trackBar2.addEventListener('click', (e) => {
+          const rect = trackBar2.getBoundingClientRect();
+          const pos = (e.clientX - rect.left) / rect.width;
+          if (sc2Video.duration) {
+            sc2Video.currentTime = pos * sc2Video.duration;
+          }
+        });
+      }
+
+      if (soundBtn2) {
+        soundBtn2.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sc2Video.muted = !sc2Video.muted;
+          const isMuted = sc2Video.muted;
+          soundBtn2.querySelector('.icon-muted')?.classList.toggle('hidden', !isMuted);
+          soundBtn2.querySelector('.icon-unmuted')?.classList.toggle('hidden', isMuted);
+          showToast(isMuted ? 'Right video audio muted' : 'Right video audio enabled ✨');
+        });
+      }
+
+      if (fsBtn2) {
+        fsBtn2.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (sc2Video.requestFullscreen) {
+            sc2Video.requestFullscreen();
+          } else if (sc2Video.webkitRequestFullscreen) {
+            sc2Video.webkitRequestFullscreen();
+          }
+        });
+      }
+    }
+
+    // 3. Product Gallery Video Switcher (for product.html)
+    const mainWrap = document.getElementById('main-img-wrap');
+    const videoThumb = document.querySelector('.thumb-item.thumb-video');
+
+    if (mainWrap && videoThumb) {
+      videoThumb.addEventListener('click', function() {
+        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+        videoThumb.classList.add('active');
+
+        mainWrap.innerHTML = `
+          <video autoplay loop muted controls playsinline style="width:100%; height:100%; object-fit:cover; border-radius: var(--radius); aspect-ratio: 1/1;">
+            <source src="${videoThumb.dataset.video}" type="video/mp4">
+          </video>
+        `;
+      });
+    }
+  });
+})();
+
 
 

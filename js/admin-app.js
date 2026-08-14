@@ -429,7 +429,47 @@ class AdminApp {
 
   // --- CATEGORIES DATA ---
   async loadCategoriesData() {
-    // Standard catalog categories loader
+    const res = await window.AdminService.getCategories();
+    const tbody = document.querySelector('#categories-table-tbody');
+    if (!tbody) return;
+
+    if (res.success && res.data && res.data.length) {
+      tbody.innerHTML = res.data.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td><code>${c.slug}</code></td>
+          <td>${c.description || 'N/A'}</td>
+          <td><span class="badge ${c.active !== false ? 'badge-success' : 'badge-secondary'}">${c.active !== false ? 'ACTIVE' : 'INACTIVE'}</span></td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="app.editCategory('${c.id || c.slug}')">Edit</button>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = `
+        <tr>
+          <td>Gold Coins</td>
+          <td>gold-coins</td>
+          <td>24K Pure 1 Gram Gold Coins</td>
+          <td><span class="badge badge-success">ACTIVE</span></td>
+          <td><button class="btn btn-secondary btn-sm">Edit</button></td>
+        </tr>
+        <tr>
+          <td>Gold Jewellery</td>
+          <td>jewellery</td>
+          <td>1 Gram Gold Pendants & Bangles</td>
+          <td><span class="badge badge-success">ACTIVE</span></td>
+          <td><button class="btn btn-secondary btn-sm">Edit</button></td>
+        </tr>
+        <tr>
+          <td>Gold Gifts</td>
+          <td>gifting</td>
+          <td>Gold Gift Boxes & Velvet Sets</td>
+          <td><span class="badge badge-success">ACTIVE</span></td>
+          <td><button class="btn btn-secondary btn-sm">Edit</button></td>
+        </tr>
+      `;
+    }
   }
 
   // --- GOLD RATES DATA ---
@@ -663,6 +703,7 @@ class AdminApp {
     // Save Buttons
     document.querySelector('#save-website-sections-btn')?.addEventListener('click', () => this.handleSaveWebsiteSections());
     document.querySelector('#btn-save-product-submit')?.addEventListener('click', (e) => this.handleSaveProduct(e));
+    document.querySelector('#btn-save-category-submit')?.addEventListener('click', (e) => this.handleSaveCategorySubmit(e));
     document.querySelector('#btn-submit-stock-adjust')?.addEventListener('click', (e) => this.handleSubmitStockAdjust(e));
     document.querySelector('#save-hero-btn')?.addEventListener('click', () => this.handleSaveHero());
     document.querySelector('#save-brand-btn')?.addEventListener('click', () => this.handleSaveBrand());
@@ -848,6 +889,10 @@ class AdminApp {
     document.querySelector('#pm-stock').value = p.stockQuantity || 0;
     document.querySelector('#pm-threshold').value = p.lowStockThreshold || 5;
     document.querySelector('#pm-description').value = p.description || '';
+    if (document.querySelector('#pm-badge')) document.querySelector('#pm-badge').value = p.badge || p.badgeTag || (p.isFeatured ? 'BESTSELLER' : '');
+    if (document.querySelector('#pm-price')) document.querySelector('#pm-price').value = p.price || p.sellingPrice || '';
+    if (document.querySelector('#pm-featured')) document.querySelector('#pm-featured').checked = !!(p.isFeatured || p.featured);
+    if (document.querySelector('#pm-active')) document.querySelector('#pm-active').checked = p.isActive !== false;
 
     document.querySelector('#product-modal-title').textContent = 'Edit Product';
     this.renderProductModalPreviews();
@@ -928,6 +973,11 @@ class AdminApp {
       purity: document.querySelector('#pm-purity').value,
       makingCharge: document.querySelector('#pm-making').value,
       gstPercentage: document.querySelector('#pm-gst').value,
+      badge: document.querySelector('#pm-badge')?.value?.trim() || '',
+      price: document.querySelector('#pm-price')?.value ? Number(document.querySelector('#pm-price').value) : null,
+      sellingPrice: document.querySelector('#pm-price')?.value ? Number(document.querySelector('#pm-price').value) : null,
+      isFeatured: document.querySelector('#pm-featured')?.checked || false,
+      isActive: document.querySelector('#pm-active')?.checked !== false,
       stockQuantity: document.querySelector('#pm-stock').value,
       lowStockThreshold: document.querySelector('#pm-threshold').value,
       description: document.querySelector('#pm-description').value.trim(),
@@ -964,6 +1014,36 @@ class AdminApp {
         this.showToast(`Product ${targetActive ? 'activated' : 'deactivated'}`, 'success');
         await this.loadProductsData();
       }
+    }
+  }
+
+  // --- Category Handlers ---
+  handleCreateCategory() {
+    document.querySelector('#category-modal-form').reset();
+    document.querySelector('#cm-id').value = '';
+    document.querySelector('#category-modal-title').textContent = 'Create Product Category';
+    this.openModal('category-modal');
+  }
+
+  async handleSaveCategorySubmit(e) {
+    if (e) e.preventDefault();
+    const name = document.querySelector('#cm-name')?.value?.trim();
+    const slug = document.querySelector('#cm-slug')?.value?.trim() || name?.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const description = document.querySelector('#cm-description')?.value?.trim() || '';
+
+    if (!name) {
+      this.showToast("Category name is required", "error");
+      return;
+    }
+
+    this.showToast("Saving category...", "info");
+    const res = await window.AdminService.createCategory({ name, slug, description });
+    if (res.success) {
+      this.showToast(res.message || "Category created successfully", "success");
+      this.closeModal('category-modal');
+      await this.loadCategoriesData();
+    } else {
+      this.showToast(res.error || "Failed to create category", "error");
     }
   }
 

@@ -100,8 +100,16 @@
     </div>
 
     <div class="hero-image">
-      <img src="assets/hero_gold_coin.png" alt="Premium 1 Gram Gold Coin — CHINNI JEWELS" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
+      <video id="hero-video" class="hero-video-element" autoplay loop muted playsinline poster="assets/hero_gold_coin.png">
+        <source src="assets/showcase.mp4" type="video/mp4" />
+        <img src="assets/hero_gold_coin.png" alt="Premium 1 Gram Gold Coin — CHINNI JEWELS" />
+      </video>
       <div class="hero-image-overlay"></div>
+      <button class="hero-video-sound-toggle" id="hero-sound-btn" aria-label="Toggle Hero Video Sound" title="Click for Sound">
+        <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        <svg class="icon-unmuted hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span class="sound-text">Sound Off</span>
+      </button>
     </div>
   </section>
 
