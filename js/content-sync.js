@@ -177,6 +177,10 @@
     if (hero.imageUrl) {
       const imgEl = document.querySelector('.hero-image img');
       if (imgEl) {
+        imgEl.onerror = function() {
+          this.onerror = null;
+          this.src = 'assets/hero_gold_coin.png';
+        };
         let finalUrl = hero.imageUrl;
         if (finalUrl && !finalUrl.includes('v=')) {
           const v = hero.updatedAt ? (hero.updatedAt.seconds || Date.now()) : Date.now();
@@ -219,6 +223,10 @@
     if (featured.imageUrl) {
       const imgEl = document.querySelector('.featured-image img');
       if (imgEl) {
+        imgEl.onerror = function() {
+          this.onerror = null;
+          this.src = 'assets/featured_product.png';
+        };
         let finalUrl = featured.imageUrl;
         if (finalUrl && !finalUrl.includes('v=')) {
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
