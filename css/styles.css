@@ -2744,27 +2744,33 @@ button, a.btn, .nav-icon-btn, .nav-hamburger {
   .hero {
     grid-template-columns: 1fr;
     min-height: auto;
-    padding: calc(var(--nav-h) + 20px) 16px 32px;
-    gap: 24px;
+    padding: calc(var(--nav-h) + 24px) 16px 36px;
+    gap: 28px;
   }
   .hero-content {
-    order: 2;
+    order: 1;
     padding: 0;
     text-align: center;
     align-items: center;
   }
   .hero-label {
     justify-content: center;
+    margin-bottom: 20px;
+  }
+  .hero-heading {
+    font-size: clamp(2.2rem, 8vw, 3.5rem);
+    margin-bottom: 20px;
   }
   .hero-subtitle {
     max-width: 100%;
+    margin-bottom: 28px;
   }
   .hero-actions {
     justify-content: center;
     width: 100%;
   }
   .hero-image {
-    order: 1;
+    order: 2;
     width: 100%;
     max-width: 100%;
     aspect-ratio: 16 / 9;
@@ -2774,7 +2780,7 @@ button, a.btn, .nav-icon-btn, .nav-hamburger {
     overflow: hidden;
     position: relative;
     background: #0d0d0d;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
