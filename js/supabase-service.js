@@ -482,7 +482,7 @@ class SupabaseDataService {
           story: {
             title: 'Gold for Every Meaningful Moment.',
             text: 'At CHINNI JEWELS, we believe that gold is more than a metal — it is an emotion.',
-            imageUrl: 'assets/brand_story_lifestyle.png'
+            imageUrl: 'assets/brand_story_banner.jpg'
           }
         };
       }
