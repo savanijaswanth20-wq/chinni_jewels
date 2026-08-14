@@ -1048,11 +1048,34 @@ if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
    ══════════════════════════════════════════════════════════ */
 (function initVideoControllers() {
   document.addEventListener('DOMContentLoaded', () => {
-    // Hero Video Autoplay & Muted Assurance
+    // Hero Video Mobile Autoplay & Endless Playback Fix
     const heroVideo = document.getElementById('hero-video');
     if (heroVideo) {
       heroVideo.muted = true;
-      heroVideo.play().catch(() => {});
+      heroVideo.defaultMuted = true;
+      heroVideo.loop = true;
+      
+      const tryPlay = () => {
+        if (heroVideo.paused) {
+          heroVideo.play().catch(() => {});
+        }
+      };
+
+      tryPlay();
+
+      // Ensure video loops continuously without pausing or turning off
+      heroVideo.addEventListener('ended', () => {
+        heroVideo.currentTime = 0;
+        tryPlay();
+      });
+
+      // Mobile Safari / Chrome touch and scroll fallback to bypass browser autoplay restrictions
+      const mobileTriggers = ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'];
+      const triggerHandler = () => {
+        tryPlay();
+        mobileTriggers.forEach(evt => window.removeEventListener(evt, triggerHandler));
+      };
+      mobileTriggers.forEach(evt => window.addEventListener(evt, triggerHandler, { passive: true, once: true }));
     }
 
     // 2. Main Showcase Video Section Controller
