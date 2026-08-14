@@ -1048,20 +1048,11 @@ if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
    ══════════════════════════════════════════════════════════ */
 (function initVideoControllers() {
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Hero Video Sound Toggle
+    // Hero Video Autoplay & Muted Assurance
     const heroVideo = document.getElementById('hero-video');
-    const heroSoundBtn = document.getElementById('hero-sound-btn');
-
-    if (heroVideo && heroSoundBtn) {
-      heroSoundBtn.addEventListener('click', () => {
-        heroVideo.muted = !heroVideo.muted;
-        const isMuted = heroVideo.muted;
-        heroSoundBtn.querySelector('.icon-muted')?.classList.toggle('hidden', !isMuted);
-        heroSoundBtn.querySelector('.icon-unmuted')?.classList.toggle('hidden', isMuted);
-        const textSpan = heroSoundBtn.querySelector('.sound-text');
-        if (textSpan) textSpan.textContent = isMuted ? 'Sound Off' : 'Sound On';
-        showToast(isMuted ? 'Hero video sound muted' : 'Hero video sound enabled ✨');
-      });
+    if (heroVideo) {
+      heroVideo.muted = true;
+      heroVideo.play().catch(() => {});
     }
 
     // 2. Main Showcase Video Section Controller
