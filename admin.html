@@ -3,19 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CHINNI JEWELS — Admin Business Dashboard</title>
-  <meta name="description" content="Centralized Admin CMS & Business Management Dashboard for CHINNI JEWELS 1-Gram Gold Website." />
+  <title>CHINNI JEWELS — Admin Dashboard</title>
+  <meta name="description" content="Admin Management Dashboard for CHINNI JEWELS 1-Gram Gold Website." />
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Vercel Web Analytics -->
-  <script>
-    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-  </script>
-  <script defer src="/_vercel/insights/script.js"></script>
 
   <!-- Admin Styles -->
   <link rel="stylesheet" href="css/admin.css" />
@@ -27,7 +21,6 @@
 
   <!-- Core Services & AI Tools -->
   <script src="js/admin-services.js"></script>
-  <script src="js/ai-image-editor.js"></script>
 </head>
 <body>
 
@@ -40,7 +33,7 @@
         C
       </div>
       <h2 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;">CHINNI JEWELS</h2>
-      <p style="color: #9aa1b1; font-size: 0.85rem; margin-bottom: 2rem;">Authorized Admin Business Portal</p>
+      <p style="color: #9aa1b1; font-size: 0.85rem; margin-bottom: 2rem;">Authorized Admin Portal</p>
 
       <form id="admin-login-form">
         <div style="margin-bottom: 1.25rem; text-align: left;">
@@ -59,7 +52,7 @@
           Sign In to Dashboard
         </button>
       </form>
-      <p style="color: #636b7b; font-size: 0.75rem;">Only verified ADMIN and STAFF roles are permitted.</p>
+      <p style="color: #636b7b; font-size: 0.75rem;">Authorized Staff & Admin Access</p>
     </div>
   </div>
 
@@ -77,107 +70,29 @@
         <div class="brand-logo-icon">C</div>
         <div class="brand-title">
           <span class="main-name">CHINNI JEWELS</span>
-          <span class="sub-name">Admin Dashboard</span>
+          <span class="sub-name">Admin Control</span>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-group-title">Main Navigation</div>
+        <div class="nav-group-title">Admin Management</div>
 
-        <a class="nav-item active" data-view="dashboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          Dashboard Overview
+        <a class="nav-item active" data-view="products">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><path d="M21 8-9 4-9-4 9 4z"/><path d="M3 8v10l9 5 9-5V8"/></svg>
+          Product Name Management
         </a>
 
-        <a class="nav-item" data-view="website">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-          Website Sections
-        </a>
-
-        <a class="nav-item" data-view="hero">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Hero Editor
-        </a>
-
-        <a class="nav-item" data-view="branding">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          Brand Settings
-        </a>
-
-        <div class="nav-group-title">Catalog & Inventory</div>
-
-        <a class="nav-item" data-view="products">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 8-9 4-9-4 9 4z"/><path d="M3 8v10l9 5 9-5V8"/></svg>
-          Products Management
-        </a>
-
-        <a class="nav-item" data-view="categories">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
-          Categories
-        </a>
-
-        <a class="nav-item" data-view="gold_rates">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M16 10H8"/></svg>
-          Gold Rates Manager
-        </a>
-
-        <a class="nav-item" data-view="inventory">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          Inventory Stock
-        </a>
-
-        <div class="nav-group-title">Sales & Customers</div>
-
-        <a class="nav-item" data-view="orders">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          Orders Directory
-        </a>
-
-        <a class="nav-item" data-view="customers">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Customers
-        </a>
-
-        <a class="nav-item" data-view="whatsapp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          WhatsApp Settings
-        </a>
-
-        <div class="nav-group-title">System & Media</div>
-
-        <a class="nav-item" data-view="media">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Media Library
-        </a>
-
-        <a class="nav-item" data-view="seo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          SEO Management
-        </a>
-
-        <a class="nav-item" data-view="users">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          User Management
-        </a>
-
-        <a class="nav-item" data-view="audit_logs">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Audit Logs
-        </a>
-
-        <a class="nav-item" data-view="settings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          General Settings
+        <a class="nav-item" data-view="shipping">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Shipping Price Settings
         </a>
       </nav>
 
       <div class="sidebar-footer">
         <div class="admin-profile-card">
-          <div class="user-avatar" id="sidebar-user-avatar" title="Click to upload profile photo" style="cursor: pointer; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
+          <div class="user-avatar" id="sidebar-user-avatar">
             <span id="sidebar-user-initial">A</span>
-            <img id="sidebar-user-photo" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;" />
           </div>
-          <input type="file" id="user-avatar-input" accept="image/*" style="display: none;" />
           <div class="user-info">
             <div class="user-name" id="sidebar-user-name">Admin User</div>
             <span class="user-role-badge" id="sidebar-user-role">ADMIN</span>
@@ -199,625 +114,79 @@
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="page-title-wrap">
-            <h1 id="current-view-title">Dashboard Overview</h1>
+            <h1 id="current-view-title">Product Name Management</h1>
           </div>
         </div>
 
         <div class="header-right">
-          <div class="gold-ticker-badge">
-            <span class="pulse-dot"></span>
-            <span>24K Gold: <strong id="header-gold-rate-val">₹9,240/g</strong></span>
-          </div>
-
-          <button class="quick-action-btn" id="header-quick-add-btn">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Product
-          </button>
+          <a href="index.html" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View Live Site
+          </a>
         </div>
       </header>
 
       <!-- Viewport Panels Container -->
       <div class="admin-content-viewport">
         
-        <!-- 1. DASHBOARD OVERVIEW VIEW -->
-        <section class="view-panel active" id="view-dashboard">
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-title">Today's Sales</span>
-                <div class="metric-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-              </div>
-              <div class="metric-value" id="metric-today-sales">₹0</div>
-              <div class="metric-subtext">Live sales from today's orders</div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-title">Today's Orders</span>
-                <div class="metric-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg></div>
-              </div>
-              <div class="metric-value" id="metric-today-orders">0</div>
-              <div class="metric-subtext">Total received today</div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-title">Pending Orders</span>
-                <div class="metric-icon" style="background: rgba(245, 158, 11, 0.12); color: var(--warning);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              </div>
-              <div class="metric-value" id="metric-pending-orders" style="color: var(--warning);">0</div>
-              <div class="metric-subtext">Requires admin action</div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-title">Low Stock Alert</span>
-                <div class="metric-icon" style="background: rgba(239, 68, 68, 0.12); color: var(--danger);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-              </div>
-              <div class="metric-value" id="metric-low-stock" style="color: var(--danger);">0</div>
-              <div class="metric-subtext">Items below threshold</div>
-            </div>
-          </div>
-
-          <!-- Quick Action Controls bar -->
-          <div class="section-card" style="padding: 1rem 1.5rem;">
-            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between;">
-              <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">Quick Business Actions:</span>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-secondary btn-sm" id="qa-add-product">+ Add Product</button>
-                <button class="btn btn-secondary btn-sm" id="qa-add-stock">+ Add Stock</button>
-                <button class="btn btn-secondary btn-sm" id="qa-update-rate">Update Gold Rate</button>
-                <button class="btn btn-secondary btn-sm" id="qa-view-orders">View Orders</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Orders Table Section -->
+        <!-- 1. PRODUCT NAME MANAGEMENT VIEW -->
+        <section class="view-panel active" id="view-products">
           <div class="section-card">
             <div class="section-header">
-              <div class="section-header-title">Recent Customer Orders</div>
-              <button class="btn btn-secondary btn-sm" id="btn-view-all-orders">View All Orders</button>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="dashboard-recent-orders-tbody">
-                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading recent orders...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 2. WEBSITE SECTIONS EDITOR VIEW -->
-        <section class="view-panel" id="view-website">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Customer Website Section Manager</div>
-              <button class="btn btn-primary btn-sm" id="save-website-sections-btn">Save Section Order & Toggles</button>
-            </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
-              Enable, disable, or reorder the major customer-facing website sections.
-            </p>
-            <div id="website-sections-list" style="display: flex; flex-direction: column; gap: 0.85rem;">
-              <!-- Dynamic Sections -->
-            </div>
-          </div>
-        </section>
-
-        <!-- 3. HERO & FRONTEND IMAGES EDITOR VIEW -->
-        <section class="view-panel" id="view-hero">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Frontend Images & Section Editor</div>
-              <button class="btn btn-primary" id="save-hero-btn">Save Section Changes</button>
-            </div>
-            
-            <form id="hero-editor-form">
-              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">1. Main Hero Banner</h3>
-              <div class="form-group">
-                <label>Badge Text</label>
-                <input type="text" id="hero-badge" class="form-control" value="CRAFTED IN PURE GOLD" />
+              <div>
+                <div class="section-header-title">Product Names</div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Update product names displayed across the store and WhatsApp order messages.</p>
               </div>
-
-              <div class="form-group">
-                <label>Hero Heading</label>
-                <textarea id="hero-heading" class="form-control" rows="2">PURE GOLD.&#10;SIMPLY YOURS.</textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Subtitle Description</label>
-                <textarea id="hero-subtitle" class="form-control" rows="2">Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.</textarea>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label>Primary Button Text</label>
-                  <input type="text" id="hero-btn-primary" class="form-control" value="EXPLORE COLLECTION" />
-                </div>
-                <div class="form-group">
-                  <label>Secondary Button Text (WhatsApp)</label>
-                  <input type="text" id="hero-btn-secondary" class="form-control" value="ORDER ON WHATSAPP" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Hero Banner Image Upload</label>
-                <input type="file" id="hero-image-input" accept="image/*" class="form-control" />
-                <div style="margin-top: 0.75rem;">
-                  <img id="hero-image-preview" src="assets/hero_gold_coin.png" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
-                </div>
-              </div>
-
-              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;" />
-
-              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">2. Featured Product Showcase</h3>
-              <div class="form-group">
-                <label>Featured Eyebrow Text</label>
-                <input type="text" id="featured-eyebrow" class="form-control" value="1 Gram Collection — Featured" />
-              </div>
-              <div class="form-group">
-                <label>Featured Title</label>
-                <input type="text" id="featured-title" class="form-control" value="Signature Gold Coin" />
-              </div>
-              <div class="form-group">
-                <label>Featured Description</label>
-                <textarea id="featured-desc" class="form-control" rows="3">Our most beloved piece. The Signature Gold Coin is a testament to pure craftsmanship — each coin bearing intricate detail, certified purity and delivered in premium packaging.</textarea>
-              </div>
-              <div class="form-group">
-                <label>Featured Section Image Upload</label>
-                <input type="file" id="featured-image-input" accept="image/*" class="form-control" />
-                <div style="margin-top: 0.75rem;">
-                  <img id="featured-image-preview" src="assets/featured_product.png" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
-                </div>
-              </div>
-
-              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;" />
-
-              <h3 style="color: var(--gold-light); font-size: 1.1rem; margin-bottom: 1rem;">3. Brand Story / About Us</h3>
-              <div class="form-group">
-                <label>Story Title</label>
-                <input type="text" id="story-title" class="form-control" value="Gold for Every Meaningful Moment." />
-              </div>
-              <div class="form-group">
-                <label>Story Description Text</label>
-                <textarea id="story-text" class="form-control" rows="3">At CHINNI JEWELS, we believe that gold is more than a metal — it is an emotion. A token of love passed between hands at weddings, a blessing given on auspicious days, a memory gifted to someone precious.</textarea>
-              </div>
-              <div class="form-group">
-                <label>Brand Story Image Upload</label>
-                <input type="file" id="story-image-input" accept="image/*" class="form-control" />
-                <div style="margin-top: 0.75rem;">
-                  <img id="story-image-preview" src="assets/brand_story_banner.jpg" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);" />
-                </div>
-              </div>
-
-              <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem;">
-                <label class="switch">
-                  <input type="checkbox" id="hero-visible" checked />
-                  <span class="slider"></span>
-                </label>
-                <span style="font-size: 0.9rem; font-weight: 600; color: #fff;">Show Hero Section on Website</span>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 4. BRAND SETTINGS VIEW -->
-        <section class="view-panel" id="view-branding">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Brand & Business Information</div>
-              <button class="btn btn-primary" id="save-brand-btn">Save Brand Settings</button>
-            </div>
-            
-            <form id="brand-form">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label>Brand Name</label>
-                  <input type="text" id="brand-name" class="form-control" value="CHINNI JEWELS" />
-                </div>
-                <div class="form-group">
-                  <label>Tagline</label>
-                  <input type="text" id="brand-tagline" class="form-control" value="Pure 1 Gram Gold Collection" />
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label>Primary Phone</label>
-                  <input type="text" id="brand-phone" class="form-control" value="+91 6304702907" />
-                </div>
-                <div class="form-group">
-                  <label>WhatsApp Number</label>
-                  <input type="text" id="brand-whatsapp" class="form-control" value="916304702907" />
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label>Business Email</label>
-                  <input type="email" id="brand-email" class="form-control" value="contact@chinnijewels.com" />
-                </div>
-                <div class="form-group">
-                  <label>Business Hours</label>
-                  <input type="text" id="brand-hours" class="form-control" value="Mon - Sat: 10:00 AM - 8:00 PM" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Address</label>
-                <textarea id="brand-address" class="form-control" rows="2">Main Road, Jewellers Street, Hyderabad, Telangana - 500001</textarea>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 5. PRODUCTS MANAGEMENT VIEW -->
-        <section class="view-panel" id="view-products">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Product Catalog</div>
-              <button class="btn btn-primary" id="btn-open-add-product-modal">+ Add New Product</button>
+              <button class="btn btn-primary" id="btn-open-add-product-modal">+ Add Product</button>
             </div>
             
             <div class="table-responsive">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Image</th>
+                    <th style="width: 70px;">Image</th>
                     <th>Product Name</th>
-                    <th>SKU</th>
-                    <th>Weight</th>
-                    <th>Purity</th>
-                    <th>Making (₹)</th>
-                    <th>Stock</th>
+                    <th>Slug / Identifier</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th style="text-align: right;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="products-table-tbody">
-                  <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading product catalog...</td></tr>
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </section>
 
-        <!-- 6. CATEGORIES VIEW -->
-        <section class="view-panel" id="view-categories">
-          <div class="section-card">
+        <!-- 2. SHIPPING PRICE SETTINGS VIEW -->
+        <section class="view-panel" id="view-shipping">
+          <div class="section-card" style="max-width: 600px;">
             <div class="section-header">
-              <div class="section-header-title">Product Categories</div>
-              <button class="btn btn-primary" id="btn-add-category">+ Create Category</button>
-            </div>
-            
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Category Name</th>
-                    <th>Slug</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="categories-table-tbody">
-                  <tr>
-                    <td>Gold Coins</td>
-                    <td>gold-coins</td>
-                    <td>24K Pure 1 Gram Gold Coins</td>
-                    <td><span class="badge badge-success">ACTIVE</span></td>
-                    <td><button class="btn btn-secondary btn-sm">Edit</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 7. GOLD RATES MANAGER VIEW -->
-        <section class="view-panel" id="view-gold_rates">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Manage Live Gold Rates</div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
-              <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">24K Pure Gold</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: var(--gold-light); margin: 0.5rem 0;" id="rate-card-24k">₹9,240 / Gram</div>
-                <button class="btn btn-primary btn-sm" onclick="app.promptRateUpdate('24K')">Update 24K Rate</button>
-              </div>
-
-              <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">22K Standard Gold</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: var(--gold-light); margin: 0.5rem 0;" id="rate-card-22k">₹8,470 / Gram</div>
-                <button class="btn btn-primary btn-sm" onclick="app.promptRateUpdate('22K')">Update 22K Rate</button>
-              </div>
-
-              <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">18K Gold</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: var(--gold-light); margin: 0.5rem 0;" id="rate-card-18k">₹6,930 / Gram</div>
-                <button class="btn btn-primary btn-sm" onclick="app.promptRateUpdate('18K')">Update 18K Rate</button>
+              <div>
+                <div class="section-header-title">Shipping Price Settings</div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Configure the fixed shipping price applied at checkout and WhatsApp orders.</p>
               </div>
             </div>
 
-            <div class="section-header" style="margin-top: 2rem;">
-              <div class="section-header-title">Gold Rate History (Historical Log)</div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Purity</th>
-                    <th>Rate / Gram (₹)</th>
-                    <th>Effective Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="gold-rates-history-tbody">
-                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading historical rates...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 8. INVENTORY STOCK VIEW -->
-        <section class="view-panel" id="view-inventory">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Inventory Stock Dashboard</div>
-              <button class="btn btn-primary" id="btn-inventory-add-stock">+ Adjust Stock</button>
-            </div>
-            
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>SKU</th>
-                    <th>Available Stock</th>
-                    <th>Reserved</th>
-                    <th>Sold</th>
-                    <th>Stock Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="inventory-table-tbody">
-                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading inventory data...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 9. ORDERS DIRECTORY VIEW -->
-        <section class="view-panel" id="view-orders">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Orders Management</div>
-              <div style="display: flex; gap: 0.5rem;">
-                <select id="order-status-filter" class="form-control" style="width: 160px; padding: 0.4rem 0.6rem;">
-                  <option value="ALL">All Statuses</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="CONFIRMED">Confirmed</option>
-                  <option value="PROCESSING">Processing</option>
-                  <option value="SHIPPED">Shipped</option>
-                  <option value="DELIVERED">Delivered</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Order Number</th>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="orders-table-tbody">
-                  <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading orders...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 10. CUSTOMERS VIEW -->
-        <section class="view-panel" id="view-customers">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Customer Directory</div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Customer Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="customers-table-tbody">
-                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading customer records...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 11. WHATSAPP SETTINGS VIEW -->
-        <section class="view-panel" id="view-whatsapp">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">WhatsApp Integration & Template Editor</div>
-              <button class="btn btn-primary" id="save-whatsapp-settings-btn">Save WhatsApp Settings</button>
-            </div>
-
-            <form id="whatsapp-settings-form">
+            <form id="shipping-settings-form" style="margin-top: 1rem;">
               <div class="form-group">
-                <label>WhatsApp Business Number (with country code)</label>
-                <input type="text" id="wa-business-number" class="form-control" value="916304702907" />
-              </div>
-
-              <div class="form-group">
-                <label>Order WhatsApp Message Template</label>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                  Available placeholders: <code>{{orderId}}</code>, <code>{{customerName}}</code>, <code>{{productName}}</code>, <code>{{quantity}}</code>, <code>{{total}}</code>, <code>{{address}}</code>, <code>{{phone}}</code>
-                </p>
-                <textarea id="wa-order-template" class="form-control" rows="8">👑 *NEW GOLD ORDER — CHINNI JEWELS*&#10;&#10;Order ID: {{orderId}}&#10;Customer: {{customerName}}&#10;Mobile: {{phone}}&#10;&#10;Product: {{productName}}&#10;Quantity: {{quantity}}&#10;Total Amount: ₹{{total}}&#10;&#10;Delivery Address: {{address}}</textarea>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 12. MEDIA LIBRARY VIEW -->
-        <section class="view-panel" id="view-media">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Media Storage Library</div>
-              <input type="file" id="media-direct-upload" style="display:none;" />
-              <button class="btn btn-primary" onclick="document.getElementById('media-direct-upload').click()">+ Upload File</button>
-            </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">Central asset library for products and website banners.</p>
-            <div class="image-preview-grid" id="media-library-grid" style="margin-top: 1.5rem;">
-              <!-- Media Items -->
-            </div>
-          </div>
-        </section>
-
-        <!-- 13. SEO MANAGEMENT VIEW -->
-        <section class="view-panel" id="view-seo">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">SEO & OpenGraph Configuration</div>
-              <button class="btn btn-primary" id="save-seo-btn">Save SEO Settings</button>
-            </div>
-            <form id="seo-form">
-              <div class="form-group">
-                <label>Default Page Title</label>
-                <input type="text" id="seo-title" class="form-control" value="CHINNI JEWELS — Pure 1 Gram Gold Collection" />
-              </div>
-              <div class="form-group">
-                <label>Meta Description</label>
-                <textarea id="seo-desc" class="form-control" rows="3">Discover the finest 1 Gram Gold coins, jewellery and gifts at CHINNI JEWELS. Certified 24K purity.</textarea>
-              </div>
-              <div class="form-group">
-                <label>Meta Keywords</label>
-                <input type="text" id="seo-keywords" class="form-control" value="1 gram gold, gold coin, 24k pure gold, chinni jewels, gold rate today" />
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 14. USER MANAGEMENT VIEW -->
-        <section class="view-panel" id="view-users">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">Admin & Staff Users</div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="users-table-tbody">
-                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading user records...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 15. AUDIT LOGS VIEW -->
-        <section class="view-panel" id="view-audit_logs">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">System Audit Trail</div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Timestamp</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Entity</th>
-                  </tr>
-                </thead>
-                <tbody id="audit-logs-tbody">
-                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading activity logs...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- 16. GENERAL SETTINGS VIEW -->
-        <section class="view-panel" id="view-settings">
-          <div class="section-card">
-            <div class="section-header">
-              <div class="section-header-title">General Website Controls</div>
-              <button class="btn btn-primary" id="save-general-settings-btn">Save Settings</button>
-            </div>
-            <form id="general-settings-form">
-              <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
-                <label class="switch">
-                  <input type="checkbox" id="setting-maintenance-mode" />
-                  <span class="slider"></span>
-                </label>
-                <div>
-                  <span style="font-weight: 700; color: #fff;">Maintenance Mode</span>
-                  <p style="font-size: 0.78rem; color: var(--text-muted);">Displays luxury maintenance page to customers when active.</p>
+                <label style="font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">Shipping Price (₹)</label>
+                <div style="position: relative; max-width: 280px;">
+                  <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--gold-light);">₹</span>
+                  <input type="number" id="input-shipping-price" class="form-control" value="150" min="0" step="1" style="padding-left: 32px; font-size: 1.1rem; font-weight: 700; color: #fff;" required />
                 </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Default standard courier delivery fee across India.</p>
               </div>
 
-              <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
-                <label class="switch">
-                  <input type="checkbox" id="setting-show-gold-rate" checked />
-                  <span class="slider"></span>
-                </label>
-                <div>
-                  <span style="font-weight: 700; color: #fff;">Display Live Gold Rate Card</span>
-                </div>
+              <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 1rem; margin: 1.5rem 0;">
+                <div style="font-size: 0.85rem; color: #fff; font-weight: 600; margin-bottom: 4px;">🚚 Active Shipping Rate: <span id="current-shipping-badge" style="color: var(--gold-light);">₹150</span></div>
+                <div style="font-size: 0.78rem; color: #9aa1b1;">This fee is automatically calculated into Grand Total at customer checkout and WhatsApp confirmation details.</div>
               </div>
 
-              <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
-                <label class="switch">
-                  <input type="checkbox" id="setting-allow-orders" checked />
-                  <span class="slider"></span>
-                </label>
-                <div>
-                  <span style="font-weight: 700; color: #fff;">Enable Customer Ordering</span>
-                </div>
-              </div>
+              <button type="submit" class="btn btn-primary" id="btn-save-shipping" style="padding: 0.75rem 1.75rem; font-size: 0.9rem;">
+                Save Shipping Price
+              </button>
             </form>
           </div>
         </section>
@@ -827,12 +196,12 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════
-       PRODUCT ADD / EDIT MODAL
+       PRODUCT NAME EDIT / ADD MODAL
        ══════════════════════════════════════════════════════════ -->
   <div class="admin-modal-backdrop" id="product-modal">
-    <div class="admin-modal-content">
+    <div class="admin-modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 id="product-modal-title">Add New Product</h3>
+        <h3 id="product-modal-title">Edit Product Name</h3>
         <button class="modal-close-btn" onclick="app.closeModal('product-modal')">✕</button>
       </div>
       <div class="modal-body">
@@ -840,185 +209,19 @@
           <input type="hidden" id="pm-id" />
           
           <div class="form-group">
-            <label>Product Name</label>
-            <input type="text" id="pm-name" class="form-control" placeholder="e.g. Signature 1 Gram Gold Coin" required />
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>SKU Code</label>
-              <input type="text" id="pm-sku" class="form-control" placeholder="CJ-24K-C01" />
-            </div>
-            <div class="form-group">
-              <label>Category</label>
-              <select id="pm-category" class="form-control">
-                <option value="gold-coins">Gold Coins</option>
-                <option value="jewellery">Gold Jewellery</option>
-                <option value="gifting">Gold Gifting</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>Weight (Grams)</label>
-              <input type="number" step="0.1" id="pm-weight" class="form-control" value="1.0" required />
-            </div>
-            <div class="form-group">
-              <label>Purity</label>
-              <select id="pm-purity" class="form-control">
-                <option value="24K / 999">24K / 999 Pure Gold</option>
-                <option value="22K / 916">22K / 916 Gold</option>
-                <option value="18K / 750">18K / 750 Gold</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>Making Charges (₹)</label>
-              <input type="number" id="pm-making" class="form-control" value="280" required />
-            </div>
-            <div class="form-group">
-              <label>GST (%)</label>
-              <input type="number" id="pm-gst" class="form-control" value="3" required />
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>Product Badge Tag (e.g. BESTSELLER, GIFT, NEW)</label>
-              <select id="pm-badge" class="form-control">
-                <option value="">None</option>
-                <option value="BESTSELLER">Bestseller</option>
-                <option value="GIFT">Gift / Gift Box</option>
-                <option value="NEW">New Arrival</option>
-                <option value="HOT">Hot Deal</option>
-                <option value="LIMITED">Limited Edition</option>
-                <option value="FEATURED">Featured</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Manual Price (₹) <span style="font-size: 0.72rem; color: var(--text-muted);">(Leave blank to auto-calculate from 24K rate)</span></label>
-              <input type="number" id="pm-price" class="form-control" placeholder="Auto calculated if empty" />
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>Initial Stock Quantity</label>
-              <input type="number" id="pm-stock" class="form-control" value="25" required />
-            </div>
-            <div class="form-group">
-              <label>Low Stock Threshold</label>
-              <input type="number" id="pm-threshold" class="form-control" value="5" required />
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff; font-size: 0.88rem;">
-              <input type="checkbox" id="pm-featured" /> Featured Product on Homepage
-            </label>
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff; font-size: 0.88rem;">
-              <input type="checkbox" id="pm-active" checked /> Product Active in Catalog
-            </label>
+            <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Product Name *</label>
+            <input type="text" id="pm-name" class="form-control" placeholder="e.g. Signature Gold Coin" required style="font-size: 1rem;" />
           </div>
 
           <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label style="margin: 0;">Product Images</label>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-open-ai-image-editor" style="background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); color: #000; font-weight: 700; border: none; font-size: 0.78rem; padding: 4px 10px;">✨ AI Image Studio & Enhancer</button>
-            </div>
-            <input type="file" id="pm-images" accept="image/*" class="form-control" multiple />
-            <div id="pm-images-preview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
-          </div>
-
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="pm-description" class="form-control" rows="3" placeholder="Crafted in 999 purity fine gold..."></textarea>
+            <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: block;">Product Image (URL / Path)</label>
+            <input type="text" id="pm-image-url-input" class="form-control" placeholder="assets/hero_gold_coin.png" />
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="app.closeModal('product-modal')">Cancel</button>
-        <button class="btn btn-primary" id="btn-save-product-submit">Save Product</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════
-       STOCK ADJUSTMENT MODAL
-       ══════════════════════════════════════════════════════════ -->
-  <div class="admin-modal-backdrop" id="stock-modal">
-    <div class="admin-modal-content" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3>Adjust Inventory Stock</h3>
-        <button class="modal-close-btn" onclick="app.closeModal('stock-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="stock-adjust-form">
-          <input type="hidden" id="sa-product-id" />
-          <div class="form-group">
-            <label>Product</label>
-            <input type="text" id="sa-product-name" class="form-control" readonly />
-          </div>
-
-          <div class="form-group">
-            <label>Action</label>
-            <select id="sa-action-type" class="form-control">
-              <option value="ADD">+ Add Stock (Purchase / Restock)</option>
-              <option value="REMOVE">- Remove Stock (Correction)</option>
-              <option value="DAMAGED">Mark Damaged Stock</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Quantity</label>
-            <input type="number" id="sa-quantity" class="form-control" min="1" value="10" required />
-          </div>
-
-          <div class="form-group">
-            <label>Reason / Note</label>
-            <input type="text" id="sa-reason" class="form-control" placeholder="Restock batch received" required />
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="app.closeModal('stock-modal')">Cancel</button>
-        <button class="btn btn-primary" id="btn-submit-stock-adjust">Apply Adjustment</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════
-       CATEGORY ADD / EDIT MODAL
-       ══════════════════════════════════════════════════════════ -->
-  <div class="admin-modal-backdrop" id="category-modal">
-    <div class="admin-modal-content" style="max-width: 500px;">
-      <div class="modal-header">
-        <h3 id="category-modal-title">Create Product Category</h3>
-        <button class="modal-close-btn" onclick="app.closeModal('category-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="category-modal-form">
-          <input type="hidden" id="cm-id" />
-          <div class="form-group">
-            <label>Category Name</label>
-            <input type="text" id="cm-name" class="form-control" placeholder="e.g. Gold Coins, Gold Jewellery" required />
-          </div>
-          <div class="form-group">
-            <label>URL Slug</label>
-            <input type="text" id="cm-slug" class="form-control" placeholder="e.g. gold-coins, jewellery" required />
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="cm-description" class="form-control" rows="2" placeholder="Brief category description..."></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="app.closeModal('category-modal')">Cancel</button>
-        <button class="btn btn-primary" id="btn-save-category-submit">Save Category</button>
+        <button class="btn btn-primary" id="btn-save-product-submit">Save Product Name</button>
       </div>
     </div>
   </div>

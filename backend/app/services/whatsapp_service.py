@@ -98,17 +98,19 @@ class WhatsAppService:
                     f"Weight:\n{p_weight}\n\n"
                     f"Purity:\n{p_purity}\n\n"
                     f"Quantity:\n{p_qty}\n\n"
-                    f"Product Image:\n{img_url}"
+                    f"Image Type:\nHigh-Resolution PNG\n\n"
+                    f"Product Image Link:\n{img_url}"
                 )
             else:
                 p_block = (
                     f"Item #{idx}:\n"
-                    f"Product:\n{p_name}\n"
-                    f"SKU:\n{p_sku}\n"
-                    f"Weight:\n{p_weight}\n"
-                    f"Purity:\n{p_purity}\n"
-                    f"Quantity:\n{p_qty}\n"
-                    f"Product Image:\n{img_url}"
+                    f"Product:\n{p_name}\n\n"
+                    f"SKU:\n{p_sku}\n\n"
+                    f"Weight:\n{p_weight}\n\n"
+                    f"Purity:\n{p_purity}\n\n"
+                    f"Quantity:\n{p_qty}\n\n"
+                    f"Image Type:\nHigh-Resolution PNG\n\n"
+                    f"Product Image Link:\n{img_url}"
                 )
             product_blocks.append(p_block)
 

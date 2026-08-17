@@ -747,6 +747,23 @@ class AdminDataService {
     return uploadRes;
   }
 
+  async addMediaUrl(url, fileName = '') {
+    const mediaDoc = {
+      url: url,
+      fileName: fileName || url.split('/').pop().split('?')[0] || 'External Image URL',
+      fileSize: 0,
+      createdAt: new Date().toISOString()
+    };
+    if (this.db) {
+      try {
+        await this.db.collection('media').add(mediaDoc);
+      } catch (e) {
+        console.warn("[AdminService] Could not save media doc to firestore:", e.message);
+      }
+    }
+    return { success: true, url: url };
+  }
+
   async getMediaLibrary() {
     try {
       const mediaList = [];

@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS public.homepage_sections (
 -- Contact Settings Table
 CREATE TABLE IF NOT EXISTS public.contact_settings (
     id TEXT PRIMARY KEY DEFAULT 'main',
-    phone TEXT DEFAULT '+91 63047 02907',
+    phone TEXT DEFAULT '+91 95421 24161',
     email TEXT DEFAULT 'hello@chinnijewels.com',
     address TEXT DEFAULT 'Chinni Jewels Corporate Suite, Hyderabad, India',
     map_url TEXT,
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS public.contact_settings (
 -- WhatsApp Settings Table
 CREATE TABLE IF NOT EXISTS public.whatsapp_settings (
     id TEXT PRIMARY KEY DEFAULT 'main',
-    phone_number TEXT DEFAULT '916304702907',
+    phone_number TEXT DEFAULT '919542124161',
     order_message_template TEXT DEFAULT 'Hello! I would like to place an order for {{productName}} (Qty: {{quantity}}). Order Total: ₹{{total}}. Delivery Address: {{address}}, {{phone}}.',
     enabled BOOLEAN DEFAULT TRUE,
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -365,7 +365,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Initial WhatsApp Settings
 INSERT INTO public.whatsapp_settings (id, phone_number, enabled) VALUES 
-('main', '916304702907', true)
+('main', '919542124161', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Initial Categories

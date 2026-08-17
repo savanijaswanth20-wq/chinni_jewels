@@ -21,7 +21,7 @@ def seed_database(db: Session):
         admin = Profile(
             full_name="CHINNI Admin",
             email="admin@chinnijewels.com",
-            phone="+916304702907",
+            phone="+919542124161",
             hashed_password=get_password_hash("AdminSecret2026!"),
             role=UserRole.ADMIN.value,
             is_active=True

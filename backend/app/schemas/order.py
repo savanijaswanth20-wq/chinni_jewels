@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -24,6 +24,8 @@ class OrderStatusUpdateRequest(BaseModel):
     notes: Optional[str] = None
 
 class OrderItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     product_id: str
     product_name: str
@@ -39,10 +41,9 @@ class OrderItemResponse(BaseModel):
     gst: float
     total_price: float
 
-    class Config:
-        from_attributes = True
-
 class OrderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     order_number: str
     customer_name: str
@@ -68,5 +69,3 @@ class OrderResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True

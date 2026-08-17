@@ -43,7 +43,7 @@ def test_order_creation_and_whatsapp_payload(db_session):
 
     req = OrderCreateRequest(
         customer_name="Test Customer",
-        phone="+916304702907",
+        phone="+919542124161",
         address="123 Gold Street",
         city="Mumbai",
         state="Maharashtra",

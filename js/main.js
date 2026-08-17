@@ -2,7 +2,7 @@
    CHINNI JEWELS — Main JavaScript
    ═══════════════════════════════════════════════════════════ */
 
-const WA_NUMBER = '916304702907';
+const WA_NUMBER = '919542124161';
 
 /* ── Utility Functions ── */
 function waLink(message) {
@@ -495,6 +495,7 @@ function openSearchModal() {
     const goldValEl = document.querySelector('#checkout-gold-val');
     const makingValEl = document.querySelector('#checkout-making-val');
     const gstEl = document.querySelector('#checkout-gst');
+    const shippingEl = document.querySelector('#checkout-shipping-val');
     const totalEl = document.querySelector('#checkout-total');
     const imgEl = document.querySelector('#checkout-prod-img');
 
@@ -504,6 +505,7 @@ function openSearchModal() {
     if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
     if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
     if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
+    if (shippingEl) shippingEl.textContent = '₹' + (getShippingFee()).toLocaleString('en-IN');
     if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
     if (imgEl && product) imgEl.src = getCacheBustedImageUrl(product);
   })();
@@ -564,21 +566,51 @@ function openSearchModal() {
     const pincode = document.querySelector('#f-pincode')?.value.trim() || '';
     const paymentPref = document.querySelector('#f-payment-preference')?.value || 'UPI';
     const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || 1;
-    const productName = sessionStorage.getItem('chinni_selected_product_name') || 'Signature Gold Coin';
+    const productName = document.querySelector('#checkout-prod-name')?.textContent || sessionStorage.getItem('chinni_selected_product_name') || 'Signature Gold Coin';
+    const prodMeta = document.querySelector('#checkout-prod-meta')?.textContent || '24K · 999 Purity · 1 Gram';
+    const goldVal = document.querySelector('#checkout-gold-val')?.textContent || '₹9,240';
+    const makingVal = document.querySelector('#checkout-making-val')?.textContent || '₹280';
+    const gstVal = document.querySelector('#checkout-gst')?.textContent || '₹0';
+    const shippingVal = document.querySelector('#checkout-shipping-val')?.textContent || '₹' + (getShippingFee()).toLocaleString('en-IN');
+    const totalVal = document.querySelector('#checkout-total')?.textContent || '₹9,670';
+
+    const imgEl = document.querySelector('#checkout-prod-img');
+    let imgSrc = imgEl ? imgEl.src : '';
+    if (!imgSrc || imgSrc.endsWith('checkout.html') || imgSrc === window.location.href) {
+      imgSrc = window.location.origin + '/assets/hero_gold_coin.png';
+    }
 
     orderBtn.disabled = true;
     orderBtn.innerHTML = `Creating WhatsApp Order...`;
 
     let orderId = generateOrderId();
-    const messageText = `👑 *NEW GOLD ORDER — CHINNI JEWELS*\n\n` +
-      `*Order ID:* ${orderId}\n` +
-      `*Product:* ${productName}\n` +
-      `*Quantity:* ${qty} unit(s)\n` +
-      `*Payment:* ${paymentPref}\n\n` +
-      `*Customer Details:*\n` +
-      `Name: ${name}\n` +
-      `Phone: ${phone}\n` +
-      `Address: ${address}, ${city}, ${state} - ${pincode}\n\n` +
+    const messageText = `🪙 *NEW GOLD ORDER — CHINNI JEWELS*\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*ORDER ID:* ${orderId}\n\n` +
+      `*PRODUCT DETAILS:*\n` +
+      `• *Product:* ${productName}\n` +
+      `• *Specifications:* ${prodMeta}\n` +
+      `• *Quantity:* ${qty} unit(s)\n` +
+      `• *Image Type:* High-Resolution Product PNG\n` +
+      `• *Product Image:* ${imgSrc}\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*PRICE BREAKDOWN:*\n` +
+      `• *Gold Value:* ${goldVal}\n` +
+      `• *Making Charges:* ${makingVal}\n` +
+      `• *GST (3%):* ${gstVal}\n` +
+      `• *Shipping:* ${shippingVal}\n` +
+      `• *GRAND TOTAL:* ${totalVal}\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*CUSTOMER DETAILS:*\n` +
+      `• *Name:* ${name}\n` +
+      `• *Mobile:* ${phone}\n` +
+      (email ? `• *Email:* ${email}\n` : '') +
+      `\n*DELIVERY ADDRESS:*\n` +
+      `• ${address}\n` +
+      `• ${city}, ${state} - ${pincode}\n\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*PAYMENT PREFERENCE:*\n` +
+      `• ${paymentPref}\n\n` +
       `Please confirm my order and share payment instructions. Thank you!`;
 
     let waUrl = waLink(messageText);
@@ -765,6 +797,14 @@ function calculateProductPrice(product, rate24k = 9240) {
   return Math.round(subtotal + gst);
 }
 
+function getShippingFee() {
+  const saved = localStorage.getItem('chinni_shipping_price');
+  if (saved !== null && !isNaN(Number(saved))) {
+    return Number(saved);
+  }
+  return 150;
+}
+
 /**
  * Compute detailed product price breakdown for given quantity
  */
@@ -773,6 +813,7 @@ function computeProductTotals(product, qty = 1, rates24k = 9240) {
   const weight = Number(product?.weightGrams || product?.weight) || 1.0;
   const makingCharge = Number(product?.makingCharge || product?.making_charge) || 280;
   const gstRate = (Number(product?.gstPercentage || product?.gst_percentage) || 3) / 100;
+  const shippingFee = getShippingFee();
 
   let goldRatePerGram = rates24k;
   if (purity.includes('22K')) goldRatePerGram = Math.round(rates24k * (8470 / 9240));
@@ -782,9 +823,9 @@ function computeProductTotals(product, qty = 1, rates24k = 9240) {
   const makingVal = Math.round(makingCharge * weight * qty);
   const subtotal = goldVal + makingVal;
   const gstVal = Math.round(subtotal * gstRate);
-  const grandTotal = subtotal + gstVal;
+  const grandTotal = subtotal + gstVal + shippingFee;
 
-  return { goldVal, makingVal, gstVal, grandTotal, weight, purity };
+  return { goldVal, makingVal, gstVal, shippingFee, grandTotal, weight, purity };
 }
 
 /**
