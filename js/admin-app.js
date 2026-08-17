@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Simplified Admin Dashboard Controller
-   Focused on: Product Names & Shipping Price Settings
+   CHINNI JEWELS — Admin Dashboard Controller
+   Focused on: Product Names & Images, Shipping Price, Hero Section, & AI Studio
    ═══════════════════════════════════════════════════════════ */
 
 class AdminApp {
@@ -11,11 +11,13 @@ class AdminApp {
   }
 
   init() {
-    console.log("[AdminApp] Initializing Simplified Admin Controller.");
+    console.log("[AdminApp] Initializing Admin Controller with AI Image Studio.");
     this.bindAuth();
     this.bindNavigation();
     this.bindProductEvents();
     this.bindShippingEvents();
+    this.bindHeroEvents();
+    this.bindAIStudioEvents();
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -152,8 +154,9 @@ class AdminApp {
     const titleEl = document.querySelector('#current-view-title');
     if (titleEl) {
       const titles = {
-        products: "Product Name Management",
-        shipping: "Shipping Price Settings"
+        products: "Product Name & Image Management",
+        shipping: "Shipping Price Settings",
+        hero: "Hero Section Content & Image Editor"
       };
       titleEl.textContent = titles[viewName] || "Admin Dashboard";
     }
@@ -171,11 +174,13 @@ class AdminApp {
       await this.loadProductsData();
     } else if (this.currentView === 'shipping') {
       this.loadShippingData();
+    } else if (this.currentView === 'hero') {
+      this.loadHeroData();
     }
   }
 
   /* ══════════════════════════════════════════════════════════
-     3. PRODUCT NAME MANAGEMENT
+     3. PRODUCT NAME & IMAGE MANAGEMENT
      ══════════════════════════════════════════════════════════ */
   async loadProductsData() {
     const tbody = document.querySelector('#products-table-tbody');
@@ -186,18 +191,44 @@ class AdminApp {
     let products = [];
     try {
       if (window.AdminService && window.AdminService.getProducts) {
-        products = await window.AdminService.getProducts();
+        const res = await window.AdminService.getProducts();
+        if (Array.isArray(res)) {
+          products = res;
+        } else if (res && Array.isArray(res.data)) {
+          products = res.data;
+        }
       }
     } catch (e) {
       console.warn("Could not fetch remote products, fallback to default", e);
     }
 
-    if (!products || products.length === 0) {
+    if (!Array.isArray(products) || products.length === 0) {
       products = [
         {
           id: 'p1111111-1111-1111-1111-111111111111',
           name: 'Signature Gold Coin',
           slug: 'signature-gold-coin',
+          image_url: 'assets/hero_gold_coin.png',
+          active: true
+        },
+        {
+          id: 'p2222222-2222-2222-2222-222222222222',
+          name: 'Filigree Gold Pendant',
+          slug: 'filigree-gold-pendant',
+          image_url: 'assets/hero_gold_coin.png',
+          active: true
+        },
+        {
+          id: 'p3333333-3333-3333-3333-333333333333',
+          name: 'Gold Coin Gift Box',
+          slug: 'gold-coin-gift-box',
+          image_url: 'assets/hero_gold_coin.png',
+          active: true
+        },
+        {
+          id: 'p4444444-4444-4444-4444-444444444444',
+          name: 'Temple Gold Coin',
+          slug: 'temple-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
           active: true
         }
@@ -236,7 +267,7 @@ class AdminApp {
           </td>
           <td style="text-align: right;">
             <button class="btn btn-secondary btn-sm edit-product-btn" data-id="${p.id}" style="padding: 6px 14px; font-size: 0.82rem;">
-              ✏️ Edit Name
+              ✏️ Edit Name & Image
             </button>
           </td>
         </tr>
@@ -268,6 +299,48 @@ class AdminApp {
         await this.handleSaveProduct();
       });
     }
+
+    // Product Image Upload Trigger
+    const prodUploadBtn = document.querySelector('#btn-trigger-product-upload');
+    const prodFileInput = document.querySelector('#product-file-upload');
+    const prodUrlInput = document.querySelector('#pm-image-url-input');
+    const prodThumb = document.querySelector('#pm-image-preview-thumb');
+
+    if (prodUploadBtn && prodFileInput) {
+      prodUploadBtn.addEventListener('click', () => prodFileInput.click());
+      prodFileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (prodUrlInput) prodUrlInput.value = ev.target.result;
+            if (prodThumb) prodThumb.src = ev.target.result;
+            this.showToast("Product image uploaded successfully!");
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (prodUrlInput && prodThumb) {
+      prodUrlInput.addEventListener('input', () => {
+        prodThumb.src = prodUrlInput.value.trim() || 'assets/hero_gold_coin.png';
+      });
+    }
+
+    // AI Enhance Product Image Button
+    const aiProductBtn = document.querySelector('#btn-ai-enhance-product');
+    if (aiProductBtn) {
+      aiProductBtn.addEventListener('click', () => {
+        const currentSrc = prodUrlInput?.value.trim() || 'assets/hero_gold_coin.png';
+        if (window.AIEditor) {
+          window.AIEditor.openWithImage(currentSrc, prodThumb, (enhancedFile, dataUrl) => {
+            if (prodUrlInput) prodUrlInput.value = dataUrl;
+            if (prodThumb) prodThumb.src = dataUrl;
+          });
+        }
+      });
+    }
   }
 
   openAddProductModal() {
@@ -275,14 +348,19 @@ class AdminApp {
     document.querySelector('#pm-id').value = "";
     document.querySelector('#pm-name').value = "";
     document.querySelector('#pm-image-url-input').value = "assets/hero_gold_coin.png";
+    const thumb = document.querySelector('#pm-image-preview-thumb');
+    if (thumb) thumb.src = "assets/hero_gold_coin.png";
     this.openModal('product-modal');
   }
 
   openEditProductModal(prod) {
-    document.querySelector('#product-modal-title').textContent = "Edit Product Name";
+    document.querySelector('#product-modal-title').textContent = "Edit Product Name & Image";
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
-    document.querySelector('#pm-image-url-input').value = prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
+    const img = prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
+    document.querySelector('#pm-image-url-input').value = img;
+    const thumb = document.querySelector('#pm-image-preview-thumb');
+    if (thumb) thumb.src = img;
     this.openModal('product-modal');
   }
 
@@ -302,7 +380,6 @@ class AdminApp {
 
     try {
       if (id) {
-        // Update product name in list / remote
         const existing = this.products.find(p => p.id === id);
         if (existing) {
           existing.name = name;
@@ -325,10 +402,9 @@ class AdminApp {
         }
       }
 
-      // Also cache selected product name for quick store preview
       sessionStorage.setItem('chinni_selected_product_name', name);
       this.closeModal('product-modal');
-      this.showToast(`Product name "${name}" saved successfully!`);
+      this.showToast(`Product "${name}" saved successfully!`);
       this.renderProductsTable(this.products);
     } catch (err) {
       console.error("Save product error:", err);
@@ -337,7 +413,7 @@ class AdminApp {
       this.renderProductsTable(this.products);
     } finally {
       saveBtn.disabled = false;
-      saveBtn.textContent = "Save Product Name";
+      saveBtn.textContent = "Save Product";
     }
   }
 
@@ -368,6 +444,223 @@ class AdminApp {
         this.showToast(`Shipping Price updated to ₹${price} successfully!`);
       });
     }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     5. HERO SECTION & AI IMAGE EDITING
+     ══════════════════════════════════════════════════════════ */
+  getHeroDefaults() {
+    return {
+      badge: "Crafted in Pure Gold",
+      heading: "Pure Gold.\nSimply Yours.",
+      subtitle: "Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.",
+      btnPrimary: "Explore Collection",
+      btnSecondary: "Order on WhatsApp",
+      mediaUrl: "assets/hero_gold_coin.png"
+    };
+  }
+
+  loadHeroData() {
+    const saved = localStorage.getItem('chinni_hero_settings');
+    let hero = this.getHeroDefaults();
+    if (saved) {
+      try {
+        hero = Object.assign(hero, JSON.parse(saved));
+      } catch(e) {}
+    }
+
+    const badgeInput = document.querySelector('#hero-input-badge');
+    const headingInput = document.querySelector('#hero-input-heading');
+    const subtitleInput = document.querySelector('#hero-input-subtitle');
+    const btnPrimaryInput = document.querySelector('#hero-input-btn-primary');
+    const btnSecondaryInput = document.querySelector('#hero-input-btn-secondary');
+    const mediaInput = document.querySelector('#hero-input-media-url');
+
+    if (badgeInput) badgeInput.value = hero.badge || "";
+    if (headingInput) headingInput.value = hero.heading || "";
+    if (subtitleInput) subtitleInput.value = hero.subtitle || "";
+    if (btnPrimaryInput) btnPrimaryInput.value = hero.btnPrimary || "";
+    if (btnSecondaryInput) btnSecondaryInput.value = hero.btnSecondary || "";
+    if (mediaInput) mediaInput.value = hero.mediaUrl || "assets/hero_gold_coin.png";
+
+    this.updateHeroLivePreview();
+  }
+
+  updateHeroLivePreview() {
+    const badgeVal = document.querySelector('#hero-input-badge')?.value || "Crafted in Pure Gold";
+    const headingVal = document.querySelector('#hero-input-heading')?.value || "Pure Gold.\nSimply Yours.";
+    const subtitleVal = document.querySelector('#hero-input-subtitle')?.value || "";
+    const btnPrimaryVal = document.querySelector('#hero-input-btn-primary')?.value || "Explore Collection";
+    const btnSecondaryVal = document.querySelector('#hero-input-btn-secondary')?.value || "Order on WhatsApp";
+    const mediaVal = document.querySelector('#hero-input-media-url')?.value || "assets/hero_gold_coin.png";
+
+    const prevBadge = document.querySelector('#preview-hero-badge');
+    const prevHeading = document.querySelector('#preview-hero-heading');
+    const prevSubtitle = document.querySelector('#preview-hero-subtitle');
+    const prevBtnP = document.querySelector('#preview-hero-btn-primary');
+    const prevBtnS = document.querySelector('#preview-hero-btn-secondary');
+    const prevMedia = document.querySelector('#preview-hero-media');
+    const prevMediaPath = document.querySelector('#preview-hero-media-path');
+
+    if (prevBadge) prevBadge.textContent = badgeVal;
+
+    if (prevHeading) {
+      if (headingVal.includes('\n')) {
+        const parts = headingVal.split('\n');
+        prevHeading.innerHTML = `${parts[0]}<br><em style="color: var(--gold-light); font-style: italic;">${parts.slice(1).join(' ')}</em>`;
+      } else {
+        prevHeading.textContent = headingVal;
+      }
+    }
+
+    if (prevSubtitle) prevSubtitle.textContent = subtitleVal;
+    if (prevBtnP) prevBtnP.textContent = btnPrimaryVal;
+    if (prevBtnS) prevBtnS.textContent = btnSecondaryVal;
+    if (prevMediaPath) prevMediaPath.textContent = mediaVal.length > 50 ? mediaVal.substring(0, 48) + '...' : mediaVal;
+
+    if (prevMedia) {
+      prevMedia.src = mediaVal;
+    }
+  }
+
+  bindHeroEvents() {
+    const heroInputs = [
+      '#hero-input-badge',
+      '#hero-input-heading',
+      '#hero-input-subtitle',
+      '#hero-input-btn-primary',
+      '#hero-input-btn-secondary',
+      '#hero-input-media-url'
+    ];
+
+    heroInputs.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) {
+        el.addEventListener('input', () => this.updateHeroLivePreview());
+        el.addEventListener('change', () => this.updateHeroLivePreview());
+      }
+    });
+
+    // Preset Media Shortcuts
+    document.querySelectorAll('.preset-media-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = btn.dataset.url;
+        const mediaInput = document.querySelector('#hero-input-media-url');
+        if (mediaInput && url) {
+          mediaInput.value = url;
+          this.updateHeroLivePreview();
+        }
+      });
+    });
+
+    // Hero Local Photo Upload
+    const heroUploadBtn = document.querySelector('#btn-trigger-hero-upload');
+    const heroFileInput = document.querySelector('#hero-file-upload');
+    const heroMediaInput = document.querySelector('#hero-input-media-url');
+
+    if (heroUploadBtn && heroFileInput) {
+      heroUploadBtn.addEventListener('click', () => heroFileInput.click());
+      heroFileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (heroMediaInput) heroMediaInput.value = ev.target.result;
+            this.updateHeroLivePreview();
+            this.showToast("Hero photo loaded! Click 'Save Hero Section' to apply.");
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Hero AI Enhance Image Button
+    const aiHeroBtn = document.querySelector('#btn-ai-enhance-hero');
+    if (aiHeroBtn) {
+      aiHeroBtn.addEventListener('click', () => {
+        const currentSrc = heroMediaInput?.value.trim() || 'assets/hero_gold_coin.png';
+        const previewImg = document.querySelector('#preview-hero-media');
+        if (window.AIEditor) {
+          window.AIEditor.openWithImage(currentSrc, previewImg, (enhancedFile, dataUrl) => {
+            if (heroMediaInput) heroMediaInput.value = dataUrl;
+            this.updateHeroLivePreview();
+          });
+        }
+      });
+    }
+
+    // Reset Defaults Button
+    const resetBtn = document.querySelector('#btn-reset-hero-defaults');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        const def = this.getHeroDefaults();
+        document.querySelector('#hero-input-badge').value = def.badge;
+        document.querySelector('#hero-input-heading').value = def.heading;
+        document.querySelector('#hero-input-subtitle').value = def.subtitle;
+        document.querySelector('#hero-input-btn-primary').value = def.btnPrimary;
+        document.querySelector('#hero-input-btn-secondary').value = def.btnSecondary;
+        document.querySelector('#hero-input-media-url').value = def.mediaUrl;
+        this.updateHeroLivePreview();
+        this.showToast("Hero section fields reset to default.");
+      });
+    }
+
+    // Save Hero Form Submit
+    const heroForm = document.querySelector('#hero-editor-form');
+    if (heroForm) {
+      heroForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const heroData = {
+          badge: document.querySelector('#hero-input-badge')?.value.trim() || "Crafted in Pure Gold",
+          heading: document.querySelector('#hero-input-heading')?.value.trim() || "Pure Gold.\nSimply Yours.",
+          subtitle: document.querySelector('#hero-input-subtitle')?.value.trim() || "",
+          btnPrimary: document.querySelector('#hero-input-btn-primary')?.value.trim() || "Explore Collection",
+          btnSecondary: document.querySelector('#hero-input-btn-secondary')?.value.trim() || "Order on WhatsApp",
+          mediaUrl: document.querySelector('#hero-input-media-url')?.value.trim() || "assets/hero_gold_coin.png",
+          imageUrl: document.querySelector('#hero-input-media-url')?.value.trim() || "assets/hero_gold_coin.png",
+          updatedAt: Date.now()
+        };
+
+        // 1. Save to LocalStorage
+        localStorage.setItem('chinni_hero_settings', JSON.stringify(heroData));
+
+        // 2. Sync to Supabase Settings if available
+        if (window.AdminService && window.AdminService.saveSetting) {
+          try {
+            await window.AdminService.saveSetting('homepage', { hero: heroData });
+          } catch(err) {
+            console.warn("Could not sync to remote settings:", err);
+          }
+        }
+
+        // 3. Dispatch global event
+        window.dispatchEvent(new CustomEvent('cj_setting_updated', {
+          detail: { settingId: 'homepage', data: { hero: heroData } }
+        }));
+
+        this.showToast("Hero Section & Image updated successfully!");
+      });
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     6. AI IMAGE STUDIO TOP-LEVEL ACCESS
+     ══════════════════════════════════════════════════════════ */
+  bindAIStudioEvents() {
+    const triggers = ['#sidebar-open-ai-studio', '#header-ai-studio-btn'];
+    triggers.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (window.AIEditor) {
+            window.AIEditor.openWithImage('assets/hero_gold_coin.png', null, (file, dataUrl) => {
+              this.showToast("Enhanced image ready for download or store usage!");
+            });
+          }
+        });
+      }
+    });
   }
 
   /* ── Modal & Toast Helpers ── */

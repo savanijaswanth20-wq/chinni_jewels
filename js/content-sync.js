@@ -9,6 +9,14 @@
   startSyncListeners();
 
   function startSyncListeners() {
+    // 0. Local Storage Hero & Store Settings Sync
+    try {
+      const localHero = localStorage.getItem('chinni_hero_settings');
+      if (localHero) {
+        syncHeroSectionUI(JSON.parse(localHero));
+      }
+    } catch(e) {}
+
     // 1. Live Gold Rates Sync
     if (window.ApiClient) {
       window.ApiClient.getGoldRates().then(res => {

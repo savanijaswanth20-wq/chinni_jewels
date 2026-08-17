@@ -2186,7 +2186,7 @@ ul { list-style: none; }
   .container { padding: 0 32px; }
 
   .product-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
 
@@ -2252,7 +2252,7 @@ ul { list-style: none; }
 
   .section-pad { padding: 64px 0; }
 
-  .product-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
   .featured-grid { grid-template-columns: 1fr; }
   .featured-content { padding: 48px 24px; }
@@ -2284,7 +2284,7 @@ ul { list-style: none; }
 }
 
 @media (max-width: 480px) {
-  .product-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; justify-content: center; }
   .featured-actions { flex-direction: column; }
@@ -2804,12 +2804,67 @@ button, a.btn, .nav-icon-btn, .nav-hamburger {
 
   /* Product Grid & Gallery */
   .product-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 8px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
   }
 
   .product-card {
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .product-card-image {
+    aspect-ratio: 1 / 1;
     padding: 12px;
+  }
+
+  .product-card-image img {
+    width: 75%;
+    height: 75%;
+  }
+
+  .product-card-info {
+    padding: 12px 10px 14px !important;
+  }
+
+  .product-card-name {
+    font-size: 0.92rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 4px !important;
+    word-break: normal !important;
+  }
+
+  .product-card-weight {
+    font-size: 0.68rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .product-card-price {
+    font-size: 1.1rem !important;
+    margin-bottom: 12px !important;
+  }
+
+  .product-card-actions {
+    gap: 6px !important;
+  }
+
+  .product-card-actions .btn {
+    padding: 8px 6px !important;
+    font-size: 0.62rem !important;
+    min-height: 36px !important;
+  }
+
+  .wishlist-btn {
+    opacity: 1 !important;
+    width: 30px !important;
+    height: 30px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .wishlist-btn svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .product-img-wrap {
@@ -3010,8 +3065,8 @@ button, a.btn, .nav-icon-btn, .nav-hamburger {
   }
 
   .product-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 6px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 
   .product-name {
