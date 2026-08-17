@@ -189,17 +189,31 @@ class AdminApp {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>`;
 
     let products = [];
+    // 1. Check local storage first
     try {
-      if (window.AdminService && window.AdminService.getProducts) {
-        const res = await window.AdminService.getProducts();
-        if (Array.isArray(res)) {
-          products = res;
-        } else if (res && Array.isArray(res.data)) {
-          products = res.data;
+      const localProds = localStorage.getItem('chinni_products');
+      if (localProds) {
+        const parsed = JSON.parse(localProds);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          products = parsed;
         }
       }
-    } catch (e) {
-      console.warn("Could not fetch remote products, fallback to default", e);
+    } catch(e) {}
+
+    // 2. If no local products, check Supabase
+    if (products.length === 0) {
+      try {
+        if (window.AdminService && window.AdminService.getProducts) {
+          const res = await window.AdminService.getProducts();
+          if (Array.isArray(res)) {
+            products = res;
+          } else if (res && Array.isArray(res.data)) {
+            products = res.data;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch remote products, fallback to default", e);
+      }
     }
 
     if (!Array.isArray(products) || products.length === 0) {
@@ -215,14 +229,14 @@ class AdminApp {
           id: 'p2222222-2222-2222-2222-222222222222',
           name: 'Filigree Gold Pendant',
           slug: 'filigree-gold-pendant',
-          image_url: 'assets/hero_gold_coin.png',
+          image_url: 'assets/product_gold_pendant.png',
           active: true
         },
         {
           id: 'p3333333-3333-3333-3333-333333333333',
           name: 'Gold Coin Gift Box',
           slug: 'gold-coin-gift-box',
-          image_url: 'assets/hero_gold_coin.png',
+          image_url: 'assets/product_gold_gift.png',
           active: true
         },
         {
@@ -236,6 +250,7 @@ class AdminApp {
     }
 
     this.products = products;
+    localStorage.setItem('chinni_products', JSON.stringify(products));
     this.renderProductsTable(products);
   }
 
@@ -402,12 +417,19 @@ class AdminApp {
         }
       }
 
+      // Persist to LocalStorage for instant real-time live site display
+      localStorage.setItem('chinni_products', JSON.stringify(this.products));
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
+
       sessionStorage.setItem('chinni_selected_product_name', name);
+      sessionStorage.setItem('chinni_selected_product_image', imageUrl);
       this.closeModal('product-modal');
-      this.showToast(`Product "${name}" saved successfully!`);
+      this.showToast(`Product "${name}" photo & details updated successfully!`);
       this.renderProductsTable(this.products);
     } catch (err) {
       console.error("Save product error:", err);
+      localStorage.setItem('chinni_products', JSON.stringify(this.products));
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
       this.showToast(`Saved locally: ${name}`);
       this.closeModal('product-modal');
       this.renderProductsTable(this.products);

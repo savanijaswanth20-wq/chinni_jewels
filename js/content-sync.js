@@ -17,6 +17,27 @@
       }
     } catch(e) {}
 
+    // 0.1 Local Storage Products Sync (Instant Local Updates)
+    try {
+      const localProds = localStorage.getItem('chinni_products');
+      if (localProds) {
+        const parsed = JSON.parse(localProds);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          syncProductsUI(parsed);
+        }
+      }
+    } catch(e) {}
+
+    // 0.2 Cross-tab real-time storage listener
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'chinni_hero_settings' && e.newValue) {
+        try { syncHeroSectionUI(JSON.parse(e.newValue)); } catch(err) {}
+      }
+      if (e.key === 'chinni_products' && e.newValue) {
+        try { syncProductsUI(JSON.parse(e.newValue)); } catch(err) {}
+      }
+    });
+
     // 1. Live Gold Rates Sync
     if (window.ApiClient) {
       window.ApiClient.getGoldRates().then(res => {
@@ -182,19 +203,47 @@
       }
     }
 
-    if (hero.imageUrl) {
-      const imgEl = document.querySelector('.hero-image img');
-      if (imgEl) {
-        imgEl.onerror = function() {
-          this.onerror = null;
-          this.src = 'assets/hero_gold_coin.png';
-        };
-        let finalUrl = hero.imageUrl;
-        if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
-          const v = hero.updatedAt ? (hero.updatedAt.seconds || Date.now()) : Date.now();
-          finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${v}`;
+    const mediaUrl = hero.mediaUrl || hero.imageUrl;
+    if (mediaUrl) {
+      const videoEl = document.querySelector('#hero-video');
+      const imgEl = document.querySelector('#hero-fallback-img') || document.querySelector('.hero-image img');
+      const isVideo = typeof mediaUrl === 'string' && (mediaUrl.endsWith('.mp4') || mediaUrl.endsWith('.webm'));
+
+      if (isVideo) {
+        if (videoEl) {
+          videoEl.style.display = 'block';
+          videoEl.classList.remove('hidden');
+          const srcEl = videoEl.querySelector('source');
+          if (srcEl && srcEl.src !== mediaUrl) {
+            srcEl.src = mediaUrl;
+            videoEl.load();
+            videoEl.play().catch(() => {});
+          }
         }
-        imgEl.src = finalUrl;
+        if (imgEl) {
+          imgEl.style.display = 'none';
+          imgEl.classList.add('hidden');
+        }
+      } else {
+        if (videoEl) {
+          videoEl.style.display = 'none';
+          videoEl.classList.add('hidden');
+          videoEl.pause();
+        }
+        if (imgEl) {
+          imgEl.style.display = 'block';
+          imgEl.classList.remove('hidden');
+          imgEl.onerror = function() {
+            this.onerror = null;
+            this.src = 'assets/hero_gold_coin.png';
+          };
+          let finalUrl = mediaUrl;
+          if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
+            const v = hero.updatedAt ? (hero.updatedAt.seconds || hero.updatedAt || Date.now()) : Date.now();
+            finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${v}`;
+          }
+          imgEl.src = finalUrl;
+        }
       }
     }
 
