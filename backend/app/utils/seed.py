@@ -126,7 +126,8 @@ def seed_database(db: Session):
     ]
 
     for ps in products_seed:
-        existing = db.query(Product).filter(Product.sku == ps["sku"]).first()
+        target_slug = slugify(ps["name"])
+        existing = db.query(Product).filter((Product.sku == ps["sku"]) | (Product.slug == target_slug)).first()
         if not existing:
             pricing = PricingService.calculate_product_price(
                 db=db, weight_grams=ps["weight"], purity=ps["purity"], making_charge=ps["making"]
