@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — AI Image Editor & Jewelry Studio Enhancer
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — AI Image Editor & Jewelry Studio Enhancer
    Interactive Client-Side AI Image Processing & Filters
    ═══════════════════════════════════════════════════════════ */
 
@@ -316,3 +316,4 @@ class AIImageEditor {
 }
 
 window.AIEditor = new AIImageEditor();
+

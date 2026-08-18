@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Admin Dashboard Controller
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Admin Dashboard Controller
    Focused on: Product Names & Images, Shipping Price, Hero Section, & AI Studio
    ═══════════════════════════════════════════════════════════ */
 
@@ -748,3 +748,4 @@ class AdminApp {
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new AdminApp();
 });
+

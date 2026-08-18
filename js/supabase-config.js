@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Supabase Client Configuration
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Supabase Client Configuration
    ═══════════════════════════════════════════════════════════ */
 
 (function initSupabaseClient() {
@@ -13,3 +13,4 @@
     console.warn("[SupabaseConfig] Waiting for Supabase JS SDK to load...");
   }
 })();
+

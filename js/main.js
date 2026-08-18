@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Main JavaScript
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Main JavaScript
    ═══════════════════════════════════════════════════════════ */
 
 const WA_NUMBER = '919542124161';
@@ -175,7 +175,7 @@ document.addEventListener('click', (e) => {
   const waGenBtn = e.target.closest('[data-wa-general]');
   if (waGenBtn) {
     e.preventDefault();
-    const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI JEWELS. Please help me with pricing and availability.`;
+    const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAM GOLD. Please help me with pricing and availability.`;
     window.open(waLink(msg), '_blank');
     return;
   }
@@ -584,7 +584,7 @@ function openSearchModal() {
     orderBtn.innerHTML = `Creating WhatsApp Order...`;
 
     let orderId = generateOrderId();
-    const messageText = `🪙 *NEW GOLD ORDER — CHINNI JEWELS*\n\n` +
+    const messageText = `🪙 *NEW GOLD ORDER — CHINNI ONE GRAM GOLD*\n\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
       `*ORDER ID:* ${orderId}\n\n` +
       `*PRODUCT DETAILS:*\n` +
@@ -758,7 +758,7 @@ function generateOrderId() {
     bulkOrderBtn.addEventListener('click', () => {
       const qty = document.querySelector('#bulk-qty')?.value || 1;
       const total = document.querySelector('#bulk-grand-total')?.textContent || '';
-      const msg = `👑 *BULK STOCK INQUIRY — CHINNI JEWELS*\n\n` +
+      const msg = `👑 *BULK STOCK INQUIRY — CHINNI ONE GRAM GOLD*\n\n` +
         `Quantity: *${qty} Grams* (24K Pure Gold Coins)\n` +
         `Estimated Total: *${total}*\n\n` +
         `Hello! I would like to place a bulk gold stock order. Please share availability and payment terms.`;
@@ -845,7 +845,7 @@ window.renderCollectionProductsGrid = function(products) {
     return `
       <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}">
         <div class="product-card-image">
-          <img src="${imgUrl}" alt="${p.name} — CHINNI JEWELS" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
+          <img src="${imgUrl}" alt="${p.name} — CHINNI ONE GRAM GOLD" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
           ${badgeHtml}
           <button class="wishlist-btn" aria-label="Add to wishlist">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -1323,6 +1323,7 @@ if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
     }
   });
 })();
+
 
 
 

@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Admin Services Data & Backend Layer
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Admin Services Data & Backend Layer
    ═══════════════════════════════════════════════════════════ */
 
 class AdminDataService {
@@ -30,7 +30,7 @@ class AdminDataService {
       return {
         authorized: true,
         role: 'ADMIN',
-        profile: { fullName: user.displayName || 'Chinni Jewels Owner', role: 'ADMIN', email: cleanEmail }
+        profile: { fullName: user.displayName || 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: cleanEmail }
       };
     }
     if (!this.db) return { authorized: true, role: 'ADMIN', profile: { fullName: 'Owner', role: 'ADMIN' } };
@@ -48,7 +48,7 @@ class AdminDataService {
       return {
         authorized: true,
         role: 'ADMIN',
-        profile: { fullName: 'Chinni Jewels Owner', role: 'ADMIN', email: cleanEmail }
+        profile: { fullName: 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: cleanEmail }
       };
     }
   }
@@ -861,4 +861,5 @@ class AdminDataService {
 }
 
 window.AdminService = new AdminDataService();
+
 

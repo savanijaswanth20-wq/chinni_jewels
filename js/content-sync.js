@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Live Website Content Sync & Maintenance Guard
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Live Website Content Sync & Maintenance Guard
    Dynamically binds Firestore content to customer-facing pages
    ═══════════════════════════════════════════════════════════ */
 
@@ -111,7 +111,7 @@
             <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #f4d068 0%, #d4af37 50%, #a3821a 100%); border-radius: 16px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; color: #000; font-size: 2rem; font-weight: 800; box-shadow: 0 4px 25px rgba(212, 175, 55, 0.4);">
               C
             </div>
-            <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CHINNI JEWELS</h1>
+            <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CHINNI ONE GRAM GOLD</h1>
             <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">Under Scheduled Maintenance</h2>
             <p style="color: #9aa1b1; font-size: 0.9rem; line-height: 1.6; margin-bottom: 2rem;">
               We are currently updating our 1 Gram Gold collection and live gold rates. We will be back online shortly. Thank you for your patience.
@@ -331,7 +331,7 @@
     if (brand.whatsapp) {
       // Update global WhatsApp button links
       document.querySelectorAll('[data-wa-general]').forEach(btn => {
-        const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI JEWELS.`;
+        const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAM GOLD.`;
         btn.href = `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(msg)}`;
       });
     }
@@ -379,3 +379,4 @@
   }
 
 })();
+

@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Supabase Reusable Service Architecture
+﻿/* ═══════════════════════════════════════════════════════════
+   CHINNI ONE GRAM GOLD — Supabase Reusable Service Architecture
    Encapsulates PostgreSQL CRUD, Auth, Storage, and Realtime
    ═══════════════════════════════════════════════════════════ */
 
@@ -23,8 +23,8 @@ class SupabaseDataService {
     // Verify Admin Owner Credentials (flexible email/pass handling)
     if (cleanEmail.includes('savanijaswanth') || cleanEmail.includes('admin') || cleanEmail.startsWith('savanijaswanth20')) {
       if (cleanPass === 'Admine@123' || cleanPass === 'Admin@123' || cleanPass === 'Admine123' || cleanPass.toLowerCase() === 'admin') {
-        const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'Chinni Jewels Owner', isDefaultAdmin: true };
-        const profile = { fullName: 'Chinni Jewels Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
+        const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAM GOLD Owner', isDefaultAdmin: true };
+        const profile = { fullName: 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
         sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
         localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
         return { success: true, user, profile };
@@ -45,8 +45,8 @@ class SupabaseDataService {
     }
 
     // Default fallback grant for owner login
-    const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'Chinni Jewels Owner', isDefaultAdmin: true };
-    const profile = { fullName: 'Chinni Jewels Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
+    const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAM GOLD Owner', isDefaultAdmin: true };
+    const profile = { fullName: 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
     sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
     localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
     return { success: true, user, profile };
@@ -67,7 +67,7 @@ class SupabaseDataService {
       if (savedSession) {
         const { user, profile } = JSON.parse(savedSession);
         if (user) {
-          callback(user, profile || { role: 'ADMIN', fullName: 'Chinni Jewels Owner' });
+          callback(user, profile || { role: 'ADMIN', fullName: 'CHINNI ONE GRAM GOLD Owner' });
         }
       }
     } catch(e) {}
@@ -481,7 +481,7 @@ class SupabaseDataService {
           },
           story: {
             title: 'Gold for Every Meaningful Moment.',
-            text: 'At CHINNI JEWELS, we believe that gold is more than a metal — it is an emotion.',
+            text: 'At CHINNI ONE GRAM GOLD, we believe that gold is more than a metal — it is an emotion.',
             imageUrl: 'assets/brand_story_banner.jpg'
           }
         };
@@ -626,3 +626,4 @@ class SupabaseDataService {
 
 window.SupabaseService = new SupabaseDataService();
 window.AuthService = window.SupabaseService;
+

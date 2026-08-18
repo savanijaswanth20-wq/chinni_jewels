@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI JEWELS — Premium 3D Effects Layer
+   CHINNI ONE GRAM GOLD — Premium 3D Effects Layer
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Global 3D Variables ── */
@@ -62,9 +62,11 @@
 /* ══════════════════════════════════════════════════════════
    2. HERO IMAGE — Floating 3D Frame
    ══════════════════════════════════════════════════════════ */
-.hero-image {
-  transform-style: preserve-3d;
-  animation: heroFloat 6s ease-in-out infinite;
+@media (min-width: 901px) {
+  .hero-image {
+    transform-style: preserve-3d;
+    animation: heroFloat 6s ease-in-out infinite;
+  }
 }
 
 @keyframes heroFloat {
@@ -283,3 +285,4 @@
     transition-duration: 0.01ms !important;
   }
 }
+
