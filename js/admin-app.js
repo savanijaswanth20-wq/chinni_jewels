@@ -265,6 +265,7 @@ class AdminApp {
 
     tbody.innerHTML = products.map(p => {
       const img = p.image_url || p.images?.[0] || 'assets/hero_gold_coin.png';
+      const priceDisplay = p.price || p.price_inr ? `₹${(p.price || p.price_inr).toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
       return `
         <tr>
           <td>
@@ -275,14 +276,14 @@ class AdminApp {
             <div style="font-size: 0.75rem; color: var(--gold-light);">1 Gram Pure Gold</div>
           </td>
           <td>
-            <code style="background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; color: #9aa1b1;">${p.slug || p.id}</code>
+            <span style="font-weight: 700; color: var(--gold-light); font-size: 0.95rem;">${priceDisplay}</span>
           </td>
           <td>
             <span class="badge ${p.active !== false ? 'badge-success' : 'badge-warning'}">${p.active !== false ? 'ACTIVE' : 'INACTIVE'}</span>
           </td>
           <td style="text-align: right;">
             <button class="btn btn-secondary btn-sm edit-product-btn" data-id="${p.id}" style="padding: 6px 14px; font-size: 0.82rem;">
-              ✏️ Edit Name & Image
+              ✏️ Edit
             </button>
           </td>
         </tr>
@@ -314,6 +315,12 @@ class AdminApp {
         await this.handleSaveProduct();
       });
     }
+
+    // Close modal buttons (Cancel & X)
+    const cancelBtn = document.querySelector('#product-modal-cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModal('product-modal'));
+    const closeXBtn = document.querySelector('#product-modal-close-x');
+    if (closeXBtn) closeXBtn.addEventListener('click', () => this.closeModal('product-modal'));
 
     // Product Image Upload Trigger
     const prodUploadBtn = document.querySelector('#btn-trigger-product-upload');
@@ -362,6 +369,8 @@ class AdminApp {
     document.querySelector('#product-modal-title').textContent = "Add Product";
     document.querySelector('#pm-id').value = "";
     document.querySelector('#pm-name').value = "";
+    const priceEl = document.querySelector('#pm-price');
+    if (priceEl) priceEl.value = "";
     document.querySelector('#pm-image-url-input').value = "assets/hero_gold_coin.png";
     const thumb = document.querySelector('#pm-image-preview-thumb');
     if (thumb) thumb.src = "assets/hero_gold_coin.png";
@@ -369,9 +378,11 @@ class AdminApp {
   }
 
   openEditProductModal(prod) {
-    document.querySelector('#product-modal-title').textContent = "Edit Product Name & Image";
+    document.querySelector('#product-modal-title').textContent = "Edit Product Name, Price & Image";
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
+    const priceEl = document.querySelector('#pm-price');
+    if (priceEl) priceEl.value = prod.price || prod.price_inr || "";
     const img = prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
     document.querySelector('#pm-image-url-input').value = img;
     const thumb = document.querySelector('#pm-image-preview-thumb');
@@ -383,9 +394,15 @@ class AdminApp {
     const id = document.querySelector('#pm-id').value;
     const name = document.querySelector('#pm-name').value.trim();
     const imageUrl = document.querySelector('#pm-image-url-input').value.trim() || 'assets/hero_gold_coin.png';
+    const priceEl = document.querySelector('#pm-price');
+    const price = priceEl ? (parseInt(priceEl.value, 10) || 0) : 0;
 
     if (!name) {
       alert("Please enter a product name.");
+      return;
+    }
+    if (!price || price <= 0) {
+      alert("Please enter a valid price.");
       return;
     }
 
@@ -399,9 +416,11 @@ class AdminApp {
         if (existing) {
           existing.name = name;
           existing.image_url = imageUrl;
+          existing.price = price;
+          existing.price_inr = price;
         }
         if (window.AdminService && window.AdminService.updateProduct) {
-          await window.AdminService.updateProduct(id, { name: name, image_url: imageUrl });
+          await window.AdminService.updateProduct(id, { name, image_url: imageUrl, price, price_inr: price });
         }
       } else {
         const newProduct = {
@@ -409,6 +428,8 @@ class AdminApp {
           name: name,
           slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           image_url: imageUrl,
+          price: price,
+          price_inr: price,
           active: true
         };
         this.products.push(newProduct);
