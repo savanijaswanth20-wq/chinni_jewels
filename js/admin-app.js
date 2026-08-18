@@ -189,31 +189,31 @@ class AdminApp {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>`;
 
     let products = [];
-    // 1. Check local storage first
+    // 1. Check Supabase first (single source of truth)
     try {
-      const localProds = localStorage.getItem('chinni_products');
-      if (localProds) {
-        const parsed = JSON.parse(localProds);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          products = parsed;
+      if (window.AdminService && window.AdminService.getProducts) {
+        const res = await window.AdminService.getProducts();
+        if (Array.isArray(res) && res.length > 0) {
+          products = res;
+        } else if (res && Array.isArray(res.data) && res.data.length > 0) {
+          products = res.data;
         }
       }
-    } catch(e) {}
+    } catch (e) {
+      console.warn("Could not fetch remote products, fallback to local cache", e);
+    }
 
-    // 2. If no local products, check Supabase
+    // 2. If Supabase is empty or failed, check local storage
     if (products.length === 0) {
       try {
-        if (window.AdminService && window.AdminService.getProducts) {
-          const res = await window.AdminService.getProducts();
-          if (Array.isArray(res)) {
-            products = res;
-          } else if (res && Array.isArray(res.data)) {
-            products = res.data;
+        const localProds = localStorage.getItem('chinni_products');
+        if (localProds) {
+          const parsed = JSON.parse(localProds);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            products = parsed;
           }
         }
-      } catch (e) {
-        console.warn("Could not fetch remote products, fallback to default", e);
-      }
+      } catch(e) {}
     }
 
     if (!Array.isArray(products) || products.length === 0) {
