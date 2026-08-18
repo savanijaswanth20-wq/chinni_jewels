@@ -203,11 +203,19 @@ class SupabaseDataService {
       const slug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `prod-${Date.now()}`);
       const timestamp = Date.now();
 
-      // Check if product exists & fetch old image_path for cleanup later
+      // Check if product exists & fetch old data for cleanup and merging
       let oldStoragePath = null;
-      if (!isNew) {
-        const { data: existing } = await this.db.from('products').select('image_path, image_url').eq('id', targetId).single();
-        if (existing) oldStoragePath = existing.image_path;
+      let existingData = null;
+      if (!isNew && this.db) {
+        try {
+          const { data: existing } = await this.db.from('products').select('*').eq('id', targetId).maybeSingle();
+          if (existing) {
+            existingData = existing;
+            oldStoragePath = existing.image_path;
+          }
+        } catch (fetchErr) {
+          console.warn("[SupabaseService] Error fetching existing product:", fetchErr);
+        }
       }
 
       // Upload new image files if provided
@@ -235,19 +243,33 @@ class SupabaseDataService {
 
       const allImages = [...new Set([...(uploadedUrls), ...(productData.images || []), primaryImageUrl].filter(Boolean))];
 
+      const baseProduct = existingData || {};
+      const name = productData.name !== undefined ? productData.name : baseProduct.name;
+      const slug = productData.slug || (name ? name.toLowerCase().replace(/[^a-z0-9]/g, '-') : baseProduct.slug || `prod-${Date.now()}`);
+      const sku = productData.sku || baseProduct.sku || `CJ-${Date.now().toString().slice(-4)}`;
+      const description = productData.description !== undefined ? productData.description : (baseProduct.description || '');
+      const weight = Number(productData.weightGrams || productData.weight || baseProduct.weight) || 1.0;
+      const purity = productData.purity || baseProduct.purity || '24K';
+      const making_charges = Number(productData.makingCharge || productData.making_charge || baseProduct.making_charges) || 280;
+      const selling_price = Number(productData.sellingPrice || productData.price || baseProduct.selling_price) || 9520;
+      const price = selling_price;
+      const stock_quantity = Number(productData.stockQuantity || productData.stock || baseProduct.stock_quantity) || 10;
+      const featured = productData.featured !== undefined ? Boolean(productData.featured) : (productData.isFeatured !== undefined ? Boolean(productData.isFeatured) : Boolean(baseProduct.featured));
+      const active = productData.isActive !== undefined ? Boolean(productData.isActive) : (baseProduct.active !== undefined ? Boolean(baseProduct.active) : true);
+
       const fullPayload = {
-        name: productData.name,
-        slug: slug,
-        sku: productData.sku || `CJ-${Date.now().toString().slice(-4)}`,
-        description: productData.description || '',
-        weight: Number(productData.weightGrams || productData.weight) || 1.0,
-        purity: productData.purity || '24K',
-        making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
-        selling_price: Number(productData.sellingPrice || productData.price) || 9520,
-        price: Number(productData.sellingPrice || productData.price) || 9520,
-        stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
-        featured: Boolean(productData.featured || productData.isFeatured),
-        active: productData.isActive !== false,
+        name,
+        slug,
+        sku,
+        description,
+        weight,
+        purity,
+        making_charges,
+        selling_price,
+        price,
+        stock_quantity,
+        featured,
+        active,
         image_url: primaryImageUrl,
         image_path: primaryStoragePath,
         images: allImages,
@@ -255,19 +277,19 @@ class SupabaseDataService {
       };
 
       const cleanPayload = {
-        name: productData.name,
-        slug: slug,
-        sku: productData.sku || `CJ-${Date.now().toString().slice(-4)}`,
-        description: productData.description || '',
-        weight: Number(productData.weightGrams || productData.weight) || 1.0,
-        purity: productData.purity || '24K',
-        making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
-        selling_price: Number(productData.sellingPrice || productData.price) || 9520,
-        price: Number(productData.sellingPrice || productData.price) || 9520,
+        name,
+        slug,
+        sku,
+        description,
+        weight,
+        purity,
+        making_charges,
+        selling_price,
+        price,
         image_url: primaryImageUrl,
-        stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
-        featured: Boolean(productData.featured || productData.isFeatured),
-        active: productData.isActive !== false,
+        stock_quantity,
+        featured,
+        active,
         updated_at: new Date().toISOString()
       };
 
@@ -300,13 +322,18 @@ class SupabaseDataService {
       // Insert/update primary image in product_images table
       if (primaryImageUrl) {
         try {
+          // Delete old primary images first to avoid duplicates
+          await this.db.from('product_images').delete().eq('product_id', targetId).eq('is_primary', true);
+
           await this.db.from('product_images').insert([{
             product_id: targetId,
             storage_path: primaryStoragePath,
             image_url: primaryImageUrl,
             is_primary: true
           }]);
-        } catch(piErr) {}
+        } catch(piErr) {
+          console.error("[SupabaseService] Error updating primary image:", piErr);
+        }
       }
 
       // Trigger local & realtime update

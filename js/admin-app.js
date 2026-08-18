@@ -374,6 +374,7 @@ class AdminApp {
           window.AIEditor.openWithImage(currentSrc, prodThumb, (enhancedFile, dataUrl) => {
             if (prodUrlInput) prodUrlInput.value = dataUrl;
             if (prodThumb) prodThumb.src = dataUrl;
+            this.selectedProductFile = enhancedFile; // Store the enhanced file for upload
           });
         }
       });
@@ -650,6 +651,7 @@ class AdminApp {
       heroFileInput.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
         if (file) {
+          this.selectedHeroFile = file; // Store the selected file
           const reader = new FileReader();
           reader.onload = (ev) => {
             if (heroMediaInput) heroMediaInput.value = ev.target.result;
@@ -670,6 +672,7 @@ class AdminApp {
         if (window.AIEditor) {
           window.AIEditor.openWithImage(currentSrc, previewImg, (enhancedFile, dataUrl) => {
             if (heroMediaInput) heroMediaInput.value = dataUrl;
+            this.selectedHeroFile = enhancedFile; // Store the enhanced file
             this.updateHeroLivePreview();
           });
         }
@@ -697,14 +700,42 @@ class AdminApp {
     if (heroForm) {
       heroForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        let finalImageUrl = document.querySelector('#hero-input-media-url')?.value.trim() || "assets/hero_gold_coin.png";
+        
+        const saveBtn = heroForm.querySelector('button[type="submit"]');
+        const originalText = saveBtn ? saveBtn.textContent : "Save Hero Section";
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = "Uploading image...";
+        }
+
+        try {
+          if (this.selectedHeroFile) {
+            const uploadRes = await window.AdminService.uploadBrandingAsset('product-images', this.selectedHeroFile);
+            if (uploadRes.success && uploadRes.url) {
+              finalImageUrl = uploadRes.url;
+              this.selectedHeroFile = null; // Clear it
+            } else {
+              console.warn("Hero image upload failed, using input value:", uploadRes.error);
+            }
+          }
+        } catch (uploadErr) {
+          console.error("Hero image upload error:", uploadErr);
+        }
+
+        if (saveBtn) {
+          saveBtn.textContent = "Saving...";
+        }
+
         const heroData = {
           badge: document.querySelector('#hero-input-badge')?.value.trim() || "Crafted in Pure Gold",
           heading: document.querySelector('#hero-input-heading')?.value.trim() || "Pure Gold.\nSimply Yours.",
           subtitle: document.querySelector('#hero-input-subtitle')?.value.trim() || "",
           btnPrimary: document.querySelector('#hero-input-btn-primary')?.value.trim() || "Explore Collection",
           btnSecondary: document.querySelector('#hero-input-btn-secondary')?.value.trim() || "Order on WhatsApp",
-          mediaUrl: document.querySelector('#hero-input-media-url')?.value.trim() || "assets/hero_gold_coin.png",
-          imageUrl: document.querySelector('#hero-input-media-url')?.value.trim() || "assets/hero_gold_coin.png",
+          mediaUrl: finalImageUrl,
+          imageUrl: finalImageUrl,
           updatedAt: Date.now()
         };
 
@@ -724,6 +755,11 @@ class AdminApp {
         window.dispatchEvent(new CustomEvent('cj_setting_updated', {
           detail: { settingId: 'homepage', data: { hero: heroData } }
         }));
+
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = originalText;
+        }
 
         this.showToast("Hero Section & Image updated successfully!");
       });
