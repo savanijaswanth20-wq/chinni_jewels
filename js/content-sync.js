@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — Live Website Content Sync & Maintenance Guard
    Dynamically binds Firestore content to customer-facing pages
    ═══════════════════════════════════════════════════════════ */

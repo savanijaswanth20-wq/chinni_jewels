@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const bodyParse = require('body-parser');
 const livereload = require('livereload');
 const connectLiveReload = require('connect-livereload');

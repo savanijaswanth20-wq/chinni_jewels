@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — AI Image Editor & Jewelry Studio Enhancer
    Interactive Client-Side AI Image Processing & Filters
    ═══════════════════════════════════════════════════════════ */

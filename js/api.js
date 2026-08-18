@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — API Client Adapter (Supabase Native Integration)
    Connects existing UI seamlessly to Supabase PostgreSQL & Storage
    ═══════════════════════════════════════════════════════════ */
