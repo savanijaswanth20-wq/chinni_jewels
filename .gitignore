@@ -11,3 +11,6 @@ ENV/
 # Node
 node_modules/
 .vercel
+
+.vercel
+.env*

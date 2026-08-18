@@ -1,0 +1,285 @@
+/* ═══════════════════════════════════════════════════════════
+   CHINNI JEWELS — Premium 3D Effects Layer
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Global 3D Variables ── */
+:root {
+  --depth-2:    0 12px 40px rgba(0,0,0,0.14), 0 4px 12px rgba(201,168,76,0.10);
+  --depth-glow: 0 0 40px rgba(201,168,76,0.25), 0 24px 70px rgba(0,0,0,0.20);
+}
+
+/* ══════════════════════════════════════════════════════════
+   1. PRODUCT CARDS — 3D Tilt + Depth
+   ══════════════════════════════════════════════════════════ */
+.product-grid { perspective: 1400px; }
+
+.product-card {
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  cursor: pointer;
+}
+
+.product-card-image {
+  transition: transform 0.35s ease;
+}
+.product-card:hover .product-card-image {
+  transform: translateZ(18px);
+}
+
+.product-card-badge {
+  transform: translateZ(28px);
+  box-shadow: 0 4px 12px rgba(201,168,76,0.4);
+}
+
+.product-card-info { transition: transform 0.35s ease; }
+.product-card:hover .product-card-info { transform: translateZ(10px); }
+
+.product-card-actions .btn { transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease; }
+.product-card:hover .product-card-actions .btn { transform: translateZ(18px); }
+
+.product-card:hover {
+  box-shadow: var(--depth-glow);
+  border-color: rgba(201,168,76,0.4);
+}
+
+/* Shine sweep */
+.product-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 3;
+  border-radius: inherit;
+}
+.product-card:hover::after { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   2. HERO IMAGE — Floating 3D Frame
+   ══════════════════════════════════════════════════════════ */
+.hero-image {
+  transform-style: preserve-3d;
+  animation: heroFloat 6s ease-in-out infinite;
+}
+
+@keyframes heroFloat {
+  0%,100% { transform: perspective(1000px) rotateX(2deg) rotateY(-3deg) translateY(0px);   box-shadow: 0 30px 80px rgba(0,0,0,0.30), 0 0 0 1px rgba(201,168,76,0.35); }
+  33%     { transform: perspective(1000px) rotateX(-1deg) rotateY(2deg) translateY(-10px); box-shadow: 0 50px 100px rgba(0,0,0,0.25), 0 0 0 1px rgba(201,168,76,0.50); }
+  66%     { transform: perspective(1000px) rotateX(3deg) rotateY(-1deg) translateY(-5px);  box-shadow: 0 40px 90px rgba(0,0,0,0.28), 0 0 0 1px rgba(201,168,76,0.38); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   3. BUTTONS — 3D Press + Depth
+   ══════════════════════════════════════════════════════════ */
+.btn-primary {
+  box-shadow: 0 4px 0 rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.35s ease;
+}
+.btn-primary:hover  { transform: translateY(-3px); box-shadow: 0 8px 0 rgba(0,0,0,0.25), 0 14px 30px rgba(139,105,20,0.30); }
+.btn-primary:active { transform: translateY(2px);  box-shadow: 0 1px 0 rgba(0,0,0,0.35); }
+
+.btn-outline {
+  box-shadow: 0 4px 0 rgba(0,0,0,0.10), 0 4px 14px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.35s ease, color 0.35s ease;
+}
+.btn-outline:hover  { transform: translateY(-3px); box-shadow: 0 8px 0 rgba(0,0,0,0.10), 0 12px 24px rgba(0,0,0,0.12); }
+.btn-outline:active { transform: translateY(2px);  box-shadow: 0 1px 0 rgba(0,0,0,0.10); }
+
+.btn-gold {
+  box-shadow: 0 4px 0 rgba(139,105,20,0.5), 0 6px 20px rgba(201,168,76,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-gold:hover  { transform: translateY(-3px); box-shadow: 0 8px 0 rgba(139,105,20,0.4), 0 16px 30px rgba(201,168,76,0.40); }
+.btn-gold:active { transform: translateY(2px);  box-shadow: 0 1px 0 rgba(139,105,20,0.5); }
+
+/* ══════════════════════════════════════════════════════════
+   4. GOLD RATE CARD — Animated Elevation
+   ══════════════════════════════════════════════════════════ */
+.gold-rate-card {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  animation: rateCardPulse 4s ease-in-out infinite;
+}
+.gold-rate-card:hover {
+  transform: perspective(800px) translateZ(20px) translateY(-4px);
+  box-shadow: var(--depth-glow);
+}
+@keyframes rateCardPulse {
+  0%,100% { box-shadow: var(--depth-2); }
+  50%     { box-shadow: var(--depth-glow); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. SPEC ITEMS — Pop on Hover
+   ══════════════════════════════════════════════════════════ */
+.spec-item {
+  transform: perspective(600px) translateZ(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative; overflow: hidden;
+}
+.spec-item::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.spec-item:hover { transform: perspective(600px) translateZ(14px) translateY(-2px); box-shadow: 0 8px 24px rgba(201,168,76,0.18); }
+.spec-item:hover::before { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   6. WHY-CARDS — 3D Tilt
+   ══════════════════════════════════════════════════════════ */
+.why-grid { perspective: 1200px; }
+.why-card {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease;
+}
+.why-card:hover {
+  transform: perspective(800px) rotateX(-4deg) rotateY(4deg) translateZ(18px) translateY(-6px);
+  box-shadow: 10px 18px 40px rgba(0,0,0,0.10), -2px 4px 14px rgba(201,168,76,0.14);
+}
+.why-icon { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.why-card:hover .why-icon { transform: translateZ(22px) scale(1.12); }
+
+/* ══════════════════════════════════════════════════════════
+   7. NAVBAR LINK UNDERLINE
+   ══════════════════════════════════════════════════════════ */
+.nav-links a {
+  position: relative;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+.nav-links a:hover { transform: translateY(-1px); }
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0; right: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+.nav-links a:hover::after { transform: scaleX(1); }
+
+/* ══════════════════════════════════════════════════════════
+   8. TRUST ROW — Icon 3D Pop
+   ══════════════════════════════════════════════════════════ */
+.trust-item { transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+.trust-item:hover { transform: translateY(-6px) scale(1.05); }
+.trust-icon {
+  display: inline-flex;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), filter 0.35s ease;
+  filter: drop-shadow(0 2px 6px rgba(201,168,76,0.18));
+}
+.trust-item:hover .trust-icon {
+  transform: rotateY(20deg) scale(1.15);
+  filter: drop-shadow(0 4px 12px rgba(201,168,76,0.40));
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. GOLD LINE — Glow Pulse
+   ══════════════════════════════════════════════════════════ */
+.gold-line {
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  animation: goldLinePulse 3s ease-in-out infinite;
+}
+@keyframes goldLinePulse {
+  0%,100% { opacity: 0.7; transform: scaleX(1); }
+  50%     { opacity: 1;   transform: scaleX(1.2); box-shadow: 0 0 10px rgba(201,168,76,0.5); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   10. HERO HEADING EM — Gold Shimmer
+   ══════════════════════════════════════════════════════════ */
+.hero-heading em {
+  display: inline-block;
+  animation: goldShimmer 4s ease-in-out infinite;
+}
+@keyframes goldShimmer {
+  0%,100% { text-shadow: 0 0 0 rgba(201,168,76,0); }
+  50%     { text-shadow: 0 0 28px rgba(201,168,76,0.45), 0 2px 14px rgba(201,168,76,0.22); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   11. FOOTER SOCIAL — 3D Bounce
+   ══════════════════════════════════════════════════════════ */
+.footer-social a {
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), filter 0.35s ease;
+}
+.footer-social a:hover {
+  transform: translateY(-4px) scale(1.15) rotateZ(-5deg);
+  filter: drop-shadow(0 4px 10px rgba(201,168,76,0.5));
+}
+
+/* ══════════════════════════════════════════════════════════
+   12. FILTER TABS — 3D Press
+   ══════════════════════════════════════════════════════════ */
+.filter-tab {
+  box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.25s ease, background 0.25s ease;
+}
+.filter-tab:hover  { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(201,168,76,0.18); }
+.filter-tab.active { transform: translateY(1px);  box-shadow: 0 1px 0 rgba(0,0,0,0.20), inset 0 1px 3px rgba(0,0,0,0.15); }
+.filter-tab:active { transform: translateY(2px);  box-shadow: none; }
+
+/* ══════════════════════════════════════════════════════════
+   13. WHATSAPP BUTTON — 3D Depth
+   ══════════════════════════════════════════════════════════ */
+.btn-whatsapp-premium {
+  position: relative; overflow: hidden;
+  box-shadow: 0 6px 0 rgba(0,100,0,0.4), 0 12px 30px rgba(0,180,0,0.22);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-whatsapp-premium:hover  { transform: translateY(-4px); box-shadow: 0 10px 0 rgba(0,100,0,0.35), 0 20px 40px rgba(0,180,0,0.28); }
+.btn-whatsapp-premium:active { transform: translateY(2px);  box-shadow: 0 2px 0 rgba(0,100,0,0.4); }
+
+/* Ripple */
+.btn-whatsapp-premium::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+}
+.btn-whatsapp-premium:active::before { width: 300px; height: 300px; opacity: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   14. SCROLL REVEAL — 3D Entry
+   ══════════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px) perspective(600px) translateZ(-30px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0) perspective(600px) translateZ(0);
+}
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.18s; }
+.reveal-delay-3 { transition-delay: 0.28s; }
+.reveal-delay-4 { transition-delay: 0.38s; }
+.reveal-delay-5 { transition-delay: 0.48s; }
+
+/* ══════════════════════════════════════════════════════════
+   15. WISHLIST BTN — Pop
+   ══════════════════════════════════════════════════════════ */
+.wishlist-btn {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease, box-shadow 0.3s ease;
+}
+.wishlist-btn:hover { transform: scale(1.22) !important; box-shadow: 0 6px 16px rgba(0,0,0,0.14); }
+
+/* ── Respect reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
