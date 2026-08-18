@@ -362,18 +362,20 @@
             </div>
 
             <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
-              <div style="width: 54px; height: 54px; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+              <div style="width: 64px; height: 64px; border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
                 <img id="pm-image-preview-thumb" src="assets/hero_gold_coin.png" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='assets/hero_gold_coin.png'" />
               </div>
-              <div style="flex: 1;">
-                <input type="text" id="pm-image-url-input" class="form-control" placeholder="assets/hero_gold_coin.png or https://..." />
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="file" id="product-file-upload" accept="image/*" style="display: none;" />
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-trigger-product-upload" style="border-color: var(--gold); color: var(--gold-light); font-size: 0.78rem; width: 100%;">
+                    📁 Upload Product Photo
+                  </button>
+                </div>
+                <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.7rem; font-weight: 600; margin: 1px 0;">— OR —</div>
+                <input type="text" id="pm-image-url-input" class="form-control" placeholder="Paste image URL (https://...) or asset path" style="font-size: 0.82rem;" />
               </div>
             </div>
-
-            <input type="file" id="product-file-upload" accept="image/*" style="display: none;" />
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-trigger-product-upload" style="border-color: var(--gold); color: var(--gold-light); font-size: 0.78rem;">
-              📁 Upload Product Photo
-            </button>
           </div>
         </form>
       </div>

@@ -359,6 +359,7 @@ class AdminApp {
 
     if (prodUrlInput && prodThumb) {
       prodUrlInput.addEventListener('input', () => {
+        this.selectedProductFile = null; // Clear any selected upload file so URL takes precedence
         prodThumb.src = prodUrlInput.value.trim() || 'assets/hero_gold_coin.png';
       });
     }
