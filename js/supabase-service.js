@@ -211,8 +211,8 @@ class SupabaseDataService {
       }
 
       // Upload new image files if provided
-      let primaryImageUrl = productData.imageUrl || (productData.images && productData.images[0]) || '';
-      let primaryStoragePath = productData.imagePath || '';
+      let primaryImageUrl = productData.imageUrl || productData.image_url || (productData.images && productData.images[0]) || '';
+      let primaryStoragePath = productData.imagePath || productData.image_path || '';
       const uploadedUrls = [];
 
       for (const file of imageFiles) {
