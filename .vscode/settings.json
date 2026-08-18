@@ -1,0 +1,8 @@
+{
+  "git.repositoryScanMaxDepth": 1,
+  "git.scanRepositories": false,
+  "git.ignoredRepositories": [
+    "multi-container-app",
+    "welcome-to-docker"
+  ]
+}
