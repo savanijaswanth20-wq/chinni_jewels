@@ -49,6 +49,8 @@ def build_product_dto(p: Product, db: Session) -> dict:
         "gst_percentage": p.gst_percentage,
         "base_price": pricing["gold_value"],
         "selling_price": pricing["total_price"],
+        "price": p.price if p.price else pricing["total_price"],
+        "image_url": p.image_url if p.image_url else p.primary_image_url,
         "stock_quantity": inv.available_quantity,
         "reserved_quantity": inv.reserved_quantity,
         "low_stock_threshold": p.low_stock_threshold,
@@ -131,6 +133,8 @@ def create_product(req: ProductCreateRequest, user=Depends(require_role(["ADMIN"
         gst_percentage=req.gst_percentage,
         base_price=pricing["gold_value"],
         selling_price=pricing["total_price"],
+        price=req.price if req.price else pricing["total_price"],
+        image_url=req.image_url,
         stock_quantity=req.stock_quantity,
         low_stock_threshold=req.low_stock_threshold,
         is_featured=req.is_featured,
@@ -176,6 +180,8 @@ def update_product(product_id: str, req: ProductUpdateRequest, user=Depends(requ
     )
     product.base_price = pricing["gold_value"]
     product.selling_price = pricing["total_price"]
+    if not getattr(product, "price", None):
+        product.price = pricing["total_price"]
 
     db.commit()
     db.refresh(product)

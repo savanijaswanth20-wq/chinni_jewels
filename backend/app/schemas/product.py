@@ -33,6 +33,8 @@ class ProductCreateRequest(BaseModel):
     low_stock_threshold: int = 5
     is_featured: bool = False
     image_urls: Optional[List[str]] = []
+    price: Optional[float] = 0.0
+    image_url: Optional[str] = None
 
 class ProductUpdateRequest(BaseModel):
     name: Optional[str] = None
@@ -46,6 +48,8 @@ class ProductUpdateRequest(BaseModel):
     low_stock_threshold: Optional[int] = None
     is_featured: Optional[bool] = None
     is_active: Optional[bool] = None
+    price: Optional[float] = None
+    image_url: Optional[str] = None
 
 class ProductResponse(BaseModel):
     id: str
@@ -61,6 +65,8 @@ class ProductResponse(BaseModel):
     gst_percentage: float
     base_price: float
     selling_price: float
+    price: float
+    image_url: Optional[str] = None
     stock_quantity: int
     low_stock_threshold: int
     is_featured: bool

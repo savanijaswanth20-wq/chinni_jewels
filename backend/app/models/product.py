@@ -19,6 +19,8 @@ class Product(Base, TimestampMixin):
     gst_percentage = Column(Float, nullable=False, default=3.0)
     base_price = Column(Float, nullable=False, default=0.0)
     selling_price = Column(Float, nullable=False, default=0.0)
+    price = Column(Float, nullable=False, default=0.0)
+    image_url = Column(String, nullable=True)
     stock_quantity = Column(Integer, nullable=False, default=0)
     low_stock_threshold = Column(Integer, nullable=False, default=5)
     is_featured = Column(Boolean, default=False, nullable=False)

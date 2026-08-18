@@ -18,7 +18,9 @@ def run_db_migrations():
             ("orders", "payment_preference", "VARCHAR DEFAULT 'UPI'"),
             ("order_items", "product_image_url", "VARCHAR"),
             ("order_items", "gold_rate", "FLOAT DEFAULT 0.0"),
-            ("order_items", "gold_value", "FLOAT DEFAULT 0.0")
+            ("order_items", "gold_value", "FLOAT DEFAULT 0.0"),
+            ("products", "price", "FLOAT DEFAULT 0.0"),
+            ("products", "image_url", "VARCHAR")
         ]
         for tbl, col, col_def in cols_to_add:
             try:

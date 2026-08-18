@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — Admin Dashboard Controller
    Focused on: Product Names & Images, Shipping Price, Hero Section, & AI Studio
    ═══════════════════════════════════════════════════════════ */
@@ -333,13 +333,26 @@ class AdminApp {
       prodFileInput.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            if (prodUrlInput) prodUrlInput.value = ev.target.result;
-            if (prodThumb) prodThumb.src = ev.target.result;
-            this.showToast("Product image uploaded successfully!");
-          };
-          reader.readAsDataURL(file);
+          // Validate file size and format
+          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+          if (file.type && !allowedTypes.includes(file.type.toLowerCase())) {
+            alert("Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP.");
+            this.showToast("Upload failed: Invalid format");
+            prodFileInput.value = '';
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            alert("Image file exceeds maximum limit of 5MB.");
+            this.showToast("Upload failed: File too large");
+            prodFileInput.value = '';
+            return;
+          }
+
+          this.selectedProductFile = file;
+          const previewUrl = URL.createObjectURL(file);
+          if (prodUrlInput) prodUrlInput.value = file.name;
+          if (prodThumb) prodThumb.src = previewUrl;
+          this.showToast("Product photo selected!");
         }
       });
     }
@@ -366,6 +379,7 @@ class AdminApp {
   }
 
   openAddProductModal() {
+    this.selectedProductFile = null;
     document.querySelector('#product-modal-title').textContent = "Add Product";
     document.querySelector('#pm-id').value = "";
     document.querySelector('#pm-name').value = "";
@@ -378,6 +392,7 @@ class AdminApp {
   }
 
   openEditProductModal(prod) {
+    this.selectedProductFile = null;
     document.querySelector('#product-modal-title').textContent = "Edit Product Name, Price & Image";
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
@@ -410,24 +425,48 @@ class AdminApp {
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
 
+    let finalImageUrl = imageUrl;
+    let uploadSuccess = false;
+    let oldImageUrl = null;
+
+    if (id) {
+      const existing = this.products.find(p => p.id === id);
+      if (existing) {
+        oldImageUrl = existing.image_url;
+      }
+    }
+
     try {
+      if (this.selectedProductFile) {
+        const uploadProductId = id || 'new_' + Date.now();
+        saveBtn.textContent = "Uploading image...";
+        const uploadRes = await window.AdminService.uploadProductImage(uploadProductId, this.selectedProductFile);
+        if (uploadRes.success && uploadRes.url) {
+          finalImageUrl = uploadRes.url;
+          uploadSuccess = true;
+        } else {
+          throw new Error(uploadRes.error || "Image upload failed.");
+        }
+      }
+
+      saveBtn.textContent = "Saving to database...";
       if (id) {
         const existing = this.products.find(p => p.id === id);
         if (existing) {
           existing.name = name;
-          existing.image_url = imageUrl;
+          existing.image_url = finalImageUrl;
           existing.price = price;
           existing.price_inr = price;
         }
         if (window.AdminService && window.AdminService.updateProduct) {
-          await window.AdminService.updateProduct(id, { name, image_url: imageUrl, price, price_inr: price });
+          await window.AdminService.updateProduct(id, { name, image_url: finalImageUrl, price, price_inr: price });
         }
       } else {
         const newProduct = {
           id: 'p_' + Date.now(),
           name: name,
           slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          image_url: imageUrl,
+          image_url: finalImageUrl,
           price: price,
           price_inr: price,
           active: true
@@ -438,22 +477,25 @@ class AdminApp {
         }
       }
 
-      // Persist to LocalStorage for instant real-time live site display
-      localStorage.setItem('chinni_products', JSON.stringify(this.products));
-      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
+      if (uploadSuccess && oldImageUrl && window.AdminService.deleteOldStorageFile) {
+        try {
+          await window.AdminService.deleteOldStorageFile(oldImageUrl);
+        } catch (delErr) {
+          console.warn("Could not delete old image file:", delErr);
+        }
+      }
+
+      this.selectedProductFile = null;
+      await this.loadProductsData(); // Refetch from Supabase and render
 
       sessionStorage.setItem('chinni_selected_product_name', name);
-      sessionStorage.setItem('chinni_selected_product_image', imageUrl);
+      sessionStorage.setItem('chinni_selected_product_image', finalImageUrl);
       this.closeModal('product-modal');
       this.showToast(`Product "${name}" photo & details updated successfully!`);
-      this.renderProductsTable(this.products);
     } catch (err) {
       console.error("Save product error:", err);
-      localStorage.setItem('chinni_products', JSON.stringify(this.products));
-      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
-      this.showToast(`Saved locally: ${name}`);
-      this.closeModal('product-modal');
-      this.renderProductsTable(this.products);
+      alert("Failed to save product: " + err.message);
+      this.showToast("Save failed!");
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = "Save Product";

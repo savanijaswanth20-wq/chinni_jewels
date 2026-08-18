@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — Supabase Reusable Service Architecture
    Encapsulates PostgreSQL CRUD, Auth, Storage, and Realtime
    ═══════════════════════════════════════════════════════════ */
@@ -242,6 +242,7 @@ class SupabaseDataService {
         purity: productData.purity || '24K',
         making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
         selling_price: Number(productData.sellingPrice || productData.price) || 9520,
+        price: Number(productData.sellingPrice || productData.price) || 9520,
         stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
         featured: Boolean(productData.featured || productData.isFeatured),
         active: productData.isActive !== false,
@@ -260,6 +261,8 @@ class SupabaseDataService {
         purity: productData.purity || '24K',
         making_charges: Number(productData.makingCharge || productData.making_charge) || 280,
         selling_price: Number(productData.sellingPrice || productData.price) || 9520,
+        price: Number(productData.sellingPrice || productData.price) || 9520,
+        image_url: primaryImageUrl,
         stock_quantity: Number(productData.stockQuantity || productData.stock) || 10,
         featured: Boolean(productData.featured || productData.isFeatured),
         active: productData.isActive !== false,
@@ -553,14 +556,14 @@ class SupabaseDataService {
   async uploadFile(bucketName, rawFile, productId = 'general') {
     if (!rawFile) return { success: false, error: "No file provided" };
 
-    // STEP 4 Validation: JPG, JPEG, PNG, WebP, SVG
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+    // STEP 4 Validation: JPG, JPEG, PNG, WebP only (no SVG)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (rawFile.type && !allowedTypes.includes(rawFile.type.toLowerCase())) {
       return { success: false, error: "Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP." };
     }
 
-    if (rawFile.size > 20 * 1024 * 1024) {
-      return { success: false, error: "Image file exceeds maximum limit of 20MB." };
+    if (rawFile.size > 5 * 1024 * 1024) {
+      return { success: false, error: "Image file exceeds maximum limit of 5MB." };
     }
 
     if (!this.db) {
@@ -572,23 +575,14 @@ class SupabaseDataService {
     }
 
     try {
-      const cleanName = rawFile.name ? rawFile.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'image.jpg';
+      const cleanName = rawFile.name ? rawFile.name.replace(/[^a-zA-Z0-9.-]/g, '_') : 'image.jpg';
       const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const storagePath = `${productId}/${timestamp}-${randomStr}_${cleanName}`;
+      const storagePath = `products/${productId}/${timestamp}-${cleanName}`;
 
-      // Resilient bucket uploading with automatic fallback
-      let targetBucket = bucketName || 'products';
+      let targetBucket = bucketName || 'product-images';
       let uploadResult = await this.db.storage
         .from(targetBucket)
         .upload(storagePath, rawFile, { cacheControl: '3600', upsert: true });
-
-      if (uploadResult.error && targetBucket !== 'media') {
-        targetBucket = 'media';
-        uploadResult = await this.db.storage
-          .from(targetBucket)
-          .upload(storagePath, rawFile, { cacheControl: '3600', upsert: true });
-      }
 
       if (uploadResult.error) {
         throw uploadResult.error;
@@ -620,6 +614,28 @@ class SupabaseDataService {
         reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
         reader.readAsDataURL(rawFile);
       });
+    }
+  }
+
+  async deleteStorageFile(url) {
+    if (!url || !this.db) return { success: false, error: "Database or URL unavailable" };
+    try {
+      if (url.includes('/storage/v1/object/public/')) {
+        const parts = url.split('/storage/v1/object/public/');
+        if (parts.length > 1) {
+          const pathParts = parts[1].split('/');
+          const bucket = pathParts[0];
+          const storagePath = pathParts.slice(1).join('/').split('?')[0]; // Remove query params
+          console.log(`[SupabaseService] Cleaning up old storage file in bucket "${bucket}": ${storagePath}`);
+          const { error } = await this.db.storage.from(bucket).remove([storagePath]);
+          if (error) throw error;
+          return { success: true };
+        }
+      }
+      return { success: false, error: "Not a valid Supabase storage URL" };
+    } catch (err) {
+      console.warn("[SupabaseService] Error deleting file:", err.message);
+      return { success: false, error: err.message };
     }
   }
 }

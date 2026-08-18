@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    CHINNI ONE GRAM GOLD — Admin Services Data & Backend Layer
    ═══════════════════════════════════════════════════════════ */
 
@@ -362,11 +362,11 @@ class AdminDataService {
     });
   }
 
-  async uploadFile(folder, rawFile) {
+  async uploadFile(bucketName, rawFile, productId = 'general') {
     if (!rawFile) return { success: false, error: "No file provided" };
     const file = await this.compressImage(rawFile);
     if (window.SupabaseService) {
-      return await window.SupabaseService.uploadFile(folder, file);
+      return await window.SupabaseService.uploadFile(bucketName, file, productId);
     }
     try {
       const dataUrl = await this.fileToDataUrl(file);
@@ -380,6 +380,9 @@ class AdminDataService {
    * Safely delete old image after new image upload succeeds
    */
   async deleteOldStorageFile(oldUrl) {
+    if (window.SupabaseService) {
+      return await window.SupabaseService.deleteStorageFile(oldUrl);
+    }
     if (!oldUrl || !this.storage || !oldUrl.includes('firebasestorage.googleapis.com')) return;
     try {
       const storageRef = this.storage.refFromURL(oldUrl.split('?')[0]);
@@ -391,7 +394,7 @@ class AdminDataService {
   }
 
   async uploadProductImage(productId, file) {
-    return await this.uploadFile(`products/${productId}`, file);
+    return await this.uploadFile('product-images', file, productId);
   }
 
   async saveProduct(productId, productData, imageFiles = []) {
@@ -459,6 +462,14 @@ class AdminDataService {
     } catch (err) {
       return { success: false, error: err.message };
     }
+  }
+
+  async updateProduct(productId, productData) {
+    return this.saveProduct(productId, productData);
+  }
+
+  async createProduct(productData) {
+    return this.saveProduct(null, productData);
   }
 
   async toggleProductStatus(productId, isActive) {
