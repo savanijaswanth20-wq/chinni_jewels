@@ -132,6 +132,8 @@ class SupabaseDataService {
           purity: p.purity || '24K',
           sellingPrice: Number(p.selling_price) || 9520,
           selling_price: Number(p.selling_price) || 9520,
+          price: Number(p.selling_price) || 9520,
+          price_inr: Number(p.selling_price) || 9520,
           makingCharge: Number(p.making_charge) || 280,
           gstPercentage: Number(p.gst_percentage) || 3,
           stockQuantity: Number(p.stock_quantity) || 10,

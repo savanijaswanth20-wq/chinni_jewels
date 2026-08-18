@@ -265,7 +265,8 @@ class AdminApp {
 
     tbody.innerHTML = products.map(p => {
       const img = p.image_url || p.images?.[0] || 'assets/hero_gold_coin.png';
-      const priceDisplay = p.price || p.price_inr ? `₹${(p.price || p.price_inr).toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
+      const price = p.price || p.price_inr || p.selling_price || p.sellingPrice;
+      const priceDisplay = price ? `₹${price.toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
       return `
         <tr>
           <td>
