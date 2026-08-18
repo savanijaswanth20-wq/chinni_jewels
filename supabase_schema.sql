@@ -377,22 +377,22 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Initial Sample Products
 INSERT INTO public.products (id, name, slug, sku, weight, purity, selling_price, category_id, featured, active) VALUES 
-('p1111111-1111-1111-1111-111111111111', 'Signature Gold Coin', 'signature-gold-coin', 'CJ-GC-001', 1.000, '24K', 9520.00, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', true, true),
-('p2222222-2222-2222-2222-222222222222', 'Filigree Gold Pendant', 'filigree-gold-pendant', 'CJ-JP-002', 1.000, '24K', 9680.00, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', true, true),
-('p3333333-3333-3333-3333-333333333333', 'Gold Coin Gift Box', 'gold-coin-gift-box', 'CJ-GG-003', 1.000, '24K', 9820.00, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', true, true),
-('p4444444-4444-4444-4444-444444444444', 'Temple Gold Coin', 'temple-gold-coin', 'CJ-GC-004', 1.000, '24K', 9520.00, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', false, true),
-('p5555555-5555-5555-5555-555555555555', 'Classic Gold Bangle', 'classic-gold-bangle', 'CJ-JB-005', 1.000, '22K', 8750.00, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', false, true),
-('p6666666-6666-6666-6666-666666666666', 'Pure Gold Bar', 'pure-gold-bar', 'CJ-GB-006', 1.000, '24K', 9620.00, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', false, true)
+('e1111111-1111-1111-1111-111111111111', 'Signature Gold Coin', 'signature-gold-coin', 'CJ-GC-001', 1.000, '24K', 9520.00, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', true, true),
+('e2222222-2222-2222-2222-222222222222', 'Filigree Gold Pendant', 'filigree-gold-pendant', 'CJ-JP-002', 1.000, '24K', 9680.00, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', true, true),
+('e3333333-3333-3333-3333-333333333333', 'Gold Coin Gift Box', 'gold-coin-gift-box', 'CJ-GG-003', 1.000, '24K', 9820.00, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', true, true),
+('e4444444-4444-4444-4444-444444444444', 'Temple Gold Coin', 'temple-gold-coin', 'CJ-GC-004', 1.000, '24K', 9520.00, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', false, true),
+('e5555555-5555-5555-5555-555555555555', 'Classic Gold Bangle', 'classic-gold-bangle', 'CJ-JB-005', 1.000, '22K', 8750.00, 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', false, true),
+('e6666666-6666-6666-6666-666666666666', 'Pure Gold Bar', 'pure-gold-bar', 'CJ-GB-006', 1.000, '24K', 9620.00, 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', false, true)
 ON CONFLICT (slug) DO NOTHING;
 
 -- Initial Product Images
 INSERT INTO public.product_images (product_id, image_url, is_primary) VALUES
-('p1111111-1111-1111-1111-111111111111', 'assets/hero_gold_coin.png', true),
-('p2222222-2222-2222-2222-222222222222', 'assets/product_gold_pendant.png', true),
-('p3333333-3333-3333-3333-333333333333', 'assets/product_gold_gift.png', true),
-('p4444444-4444-4444-4444-444444444444', 'assets/featured_product.png', true),
-('p5555555-5555-5555-5555-555555555555', 'assets/product_gold_bangle.png', true),
-('p6666666-6666-6666-6666-666666666666', 'assets/product_gold_bar.png', true)
+('e1111111-1111-1111-1111-111111111111', 'assets/hero_gold_coin.png', true),
+('e2222222-2222-2222-2222-222222222222', 'assets/product_gold_pendant.png', true),
+('e3333333-3333-3333-3333-333333333333', 'assets/product_gold_gift.png', true),
+('e4444444-4444-4444-4444-444444444444', 'assets/featured_product.png', true),
+('e5555555-5555-5555-5555-555555555555', 'assets/product_gold_bangle.png', true),
+('e6666666-6666-6666-6666-666666666666', 'assets/product_gold_bar.png', true)
 ON CONFLICT DO NOTHING;
 
 -- Enable Realtime for operational tables

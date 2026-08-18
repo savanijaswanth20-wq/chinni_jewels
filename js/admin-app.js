@@ -219,28 +219,28 @@ class AdminApp {
     if (!Array.isArray(products) || products.length === 0) {
       products = [
         {
-          id: 'p1111111-1111-1111-1111-111111111111',
+          id: 'e1111111-1111-1111-1111-111111111111',
           name: 'Signature Gold Coin',
           slug: 'signature-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
           active: true
         },
         {
-          id: 'p2222222-2222-2222-2222-222222222222',
+          id: 'e2222222-2222-2222-2222-222222222222',
           name: 'Filigree Gold Pendant',
           slug: 'filigree-gold-pendant',
           image_url: 'assets/product_gold_pendant.png',
           active: true
         },
         {
-          id: 'p3333333-3333-3333-3333-333333333333',
+          id: 'e3333333-3333-3333-3333-333333333333',
           name: 'Gold Coin Gift Box',
           slug: 'gold-coin-gift-box',
           image_url: 'assets/product_gold_gift.png',
           active: true
         },
         {
-          id: 'p4444444-4444-4444-4444-444444444444',
+          id: 'e4444444-4444-4444-4444-444444444444',
           name: 'Temple Gold Coin',
           slug: 'temple-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
