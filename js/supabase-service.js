@@ -200,7 +200,7 @@ class SupabaseDataService {
     try {
       const isNew = !productId;
       const targetId = productId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `prod-${Date.now()}`);
-      const slug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `prod-${Date.now()}`);
+      let slug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `prod-${Date.now()}`);
       const timestamp = Date.now();
 
       // Check if product exists & fetch old data for cleanup and merging
@@ -245,7 +245,7 @@ class SupabaseDataService {
 
       const baseProduct = existingData || {};
       const name = productData.name !== undefined ? productData.name : baseProduct.name;
-      const slug = productData.slug || (name ? name.toLowerCase().replace(/[^a-z0-9]/g, '-') : baseProduct.slug || `prod-${Date.now()}`);
+      slug = productData.slug || (name ? name.toLowerCase().replace(/[^a-z0-9]/g, '-') : baseProduct.slug || `prod-${Date.now()}`);
       const sku = productData.sku || baseProduct.sku || `CJ-${Date.now().toString().slice(-4)}`;
       const description = productData.description !== undefined ? productData.description : (baseProduct.description || '');
       const weight = Number(productData.weightGrams || productData.weight || baseProduct.weight) || 1.0;
