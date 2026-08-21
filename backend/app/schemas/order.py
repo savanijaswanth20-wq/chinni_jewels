@@ -20,8 +20,16 @@ class OrderCreateRequest(BaseModel):
     notes: Optional[str] = None
 
 class OrderStatusUpdateRequest(BaseModel):
-    order_status: str  # PENDING, CONFIRMED, PROCESSING, PACKED, SHIPPED, DELIVERED, CANCELLED
+    order_status: Optional[str] = None
+    status: Optional[str] = None
     notes: Optional[str] = None
+
+    @property
+    def final_status(self) -> str:
+        s = self.order_status or self.status
+        if not s:
+            raise ValueError("order_status or status is required")
+        return s.upper()
 
 class OrderItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

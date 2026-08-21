@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, time, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -16,10 +16,13 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 @router.get("/dashboard")
 def get_admin_dashboard(user=Depends(require_role(["ADMIN", "STAFF"])), db: Session = Depends(get_db)):
     today = date.today()
+    start_of_today = datetime.combine(today, time.min)
+    end_of_today = datetime.combine(today, time.max)
 
-    # Sales today
+    # Sales today (handles cross-database timestamp comparison reliably)
     today_orders = db.query(Order).filter(
-        func.date(Order.created_at) == today,
+        Order.created_at >= start_of_today,
+        Order.created_at <= end_of_today,
         Order.order_status != "CANCELLED"
     ).all()
     today_sales = sum(o.total_amount for o in today_orders)
@@ -39,8 +42,15 @@ def get_admin_dashboard(user=Depends(require_role(["ADMIN", "STAFF"])), db: Sess
     out_of_stock_count = sum(1 for inv in inventories if InventoryService.get_stock_status(inv) == "OUT_OF_STOCK")
 
     products = db.query(Product).filter(Product.is_active == True).all()
-    total_vault_grams = sum(p.weight_grams * (p.inventory.available_quantity if p.inventory else 0) for p in products)
-    total_stock_val = sum(p.selling_price * (p.inventory.available_quantity if p.inventory else 0) for p in products)
+    total_vault_grams = sum(
+        p.weight_grams * (p.inventory.available_quantity if p.inventory else (p.stock_quantity or 0))
+        for p in products
+    )
+    total_stock_val = sum(
+        (p.selling_price if p.selling_price > 0 else (p.price if p.price > 0 else 0.0)) *
+        (p.inventory.available_quantity if p.inventory else (p.stock_quantity or 0))
+        for p in products
+    )
 
     return success_response({
         "today_sales": round(today_sales, 2),
@@ -54,3 +64,4 @@ def get_admin_dashboard(user=Depends(require_role(["ADMIN", "STAFF"])), db: Sess
         "total_vault_stock_grams": round(total_vault_grams, 3),
         "total_stock_value": round(total_stock_val, 2)
     })
+

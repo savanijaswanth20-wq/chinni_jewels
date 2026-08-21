@@ -69,7 +69,7 @@ def create_order(req: OrderCreateRequest, db: Session = Depends(get_db), current
     return success_response(build_order_dto(new_order))
 
 @router.get("")
-def list_orders(status_filter: Optional[str] = Query(None), user=Depends(require_role(["ADMIN", "STAFF"])), db: Session = Depends(get_db)):
+def list_orders(status_filter: Optional[str] = None, user=Depends(require_role(["ADMIN", "STAFF"])), db: Session = Depends(get_db)):
     query = db.query(Order)
     if status_filter:
         query = query.filter(Order.order_status == status_filter)
@@ -95,9 +95,10 @@ def get_order(id_or_number: str, user=Depends(require_role(["ADMIN", "STAFF", "C
     return success_response(build_order_dto(order))
 
 @router.put("/{order_id}/status")
+@router.patch("/{order_id}/status")
 def update_order_status(order_id: str, req: OrderStatusUpdateRequest, user=Depends(require_role(["ADMIN", "STAFF"])), db: Session = Depends(get_db)):
     user_id = user.get("sub") if user else None
-    updated = OrderService.update_order_status(db=db, order_id=order_id, new_status=req.order_status, user_id=user_id)
+    updated = OrderService.update_order_status(db=db, order_id=order_id, new_status=req.final_status, user_id=user_id)
     return success_response(build_order_dto(updated))
 
 @router.post("/{order_id}/cancel")

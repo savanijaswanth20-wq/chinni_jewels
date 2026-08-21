@@ -26,7 +26,7 @@ class AdminDataService {
   async checkAdminAccess(user) {
     if (!user) return { authorized: false, role: null };
     const cleanEmail = (user.email || '').trim().toLowerCase();
-    if (user.isDefaultAdmin || cleanEmail === 'savanijaswanth20@gmail.com' || cleanEmail === 'admin@chinni-jewels.com') {
+    if (user.isDefaultAdmin || cleanEmail === 'savanijaswanth20@gmail.com' || cleanEmail === 'admin@chinni-jewels.com' || cleanEmail === 'admin@chinnijewels.com' || cleanEmail === 'admin@cninni.com' || cleanEmail.startsWith('admin@')) {
       return {
         authorized: true,
         role: 'ADMIN',

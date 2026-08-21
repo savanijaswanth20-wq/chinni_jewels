@@ -63,10 +63,10 @@ def build_product_dto(p: Product, db: Session) -> dict:
 
 @router.get("")
 def list_products(
-    category_slug: Optional[str] = Query(None),
-    purity: Optional[str] = Query(None),
-    is_featured: Optional[bool] = Query(None),
-    search: Optional[str] = Query(None),
+    category_slug: Optional[str] = None,
+    purity: Optional[str] = None,
+    is_featured: Optional[bool] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Product).filter(Product.is_active == True)

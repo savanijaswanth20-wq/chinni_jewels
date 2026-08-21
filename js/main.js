@@ -406,7 +406,7 @@ function openSearchModal() {
       const products = window.allFirestoreProducts || [];
       const activeProduct = products.find(p => p.id === storedId || p.name === selectedName) || null;
 
-      const { goldVal, makingVal, gstVal, grandTotal } = computeProductTotals(activeProduct, qty);
+      const { goldVal, makingVal, gstVal, shippingFee, grandTotal } = computeProductTotals(activeProduct, qty);
 
       const set = (sel, val) => {
         const el = document.querySelector(sel);
@@ -416,6 +416,7 @@ function openSearchModal() {
       set('.gold-value-price', goldVal);
       set('.making-charges-price', makingVal);
       set('.gst-price', gstVal);
+      set('.shipping-fee-price', shippingFee);
       set('.total-price', grandTotal);
       set('.sticky-price', grandTotal);
     }
@@ -570,9 +571,9 @@ function openSearchModal() {
     const prodMeta = document.querySelector('#checkout-prod-meta')?.textContent || '24K · 999 Purity · 1 Gram';
     const goldVal = document.querySelector('#checkout-gold-val')?.textContent || '₹9,240';
     const makingVal = document.querySelector('#checkout-making-val')?.textContent || '₹280';
-    const gstVal = document.querySelector('#checkout-gst')?.textContent || '₹0';
+    const gstVal = document.querySelector('#checkout-gst')?.textContent || '₹286';
     const shippingVal = document.querySelector('#checkout-shipping-val')?.textContent || '₹' + (getShippingFee()).toLocaleString('en-IN');
-    const totalVal = document.querySelector('#checkout-total')?.textContent || '₹9,670';
+    const totalVal = document.querySelector('#checkout-total')?.textContent || '₹9,956';
 
     const imgEl = document.querySelector('#checkout-prod-img');
     let imgSrc = imgEl ? imgEl.src : '';
@@ -972,7 +973,7 @@ window.renderProductPageDetails = function(products) {
 
   // Dynamic Price Breakdown
   const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || (document.querySelector('.qty-input') ? (parseInt(document.querySelector('.qty-input').value) || 1) : 1);
-  const { goldVal, makingVal, gstVal, grandTotal, weight } = computeProductTotals(activeProduct, qty);
+  const { goldVal, makingVal, gstVal, shippingFee, grandTotal, weight } = computeProductTotals(activeProduct, qty);
 
   const goldValEl = document.querySelector('.gold-value-price');
   if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
@@ -982,6 +983,9 @@ window.renderProductPageDetails = function(products) {
 
   const gstEl = document.querySelector('.gst-price');
   if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
+
+  const shippingEl = document.querySelector('.shipping-fee-price');
+  if (shippingEl) shippingEl.textContent = '₹' + shippingFee.toLocaleString('en-IN');
 
   const totalEl = document.querySelector('.total-price');
   if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
