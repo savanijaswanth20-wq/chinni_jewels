@@ -4,7 +4,7 @@ from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, require_role
 from app.models.profile import Profile, UserRole
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, ProfileResponse
-from app.utils.response import success_response, error_response
+from app.utils.response import success_response
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

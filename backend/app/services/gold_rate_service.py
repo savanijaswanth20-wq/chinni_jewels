@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.models.gold_rate import GoldRate
 from app.services.pricing_service import PricingService
@@ -14,7 +14,7 @@ class GoldRateService:
             GoldRate.is_active == True
         ).all()
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for r in active_rates:
             r.is_active = False
             r.effective_to = now

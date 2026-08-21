@@ -78,13 +78,19 @@ def list_orders(status_filter: Optional[str] = Query(None), user=Depends(require
     return success_response([build_order_dto(o) for o in orders])
 
 @router.get("/{id_or_number}")
-def get_order(id_or_number: str, db: Session = Depends(get_db)):
+def get_order(id_or_number: str, user=Depends(require_role(["ADMIN", "STAFF", "CUSTOMER"])), db: Session = Depends(get_db)):
     order = db.query(Order).filter(
         (Order.id == id_or_number) | (Order.order_number == id_or_number)
     ).first()
 
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # Customers can only view their own orders
+    user_role = user.get("role", "CUSTOMER")
+    user_id = user.get("sub")
+    if user_role == "CUSTOMER" and order.customer_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     return success_response(build_order_dto(order))
 
@@ -95,6 +101,7 @@ def update_order_status(order_id: str, req: OrderStatusUpdateRequest, user=Depen
     return success_response(build_order_dto(updated))
 
 @router.post("/{order_id}/cancel")
-def cancel_order(order_id: str, db: Session = Depends(get_db)):
-    updated = OrderService.update_order_status(db=db, order_id=order_id, new_status="CANCELLED")
+def cancel_order(order_id: str, user=Depends(require_role(["ADMIN", "STAFF"])), db: Session = Depends(get_db)):
+    user_id = user.get("sub") if user else None
+    updated = OrderService.update_order_status(db=db, order_id=order_id, new_status="CANCELLED", user_id=user_id)
     return success_response(build_order_dto(updated))

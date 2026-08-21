@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -10,11 +9,9 @@ from app.schemas.product import ProductCreateRequest, ProductUpdateRequest
 from app.services.pricing_service import PricingService
 from app.services.inventory_service import InventoryService
 from app.utils.response import success_response
+from app.utils.helpers import slugify
 
 router = APIRouter(prefix="/products", tags=["Products"])
-
-def slugify(text: str) -> str:
-    return re.sub(r'[\W_]+', '-', text.lower()).strip('-')
 
 def build_product_dto(p: Product, db: Session) -> dict:
     pricing = PricingService.calculate_product_price(
@@ -49,7 +46,8 @@ def build_product_dto(p: Product, db: Session) -> dict:
         "gst_percentage": p.gst_percentage,
         "base_price": pricing["gold_value"],
         "selling_price": pricing["total_price"],
-        "price": p.price if p.price else pricing["total_price"],
+        # (#18/#21) Use 'is not None' instead of truthiness to allow price=0.0
+        "price": p.price if p.price is not None and p.price > 0 else pricing["total_price"],
         "image_url": p.image_url if p.image_url else p.primary_image_url,
         "stock_quantity": inv.available_quantity,
         "reserved_quantity": inv.reserved_quantity,
@@ -133,7 +131,7 @@ def create_product(req: ProductCreateRequest, user=Depends(require_role(["ADMIN"
         gst_percentage=req.gst_percentage,
         base_price=pricing["gold_value"],
         selling_price=pricing["total_price"],
-        price=req.price if req.price else pricing["total_price"],
+        price=req.price if req.price is not None and req.price > 0 else pricing["total_price"],
         image_url=req.image_url,
         stock_quantity=req.stock_quantity,
         low_stock_threshold=req.low_stock_threshold,
@@ -180,7 +178,8 @@ def update_product(product_id: str, req: ProductUpdateRequest, user=Depends(requ
     )
     product.base_price = pricing["gold_value"]
     product.selling_price = pricing["total_price"]
-    if not getattr(product, "price", None):
+    # (#18) Use explicit None check so a custom price of 0.0 is preserved
+    if product.price is None:
         product.price = pricing["total_price"]
 
     db.commit()

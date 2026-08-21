@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -13,15 +14,22 @@ router = APIRouter(prefix="/gold-rates", tags=["Gold Rates"])
 @router.get("/latest")
 def get_latest_rates(db: Session = Depends(get_db)):
     purities = ["24K", "22K", "18K"]
+    today = date.today()
     result = {}
     for p in purities:
         rate = PricingService.get_active_gold_rate(db, purity=p)
+        # (#10) Check if the rate was actually updated today
+        rate_entry = db.query(GoldRate).filter(
+            GoldRate.purity == p,
+            GoldRate.is_active == True
+        ).order_by(GoldRate.effective_from.desc()).first()
+        was_updated_today = (rate_entry.effective_from.date() == today) if rate_entry and rate_entry.effective_from else False
         result[p] = {
             "purity": p,
             "rate_per_gram": rate,
             "currency": "INR",
             "unit": "per_gram",
-            "updated_today": True
+            "updated_today": was_updated_today
         }
     return success_response(result)
 

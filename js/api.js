@@ -5,7 +5,8 @@
 
 class ApiClient {
   static get BASE_URL() {
-    return 'http://localhost:8000/api/v1';
+    // (#14) Must match backend API_V1_STR which is '/api' (not '/api/v1')
+    return 'http://localhost:8000/api';
   }
 
   static async request(endpoint, options = {}) {

@@ -33,6 +33,8 @@ class InventoryService:
     @staticmethod
     def adjust_stock(db: Session, product_id: str, quantity: int, reason: str, transaction_type: str = "ADJUSTMENT", user_id: str = None) -> Inventory:
         """Atomic stock adjustment with transaction audit log."""
+        # NOTE (#11): with_for_update() issues SELECT...FOR UPDATE which SQLite silently ignores.
+        # For production with PostgreSQL this provides proper row-level locking.
         inv = db.query(Inventory).filter(Inventory.product_id == product_id).with_for_update().first()
         if not inv:
             inv = InventoryService.get_or_create_inventory(db, product_id, default_stock=0)
@@ -120,15 +122,17 @@ class InventoryService:
         """Convert reserved stock to sold stock (RESERVED -> SOLD)."""
         inv = db.query(Inventory).filter(Inventory.product_id == product_id).with_for_update().first()
         if inv and inv.reserved_quantity >= quantity:
+            prev_reserved = inv.reserved_quantity
             inv.reserved_quantity -= quantity
             inv.sold_quantity += quantity
 
+            # (#8) Log reserved->sold correctly: previous/new refer to reserved counts
             tx = InventoryTransaction(
                 product_id=product_id,
                 transaction_type=TransactionType.SALE.value,
                 quantity=quantity,
-                previous_stock=inv.available_quantity + quantity,
-                new_stock=inv.available_quantity,
+                previous_stock=prev_reserved,
+                new_stock=inv.reserved_quantity,
                 reference_type="ORDER",
                 reference_id=order_id,
                 reason=f"Sale confirmed for Order {order_id}"

@@ -1,4 +1,4 @@
-import re
+import os
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, engine, Base
 from app.models.profile import Profile, UserRole
@@ -8,9 +8,7 @@ from app.models.gold_rate import GoldRate
 from app.models.inventory import Inventory
 from app.core.security import get_password_hash
 from app.services.pricing_service import PricingService
-
-def slugify(text: str) -> str:
-    return re.sub(r'[\W_]+', '-', text.lower()).strip('-')
+from app.utils.helpers import slugify
 
 def seed_database(db: Session):
     Base.metadata.create_all(bind=engine)
@@ -18,11 +16,22 @@ def seed_database(db: Session):
     # 1. Seed Admin User
     admin = db.query(Profile).filter((Profile.email == "admin@chinnijewels.com") | (Profile.email == "admin@cninni.com")).first()
     if not admin:
+        # SECURITY: Admin credentials loaded from environment variables
+        admin_email = os.environ.get("ADMIN_EMAIL", "admin@chinnijewels.com")
+        admin_password = os.environ.get("ADMIN_PASSWORD")
+        if not admin_password:
+            import logging
+            logging.getLogger(__name__).warning(
+                "ADMIN_PASSWORD env var not set — using generated default. "
+                "Set ADMIN_PASSWORD env var in production!"
+            )
+            import secrets
+            admin_password = secrets.token_urlsafe(16)
         admin = Profile(
             full_name="CHINNI Admin",
-            email="admin@chinnijewels.com",
+            email=admin_email,
             phone="+919542124161",
-            hashed_password=get_password_hash("AdminSecret2026!"),
+            hashed_password=get_password_hash(admin_password),
             role=UserRole.ADMIN.value,
             is_active=True
         )

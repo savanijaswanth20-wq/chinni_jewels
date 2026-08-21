@@ -1,4 +1,5 @@
 import os
+import secrets
 from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
@@ -14,9 +15,24 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     
-    JWT_SECRET_KEY: str = "chinni_jewels_super_secret_jwt_key_2026_pure_gold"
+    # SECURITY: Set JWT_SECRET_KEY via environment variable in production.
+    # A random fallback is generated for local development only.
+    JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+
+    @field_validator("JWT_SECRET_KEY", mode="before")
+    @classmethod
+    def set_jwt_secret(cls, v):
+        if v and v.strip():
+            return v
+        # Auto-generate for development; logs a warning
+        import logging
+        logging.getLogger(__name__).warning(
+            "JWT_SECRET_KEY not set — using auto-generated secret. "
+            "Set JWT_SECRET_KEY env var in production!"
+        )
+        return secrets.token_urlsafe(64)
     
     WHATSAPP_BUSINESS_NUMBER: str = "919542124161"
     WHATSAPP_CLOUD_API_TOKEN: str = ""

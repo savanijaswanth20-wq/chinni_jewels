@@ -22,14 +22,30 @@ def list_customers(search: Optional[str] = Query(None), user=Depends(require_rol
 
     customers = query.order_by(Profile.created_at.desc()).all()
 
+    # (#20) Batch-fetch order stats for all customers to avoid N+1 queries
+    customer_ids = [c.id for c in customers]
+    customer_phones = [c.phone for c in customers if c.phone]
+
+    # Fetch all relevant orders in one query
+    all_orders = db.query(Order).filter(
+        (Order.customer_id.in_(customer_ids)) | (Order.phone.in_(customer_phones))
+    ).order_by(Order.created_at.desc()).all()
+
+    # Build lookup: customer_id/phone -> list of orders
+    orders_by_customer = {}
+    for c in customers:
+        orders_by_customer[c.id] = []
+    for o in all_orders:
+        for c in customers:
+            if o.customer_id == c.id or (c.phone and o.phone == c.phone):
+                orders_by_customer[c.id].append(o)
+                break
+
     result = []
     for c in customers:
-        # Calculate stats
-        orders = db.query(Order).filter(
-            (Order.customer_id == c.id) | (Order.phone == c.phone)
-        ).all()
-
+        orders = orders_by_customer.get(c.id, [])
         total_spent = sum(o.total_amount for o in orders if o.order_status != "CANCELLED")
+        # (#19) Orders are already sorted desc by created_at, so first is most recent
         last_order = orders[0].created_at if orders else None
 
         result.append({

@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.order import Order, OrderItem, OrderStatus
@@ -13,10 +13,19 @@ from app.models.audit import AuditLog
 
 class OrderService:
     @staticmethod
-    def generate_order_number() -> str:
-        date_str = datetime.utcnow().strftime("%Y%m%d")
-        rand_suffix = str(random.randint(1000, 9999))
-        return f"G1G-{date_str}-{rand_suffix}"
+    def generate_order_number(db: Session) -> str:
+        """Generate unique order number with collision retry (#4)."""
+        for _ in range(10):
+            date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+            rand_suffix = str(random.randint(1000, 9999))
+            order_number = f"G1G-{date_str}-{rand_suffix}"
+            existing = db.query(Order).filter(Order.order_number == order_number).first()
+            if not existing:
+                return order_number
+        # Fallback: use timestamp for guaranteed uniqueness
+        import time
+        ts = str(int(time.time() * 1000))[-6:]
+        return f"G1G-{date_str}-{ts}"
 
     @staticmethod
     def create_order(db: Session, order_data: OrderCreateRequest, customer_id: str = None) -> Order:
@@ -31,7 +40,7 @@ class OrderService:
         if not order_data.items:
             raise HTTPException(status_code=400, detail="Order must contain at least one item.")
 
-        order_number = OrderService.generate_order_number()
+        order_number = OrderService.generate_order_number(db)
         
         subtotal = 0.0
         making_total = 0.0
@@ -128,7 +137,8 @@ class OrderService:
         wa_url = WhatsAppService.generate_whatsapp_url(wa_message)
         WhatsAppService.send_whatsapp_order(new_order)
 
-        # Attach dynamic WhatsApp URL & Message properties
+        # NOTE (#26): whatsapp_url and whatsapp_message are transient attributes
+        # (not DB columns). They exist only for the immediate API response.
         new_order.whatsapp_url = wa_url
         new_order.whatsapp_message = wa_message
 
@@ -162,12 +172,21 @@ class OrderService:
                 detail=f"Invalid order status transition from '{current}' to '{new_status}'. Allowed: {allowed}"
             )
 
-        # Execute stock state transitions
-        if new_status in [OrderStatus.CONFIRMED.value, OrderStatus.DELIVERED.value] and current == OrderStatus.PENDING.value:
+        # Execute stock state transitions (#7: fixed to handle each transition correctly)
+        if new_status == OrderStatus.CONFIRMED.value and current == OrderStatus.PENDING.value:
+            # PENDING -> CONFIRMED: stock stays reserved (already reserved at order creation)
+            pass
+
+        elif new_status == OrderStatus.DELIVERED.value:
+            # SHIPPED -> DELIVERED: convert reserved stock to sold
             for item in order.items:
                 InventoryService.confirm_sale_stock(db, item.product_id, item.quantity, order.id)
 
-        elif new_status == OrderStatus.CANCELLED.value and current in [OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value, OrderStatus.PROCESSING.value]:
+        elif new_status == OrderStatus.CANCELLED.value and current in [
+            OrderStatus.PENDING.value, OrderStatus.CONFIRMED.value,
+            OrderStatus.PROCESSING.value, OrderStatus.PACKED.value
+        ]:
+            # Release reserved stock back to available on cancellation
             for item in order.items:
                 InventoryService.release_reserved_stock(db, item.product_id, item.quantity, order.id)
 

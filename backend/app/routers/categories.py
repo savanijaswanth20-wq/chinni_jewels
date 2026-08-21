@@ -1,4 +1,3 @@
-import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -6,11 +5,9 @@ from app.core.security import require_role
 from app.models.category import Category
 from app.schemas.admin import CategoryCreateRequest
 from app.utils.response import success_response
+from app.utils.helpers import slugify
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-
-def slugify(text: str) -> str:
-    return re.sub(r'[\W_]+', '-', text.lower()).strip('-')
 
 @router.get("")
 def list_categories(db: Session = Depends(get_db)):

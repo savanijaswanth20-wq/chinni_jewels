@@ -15,7 +15,7 @@ class TransactionType(str, enum.Enum):
     RESERVATION = "RESERVATION"
     RELEASE = "RELEASE"
 
-class Inventory(Base):
+class Inventory(Base, TimestampMixin):
     __tablename__ = "inventory"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
