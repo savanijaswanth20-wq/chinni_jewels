@@ -335,15 +335,24 @@ class AdminDataService {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+
+          const isPng = (file.type && file.type.toLowerCase() === 'image/png');
+          const isWebP = (file.type && file.type.toLowerCase() === 'image/webp');
+          const mimeType = isPng ? 'image/png' : (isWebP ? 'image/webp' : 'image/jpeg');
+
+          if (isPng) {
+            ctx.clearRect(0, 0, width, height);
+          }
           ctx.drawImage(img, 0, 0, width, height);
+
           canvas.toBlob((blob) => {
             if (blob) {
-              const compressedFile = new File([blob], file.name || 'image.jpg', { type: 'image/jpeg' });
+              const compressedFile = new File([blob], file.name || (isPng ? 'image.png' : 'image.jpg'), { type: mimeType });
               resolve(compressedFile);
             } else {
               resolve(file);
             }
-          }, 'image/jpeg', quality);
+          }, mimeType, isPng ? undefined : quality);
         };
         img.onerror = () => resolve(file);
         img.src = e.target.result;
@@ -352,6 +361,7 @@ class AdminDataService {
       reader.readAsDataURL(file);
     });
   }
+
 
   fileToDataUrl(file) {
     return new Promise((resolve, reject) => {

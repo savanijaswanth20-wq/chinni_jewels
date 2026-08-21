@@ -222,11 +222,13 @@ class AdminApp {
           const localMap = new Map((this.products || []).map(p => [p.id, p]));
           const merged = remoteProducts.map(rp => {
             const loc = localMap.get(rp.id);
-            return loc ? { ...rp, ...loc } : rp;
+            // Remote Supabase database is Single Source of Truth
+            return loc ? { ...loc, ...rp } : rp;
           });
           this.products = merged;
           localStorage.setItem('chinni_products', JSON.stringify(merged));
           this.renderProductsTable(merged);
+
         }
       }
     } catch (e) {

@@ -782,14 +782,35 @@ function generateOrderId() {
  * Format image URL with cache buster query parameter to prevent browser/CDN stale image display
  */
 function getCacheBustedImageUrl(product) {
+  if (!product) return "assets/hero_gold_coin.png";
   let url = product.imageUrl || product.image_url || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
   if (!url) return "assets/hero_gold_coin.png";
-  if (!url.startsWith('data:') && !url.includes('v=')) {
-    const v = product.updatedAt ? new Date(product.updatedAt).getTime() : Date.now();
-    url += (url.includes('?') ? '&' : '?') + `v=${v}`;
+  if (url.startsWith('data:') || url.includes('v=')) {
+    return url;
   }
-  return url;
+
+  let v = null;
+  const rawTime = product.updatedAt || product.updated_at;
+  if (rawTime) {
+    const parsed = typeof rawTime === 'number' ? rawTime : new Date(rawTime).getTime();
+    if (!isNaN(parsed) && parsed > 0) {
+      v = parsed;
+    }
+  }
+
+  if (!v) {
+    const seed = String(product.id || product.name || 'product');
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    v = Math.abs(hash) || 1;
+  }
+
+  return url + (url.includes('?') ? '&' : '?') + `v=${v}`;
 }
+
 
 /**
  * Calculate estimated retail price based on gold rate & making charges

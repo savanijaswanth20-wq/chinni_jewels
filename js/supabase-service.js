@@ -648,6 +648,9 @@ class SupabaseDataService {
 
   async deleteStorageFile(url) {
     if (!url || !this.db) return { success: false, error: "Database or URL unavailable" };
+    if (url.startsWith('assets/') || url.startsWith('data:')) {
+      return { success: true, isLocalAsset: true };
+    }
     try {
       if (url.includes('/storage/v1/object/public/')) {
         const parts = url.split('/storage/v1/object/public/');
@@ -655,10 +658,12 @@ class SupabaseDataService {
           const pathParts = parts[1].split('/');
           const bucket = pathParts[0];
           const storagePath = pathParts.slice(1).join('/').split('?')[0]; // Remove query params
-          console.log(`[SupabaseService] Cleaning up old storage file in bucket "${bucket}": ${storagePath}`);
-          const { error } = await this.db.storage.from(bucket).remove([storagePath]);
-          if (error) throw error;
-          return { success: true };
+          if (storagePath) {
+            console.log(`[SupabaseService] Cleaning up old storage file in bucket "${bucket}": ${storagePath}`);
+            const { error } = await this.db.storage.from(bucket).remove([storagePath]);
+            if (error) throw error;
+            return { success: true };
+          }
         }
       }
       return { success: false, error: "Not a valid Supabase storage URL" };
@@ -667,6 +672,7 @@ class SupabaseDataService {
       return { success: false, error: err.message };
     }
   }
+
 }
 
 window.SupabaseService = new SupabaseDataService();

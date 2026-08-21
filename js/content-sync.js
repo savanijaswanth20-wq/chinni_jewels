@@ -87,15 +87,18 @@
                 const localMap = new Map(parsedLocal.map(p => [p.id, p]));
                 productsToSync = productsToSync.map(rp => {
                   const loc = localMap.get(rp.id);
-                  return loc ? { ...rp, ...loc } : rp;
+                  // Remote Supabase database is Single Source of Truth
+                  return loc ? { ...loc, ...rp } : rp;
                 });
                 const remoteIds = new Set(productsToSync.map(p => p.id));
                 parsedLocal.forEach(lp => {
                   if (!remoteIds.has(lp.id)) productsToSync.push(lp);
                 });
+                try { localStorage.setItem('chinni_products', JSON.stringify(productsToSync)); } catch(sErr) {}
               } else {
                 productsToSync = parsedLocal;
               }
+
             }
           } catch(e) {}
         }
