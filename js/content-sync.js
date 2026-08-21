@@ -73,9 +73,42 @@
     // 4. Products Collection Sync
     if (window.ApiClient) {
       window.ApiClient.getProducts().then(res => {
-        if (res.success && res.data) syncProductsUI(res.data);
+        let productsToSync = [];
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          productsToSync = res.data;
+        }
+
+        const localProds = localStorage.getItem('chinni_products');
+        if (localProds) {
+          try {
+            const parsedLocal = JSON.parse(localProds);
+            if (Array.isArray(parsedLocal) && parsedLocal.length > 0) {
+              if (productsToSync.length > 0) {
+                const localMap = new Map(parsedLocal.map(p => [p.id, p]));
+                productsToSync = productsToSync.map(rp => {
+                  const loc = localMap.get(rp.id);
+                  return loc ? { ...rp, ...loc } : rp;
+                });
+                const remoteIds = new Set(productsToSync.map(p => p.id));
+                parsedLocal.forEach(lp => {
+                  if (!remoteIds.has(lp.id)) productsToSync.push(lp);
+                });
+              } else {
+                productsToSync = parsedLocal;
+              }
+            }
+          } catch(e) {}
+        }
+
+        if (productsToSync.length > 0) {
+          syncProductsUI(productsToSync);
+        }
       }).catch(() => {});
     }
+
+    window.addEventListener('cj_products_changed', (e) => {
+      if (e.detail) syncProductsUI(e.detail);
+    });
 
     // 5. Supabase Realtime Subscription for Live Cross-Device Product Image Sync
     if (window.SupabaseService && window.SupabaseService.subscribeToProducts) {

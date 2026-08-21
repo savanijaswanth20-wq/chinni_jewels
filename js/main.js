@@ -961,7 +961,9 @@ window.renderProductPageDetails = function(products) {
   const storedId = sessionStorage.getItem('chinni_selected_product_id');
   const targetId = paramId || storedId;
 
-  let activeProduct = products.find(p => p.id === targetId) || products[0];
+  const storedName = sessionStorage.getItem('chinni_selected_product_name');
+  const storedSlug = sessionStorage.getItem('chinni_selected_product_slug');
+  let activeProduct = products.find(p => p.id === targetId || (storedName && p.name.toLowerCase() === storedName.toLowerCase()) || (storedSlug && p.slug === storedSlug)) || products[0];
   if (!activeProduct) return;
 
   const mainUrl = getCacheBustedImageUrl(activeProduct);
