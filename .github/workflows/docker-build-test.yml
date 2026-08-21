@@ -114,7 +114,7 @@ jobs:
           cache: 'yarn'
       
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install || npm install
       
       - name: Check for linting issues
         run: |

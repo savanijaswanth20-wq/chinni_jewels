@@ -43,4 +43,8 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          npx vercel --prod --token $VERCEL_TOKEN
+          if [ -n "$VERCEL_TOKEN" ]; then
+            npx vercel --prod --token $VERCEL_TOKEN --yes
+          else
+            echo "VERCEL_TOKEN secret is not set in GitHub Repository Secrets. Skipping Vercel CLI deploy (Vercel Git integration deploys automatically)."
+          fi

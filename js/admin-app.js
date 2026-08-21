@@ -240,6 +240,7 @@ class AdminApp {
           name: 'Signature Gold Coin',
           slug: 'signature-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
+          imageUrl: 'assets/hero_gold_coin.png',
           price: 9520,
           price_inr: 9520,
           selling_price: 9520,
@@ -250,6 +251,7 @@ class AdminApp {
           name: 'Filigree Gold Pendant',
           slug: 'filigree-gold-pendant',
           image_url: 'assets/product_gold_pendant.png',
+          imageUrl: 'assets/product_gold_pendant.png',
           price: 9680,
           price_inr: 9680,
           selling_price: 9680,
@@ -260,6 +262,7 @@ class AdminApp {
           name: 'Gold Coin Gift Box',
           slug: 'gold-coin-gift-box',
           image_url: 'assets/product_gold_gift.png',
+          imageUrl: 'assets/product_gold_gift.png',
           price: 9820,
           price_inr: 9820,
           selling_price: 9820,
@@ -269,10 +272,33 @@ class AdminApp {
           id: 'e4444444-4444-4444-4444-444444444444',
           name: 'Temple Gold Coin',
           slug: 'temple-gold-coin',
-          image_url: 'assets/hero_gold_coin.png',
+          image_url: 'assets/featured_product.png',
+          imageUrl: 'assets/featured_product.png',
           price: 9520,
           price_inr: 9520,
           selling_price: 9520,
+          active: true
+        },
+        {
+          id: 'e5555555-5555-5555-5555-555555555555',
+          name: 'Classic Gold Bangle',
+          slug: 'classic-gold-bangle',
+          image_url: 'assets/product_gold_pendant.png',
+          imageUrl: 'assets/product_gold_pendant.png',
+          price: 8750,
+          price_inr: 8750,
+          selling_price: 8750,
+          active: true
+        },
+        {
+          id: 'e6666666-6666-6666-6666-666666666666',
+          name: 'Pure Gold Bar',
+          slug: 'pure-gold-bar',
+          image_url: 'assets/hero_gold_coin.png',
+          imageUrl: 'assets/hero_gold_coin.png',
+          price: 9620,
+          price_inr: 9620,
+          selling_price: 9620,
           active: true
         }
       ];
@@ -297,7 +323,7 @@ class AdminApp {
       return `
         <tr>
           <td>
-            <img src="${img}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(212,175,55,0.2);" onerror="this.src='assets/hero_gold_coin.png'" />
+            <img src="${img}" alt="${p.name}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(212,175,55,0.2);" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png'" />
           </td>
           <td>
             <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${p.name}</div>
