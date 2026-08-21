@@ -26,23 +26,23 @@
   transition: transform 0.35s ease;
 }
 .product-card:hover .product-card-image {
-  transform: translateZ(18px);
+  transform: translateZ(8px);
 }
 
 .product-card-badge {
-  transform: translateZ(28px);
-  box-shadow: 0 4px 12px rgba(201,168,76,0.4);
+  transform: translateZ(12px);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.3);
 }
 
 .product-card-info { transition: transform 0.35s ease; }
-.product-card:hover .product-card-info { transform: translateZ(10px); }
+.product-card:hover .product-card-info { transform: translateZ(4px); }
 
 .product-card-actions .btn { transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease; }
-.product-card:hover .product-card-actions .btn { transform: translateZ(18px); }
+.product-card:hover .product-card-actions .btn { transform: translateZ(8px); }
 
 .product-card:hover {
-  box-shadow: var(--depth-glow);
-  border-color: rgba(201,168,76,0.4);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 4px 14px rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.35);
 }
 
 /* Shine sweep */

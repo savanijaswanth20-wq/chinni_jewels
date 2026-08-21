@@ -186,43 +186,63 @@ class AdminApp {
     const tbody = document.querySelector('#products-table-tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>`;
-
     let products = [];
-    // 1. Check Supabase first (single source of truth)
+    // 1. Check local storage first for instant display
+    try {
+      const localProds = localStorage.getItem('chinni_products');
+      if (localProds) {
+        const parsed = JSON.parse(localProds);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          products = parsed;
+        }
+      }
+    } catch(e) {}
+
+    // Render local/cached products immediately so user never sees empty screen
+    if (products.length > 0) {
+      this.products = products;
+      this.renderProductsTable(products);
+    } else {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>`;
+    }
+
+    // 2. Fetch remote products from Supabase/Backend to update local cache
     try {
       if (window.AdminService && window.AdminService.getProducts) {
         const res = await window.AdminService.getProducts();
+        let remoteProducts = [];
         if (Array.isArray(res) && res.length > 0) {
-          products = res;
+          remoteProducts = res;
         } else if (res && Array.isArray(res.data) && res.data.length > 0) {
-          products = res.data;
+          remoteProducts = res.data;
+        }
+
+        if (remoteProducts.length > 0) {
+          // Merge local modifications if present
+          const localMap = new Map((this.products || []).map(p => [p.id, p]));
+          const merged = remoteProducts.map(rp => {
+            const loc = localMap.get(rp.id);
+            return loc ? { ...rp, ...loc } : rp;
+          });
+          this.products = merged;
+          localStorage.setItem('chinni_products', JSON.stringify(merged));
+          this.renderProductsTable(merged);
         }
       }
     } catch (e) {
       console.warn("Could not fetch remote products, fallback to local cache", e);
     }
 
-    // 2. If Supabase is empty or failed, check local storage
-    if (products.length === 0) {
-      try {
-        const localProds = localStorage.getItem('chinni_products');
-        if (localProds) {
-          const parsed = JSON.parse(localProds);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            products = parsed;
-          }
-        }
-      } catch(e) {}
-    }
-
-    if (!Array.isArray(products) || products.length === 0) {
-      products = [
+    if (!Array.isArray(this.products) || this.products.length === 0) {
+      this.products = [
         {
           id: 'e1111111-1111-1111-1111-111111111111',
           name: 'Signature Gold Coin',
           slug: 'signature-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
+          price: 9520,
+          price_inr: 9520,
+          selling_price: 9520,
           active: true
         },
         {
@@ -230,6 +250,9 @@ class AdminApp {
           name: 'Filigree Gold Pendant',
           slug: 'filigree-gold-pendant',
           image_url: 'assets/product_gold_pendant.png',
+          price: 9680,
+          price_inr: 9680,
+          selling_price: 9680,
           active: true
         },
         {
@@ -237,6 +260,9 @@ class AdminApp {
           name: 'Gold Coin Gift Box',
           slug: 'gold-coin-gift-box',
           image_url: 'assets/product_gold_gift.png',
+          price: 9820,
+          price_inr: 9820,
+          selling_price: 9820,
           active: true
         },
         {
@@ -244,14 +270,15 @@ class AdminApp {
           name: 'Temple Gold Coin',
           slug: 'temple-gold-coin',
           image_url: 'assets/hero_gold_coin.png',
+          price: 9520,
+          price_inr: 9520,
+          selling_price: 9520,
           active: true
         }
       ];
+      localStorage.setItem('chinni_products', JSON.stringify(this.products));
+      this.renderProductsTable(this.products);
     }
-
-    this.products = products;
-    localStorage.setItem('chinni_products', JSON.stringify(products));
-    this.renderProductsTable(products);
   }
 
   renderProductsTable(products) {
@@ -264,7 +291,7 @@ class AdminApp {
     }
 
     tbody.innerHTML = products.map(p => {
-      const img = p.image_url || p.images?.[0] || 'assets/hero_gold_coin.png';
+      const img = p.imageUrl || p.image_url || (p.images && p.images[0]) || 'assets/hero_gold_coin.png';
       const price = p.price || p.price_inr || p.selling_price || p.sellingPrice;
       const priceDisplay = price ? `₹${price.toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
       return `
@@ -350,10 +377,14 @@ class AdminApp {
           }
 
           this.selectedProductFile = file;
-          const previewUrl = URL.createObjectURL(file);
-          if (prodUrlInput) prodUrlInput.value = file.name;
-          if (prodThumb) prodThumb.src = previewUrl;
-          this.showToast("Product photo selected!");
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            if (prodUrlInput) prodUrlInput.value = dataUrl;
+            if (prodThumb) prodThumb.src = dataUrl;
+            this.showToast("Product photo selected!");
+          };
+          reader.readAsDataURL(file);
         }
       });
     }
@@ -453,44 +484,63 @@ class AdminApp {
       }
 
       saveBtn.textContent = "Saving to database...";
+      
+      const payload = {
+        name: name,
+        image_url: finalImageUrl,
+        imageUrl: finalImageUrl,
+        price: price,
+        price_inr: price,
+        selling_price: price,
+        sellingPrice: price,
+        active: true
+      };
+
       if (id) {
         const existing = this.products.find(p => p.id === id);
         if (existing) {
-          existing.name = name;
-          existing.image_url = finalImageUrl;
-          existing.price = price;
-          existing.price_inr = price;
+          Object.assign(existing, payload);
         }
-        if (window.AdminService && window.AdminService.updateProduct) {
-          await window.AdminService.updateProduct(id, { name, image_url: finalImageUrl, price, price_inr: price });
+        if (window.AdminService && window.AdminService.saveProduct) {
+          try {
+            await window.AdminService.saveProduct(id, payload);
+          } catch (apiErr) {
+            console.warn("Supabase saveProduct warning:", apiErr);
+          }
         }
       } else {
+        const targetId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'p_' + Date.now();
         const newProduct = {
-          id: 'p_' + Date.now(),
-          name: name,
+          id: targetId,
           slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          image_url: finalImageUrl,
-          price: price,
-          price_inr: price,
-          active: true
+          ...payload
         };
         this.products.push(newProduct);
-        if (window.AdminService && window.AdminService.createProduct) {
-          await window.AdminService.createProduct(newProduct);
+        if (window.AdminService && window.AdminService.saveProduct) {
+          try {
+            await window.AdminService.saveProduct(null, newProduct);
+          } catch (apiErr) {
+            console.warn("Supabase saveProduct creation warning:", apiErr);
+          }
         }
       }
+
+      // 1. Save updated products list to LocalStorage
+      localStorage.setItem('chinni_products', JSON.stringify(this.products));
+
+      // 2. Render updated products table immediately
+      this.renderProductsTable(this.products);
+
+      // 3. Dispatch global live update event across app & tabs
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
 
       if (uploadSuccess && oldImageUrl && window.AdminService.deleteOldStorageFile) {
         try {
           await window.AdminService.deleteOldStorageFile(oldImageUrl);
-        } catch (delErr) {
-          console.warn("Could not delete old image file:", delErr);
-        }
+        } catch (delErr) {}
       }
 
       this.selectedProductFile = null;
-      await this.loadProductsData(); // Refetch from Supabase and render
-
       sessionStorage.setItem('chinni_selected_product_name', name);
       sessionStorage.setItem('chinni_selected_product_image', finalImageUrl);
       this.closeModal('product-modal');
@@ -824,8 +874,15 @@ class AdminApp {
   }
 }
 
-// Instantiate on load
-document.addEventListener('DOMContentLoaded', () => {
-  window.app = new AdminApp();
-});
+function initAdminApp() {
+  if (!window.app) {
+    window.app = new AdminApp();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminApp);
+} else {
+  initAdminApp();
+}
 
