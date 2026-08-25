@@ -87,8 +87,9 @@
                 const localMap = new Map(parsedLocal.map(p => [p.id, p]));
                 productsToSync = productsToSync.map(rp => {
                   const loc = localMap.get(rp.id);
-                  // Remote Supabase database is Single Source of Truth
-                  return loc ? { ...loc, ...rp } : rp;
+                  if (!loc) return rp;
+                  const img = loc.image_url || loc.imageUrl || rp.image_url || rp.imageUrl;
+                  return { ...rp, ...loc, image_url: img, imageUrl: img };
                 });
                 const remoteIds = new Set(productsToSync.map(p => p.id));
                 parsedLocal.forEach(lp => {

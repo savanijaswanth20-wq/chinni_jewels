@@ -222,13 +222,16 @@ class AdminApp {
           const localMap = new Map((this.products || []).map(p => [p.id, p]));
           const merged = remoteProducts.map(rp => {
             const loc = localMap.get(rp.id);
-            // Remote Supabase database is Single Source of Truth
-            return loc ? { ...loc, ...rp } : rp;
+            if (!loc) return rp;
+            const img = loc.image_url || loc.imageUrl || rp.image_url || rp.imageUrl;
+            return { ...rp, ...loc, image_url: img, imageUrl: img };
           });
-          this.products = merged;
-          localStorage.setItem('chinni_products', JSON.stringify(merged));
-          this.renderProductsTable(merged);
-
+          const remoteIds = new Set(remoteProducts.map(rp => rp.id));
+          const localOnly = (this.products || []).filter(p => !remoteIds.has(p.id));
+          const finalMerged = [...merged, ...localOnly];
+          this.products = finalMerged;
+          localStorage.setItem('chinni_products', JSON.stringify(finalMerged));
+          this.renderProductsTable(finalMerged);
         }
       }
     } catch (e) {
@@ -513,6 +516,10 @@ class AdminApp {
 
       saveBtn.textContent = "Saving to database...";
       
+      if (finalImageUrl && !finalImageUrl.startsWith('data:') && !finalImageUrl.includes('v=')) {
+        finalImageUrl += (finalImageUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
+      }
+
       const payload = {
         name: name,
         image_url: finalImageUrl,
@@ -521,7 +528,8 @@ class AdminApp {
         price_inr: price,
         selling_price: price,
         sellingPrice: price,
-        active: true
+        active: true,
+        updated_at: new Date().toISOString()
       };
 
       if (id) {

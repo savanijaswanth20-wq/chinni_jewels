@@ -311,10 +311,10 @@ class SupabaseDataService {
           }]);
         } catch(iErr) {}
       } else {
-        let { error } = await this.db.from('products').update(fullPayload).eq('id', targetId);
+        let { error } = await this.db.from('products').upsert(fullPayload);
         if (error) {
-          console.warn("[SupabaseService] Update retry with clean schema payload:", error.message);
-          const { error: err2 } = await this.db.from('products').update(cleanPayload).eq('id', targetId);
+          console.warn("[SupabaseService] Upsert retry with clean schema payload:", error.message);
+          const { error: err2 } = await this.db.from('products').upsert(cleanPayload);
           if (err2) throw err2;
         }
       }
