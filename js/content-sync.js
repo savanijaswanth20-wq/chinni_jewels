@@ -265,16 +265,16 @@
           videoEl.playsInline = true;
           videoEl.setAttribute('muted', '');
           videoEl.setAttribute('playsinline', '');
-          const srcEl = videoEl.querySelector('source');
-          if (srcEl && !srcEl.src.includes('showcase.mp4') && srcEl.src !== mediaUrl) {
-            srcEl.src = mediaUrl;
+          videoEl.setAttribute('webkit-playsinline', '');
+          if (!videoEl.src || (!videoEl.src.includes('showcase.mp4') && videoEl.src !== mediaUrl)) {
+            videoEl.src = mediaUrl;
             videoEl.load();
           }
           const playPromise = videoEl.play();
           if (playPromise !== undefined) {
-            playPromise.catch(() => {
+            playPromise.catch(function() {
               videoEl.muted = true;
-              videoEl.play().catch(() => {});
+              videoEl.play().catch(function() {});
             });
           }
         }
