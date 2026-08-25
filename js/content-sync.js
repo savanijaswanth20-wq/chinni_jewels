@@ -240,22 +240,26 @@
       }
     }
 
-    const mediaUrl = hero.mediaUrl || hero.imageUrl;
+    let mediaUrl = hero.mediaUrl || hero.imageUrl;
+    if (!mediaUrl || mediaUrl === 'assets/hero_gold_coin.png') {
+      mediaUrl = 'assets/showcase.mp4';
+    }
+
     if (mediaUrl) {
       const videoEl = document.querySelector('#hero-video');
       const imgEl = document.querySelector('#hero-fallback-img') || document.querySelector('.hero-image img');
-      const isVideo = typeof mediaUrl === 'string' && (mediaUrl.endsWith('.mp4') || mediaUrl.endsWith('.webm'));
+      const isVideo = typeof mediaUrl === 'string' && (mediaUrl.endsWith('.mp4') || mediaUrl.endsWith('.webm') || mediaUrl.includes('showcase.mp4'));
 
-      if (isVideo) {
+      if (isVideo || !imgEl) {
         if (videoEl) {
           videoEl.style.display = 'block';
           videoEl.classList.remove('hidden');
           const srcEl = videoEl.querySelector('source');
-          if (srcEl && srcEl.src !== mediaUrl) {
+          if (srcEl && !srcEl.src.includes('showcase.mp4') && srcEl.src !== mediaUrl) {
             srcEl.src = mediaUrl;
             videoEl.load();
-            videoEl.play().catch(() => {});
           }
+          videoEl.play().catch(() => {});
         }
         if (imgEl) {
           imgEl.style.display = 'none';

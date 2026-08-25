@@ -630,7 +630,7 @@ class AdminApp {
       subtitle: "Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.",
       btnPrimary: "Explore Collection",
       btnSecondary: "Order on WhatsApp",
-      mediaUrl: "assets/hero_gold_coin.png"
+      mediaUrl: "assets/showcase.mp4"
     };
   }
 
