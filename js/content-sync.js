@@ -13,7 +13,14 @@
     try {
       const localHero = localStorage.getItem('chinni_hero_settings');
       if (localHero) {
-        syncHeroSectionUI(JSON.parse(localHero));
+        const parsed = JSON.parse(localHero);
+        if (!parsed.mediaUrl || parsed.mediaUrl.includes('hero_gold_coin.png')) {
+          parsed.mediaUrl = 'assets/showcase.mp4';
+          localStorage.setItem('chinni_hero_settings', JSON.stringify(parsed));
+        }
+        syncHeroSectionUI(parsed);
+      } else {
+        syncHeroSectionUI({ mediaUrl: 'assets/showcase.mp4' });
       }
     } catch(e) {}
 
@@ -240,8 +247,8 @@
       }
     }
 
-    let mediaUrl = hero.mediaUrl || hero.imageUrl;
-    if (!mediaUrl || mediaUrl === 'assets/hero_gold_coin.png') {
+    let mediaUrl = (hero && (hero.mediaUrl || hero.imageUrl)) || 'assets/showcase.mp4';
+    if (!mediaUrl || mediaUrl.includes('hero_gold_coin.png') || (!mediaUrl.endsWith('.mp4') && !mediaUrl.endsWith('.webm'))) {
       mediaUrl = 'assets/showcase.mp4';
     }
 
