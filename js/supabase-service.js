@@ -635,6 +635,7 @@ class SupabaseDataService {
         }]);
       } catch(mErr) {}
 
+      return { success: true, url: publicUrl, storagePath };
     } catch (err) {
       console.warn("[SupabaseService] Storage upload fallback notice:", err.message);
       if (window.ApiClient && window.ApiClient.uploadImage) {

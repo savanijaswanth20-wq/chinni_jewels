@@ -322,7 +322,8 @@ class AdminApp {
     }
 
     tbody.innerHTML = products.map(p => {
-      const img = p.imageUrl || p.image_url || (p.images && p.images[0]) || 'assets/hero_gold_coin.png';
+      const rawImg = p.imageUrl || p.image_url || (p.images && p.images[0]) || 'assets/hero_gold_coin.png';
+      const img = window.ApiClient ? window.ApiClient.resolveImageUrl(rawImg) : rawImg;
       const price = p.price || p.price_inr || p.selling_price || p.sellingPrice;
       const priceDisplay = price ? `₹${price.toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
       return `
@@ -344,17 +345,30 @@ class AdminApp {
             <button class="btn btn-secondary btn-sm edit-product-btn" data-id="${p.id}" style="padding: 6px 14px; font-size: 0.82rem;">
               ✏️ Edit
             </button>
+            <button class="btn btn-secondary btn-sm delete-product-btn" data-id="${p.id}" style="padding: 6px 10px; font-size: 0.82rem; color: #ff5252; border-color: rgba(255,82,82,0.3); margin-left: 6px;">
+              🗑️
+            </button>
           </td>
         </tr>
       `;
     }).join('');
 
-    // Bind Edit Buttons
+    // Bind Edit & Delete Buttons
     tbody.querySelectorAll('.edit-product-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const prod = this.products.find(p => p.id === id);
         if (prod) this.openEditProductModal(prod);
+      });
+    });
+
+    tbody.querySelectorAll('.delete-product-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const prod = this.products.find(p => p.id === id);
+        if (prod && confirm(`Are you sure you want to delete "${prod.name}"?`)) {
+          await this.handleDeleteProduct(id);
+        }
       });
     });
   }
@@ -462,12 +476,30 @@ class AdminApp {
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
     const priceEl = document.querySelector('#pm-price');
-    if (priceEl) priceEl.value = prod.price || prod.price_inr || "";
-    const img = prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
+    if (priceEl) priceEl.value = prod.price || prod.price_inr || prod.selling_price || prod.sellingPrice || "";
+    const rawImg = prod.imageUrl || prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
+    const img = window.ApiClient ? window.ApiClient.resolveImageUrl(rawImg) : rawImg;
     document.querySelector('#pm-image-url-input').value = img;
     const thumb = document.querySelector('#pm-image-preview-thumb');
     if (thumb) thumb.src = img;
     this.openModal('product-modal');
+  }
+
+  async handleDeleteProduct(id) {
+    const prod = this.products.find(p => p.id === id);
+    if (!prod) return;
+
+    this.products = this.products.filter(p => p.id !== id);
+    localStorage.setItem('chinni_products', JSON.stringify(this.products));
+    this.renderProductsTable(this.products);
+    window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
+
+    if (window.AdminService && window.AdminService.deleteProduct) {
+      try {
+        await window.AdminService.deleteProduct(id);
+      } catch (err) {}
+    }
+    this.showToast(`Product "${prod.name}" deleted successfully.`);
   }
 
   async handleSaveProduct() {
