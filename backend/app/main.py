@@ -1,6 +1,11 @@
 import os
+import sys
 import re
 from contextlib import asynccontextmanager
+
+# Self-register backend root directory into sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
