@@ -114,6 +114,8 @@ class ApiClient {
         completedOrders: 0
       }
     };
+  }
+
   // Admin Image Upload
   static async uploadImage(file) {
     try {
