@@ -34,7 +34,7 @@ class Settings(BaseSettings):
         )
         return secrets.token_urlsafe(64)
     
-    WHATSAPP_BUSINESS_NUMBER: str = "919542124161"
+    WHATSAPP_BUSINESS_NUMBER: str = "916304702907"
     WHATSAPP_CLOUD_API_TOKEN: str = ""
     WHATSAPP_CLOUD_API_PHONE_ID: str = ""
     WHATSAPP_CLOUD_API_VERSION: str = "v18.0"
@@ -42,6 +42,34 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[List[str], str] = ["*"]
     
     ENVIRONMENT: str = "development"
+
+    @field_validator("SUPABASE_ANON_KEY", mode="before")
+    @classmethod
+    def set_supabase_anon_key(cls, v):
+        if v and v.strip():
+            return v
+        return os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_PUBLISHABLE_KEY") or ""
+
+    @field_validator("SUPABASE_SERVICE_ROLE_KEY", mode="before")
+    @classmethod
+    def set_supabase_service_role_key(cls, v):
+        if v and v.strip():
+            return v
+        return os.getenv("SUPABASE_SECRET_KEY") or ""
+
+    @field_validator("WHATSAPP_CLOUD_API_TOKEN", mode="before")
+    @classmethod
+    def set_whatsapp_token(cls, v):
+        if v and v.strip():
+            return v
+        return os.getenv("WHATSAPP_ACCESS_TOKEN") or ""
+
+    @field_validator("WHATSAPP_CLOUD_API_PHONE_ID", mode="before")
+    @classmethod
+    def set_whatsapp_phone_id(cls, v):
+        if v and v.strip():
+            return v
+        return os.getenv("WHATSAPP_PHONE_NUMBER_ID") or ""
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
