@@ -5,8 +5,10 @@
 
 class ApiClient {
   static get BASE_URL() {
-    // (#14) Must match backend API_V1_STR which is '/api'
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      if (window.location.hostname.includes('vercel.app')) {
+        return 'https://chinnijewels-production.up.railway.app/api';
+      }
       return `${window.location.origin}/api`;
     }
     return 'http://localhost:8000/api';

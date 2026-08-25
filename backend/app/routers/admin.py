@@ -67,10 +67,10 @@ def get_admin_dashboard(user=Depends(require_role(["ADMIN", "STAFF"])), db: Sess
 
 import os
 import uuid
-from fastapi import File, UploadFile, HTTPException
+from fastapi import File, UploadFile, HTTPException, Request
 
 @router.post("/upload-image")
-async def upload_admin_image(file: UploadFile = File(...)):
+async def upload_admin_image(request: Request, file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
         raise HTTPException(status_code=400, detail="Invalid image format. Allowed: JPG, JPEG, PNG, WebP.")
@@ -89,7 +89,10 @@ async def upload_admin_image(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(content)
         
-    public_url = f"assets/uploads/{unique_name}"
+    host = request.headers.get("host") or "chinnijewels-production.up.railway.app"
+    scheme = "https" if "localhost" not in host and "127.0.0.1" not in host else "http"
+    public_url = f"{scheme}://{host}/assets/uploads/{unique_name}"
+
     return success_response({
         "url": public_url,
         "filename": unique_name,
