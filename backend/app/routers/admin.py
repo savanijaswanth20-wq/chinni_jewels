@@ -65,3 +65,35 @@ def get_admin_dashboard(user=Depends(require_role(["ADMIN", "STAFF"])), db: Sess
         "total_stock_value": round(total_stock_val, 2)
     })
 
+import os
+import uuid
+from fastapi import File, UploadFile, HTTPException
+
+@router.post("/upload-image")
+async def upload_admin_image(file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Allowed: JPG, JPEG, PNG, WebP.")
+    
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    upload_dir = os.path.join(ROOT_DIR, "assets", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    file_path = os.path.join(upload_dir, unique_name)
+    
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit.")
+        
+    with open(file_path, "wb") as f:
+        f.write(content)
+        
+    public_url = f"assets/uploads/{unique_name}"
+    return success_response({
+        "url": public_url,
+        "filename": unique_name,
+        "success": True
+    })
+
+

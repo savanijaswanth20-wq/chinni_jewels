@@ -112,6 +112,24 @@ class ApiClient {
         completedOrders: 0
       }
     };
+  // Admin Image Upload
+  static async uploadImage(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`${ApiClient.BASE_URL}/admin/upload-image`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      if (response.ok && data && data.data && data.data.url) {
+        return { success: true, url: data.data.url };
+      }
+      return { success: false, error: data.detail || "Upload failed" };
+    } catch(err) {
+      console.warn("[ApiClient] uploadImage error:", err.message);
+      return { success: false, error: err.message };
+    }
   }
 }
 

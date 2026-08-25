@@ -635,9 +635,16 @@ class SupabaseDataService {
         }]);
       } catch(mErr) {}
 
-      return { success: true, url: publicUrl, storagePath };
     } catch (err) {
       console.warn("[SupabaseService] Storage upload fallback notice:", err.message);
+      if (window.ApiClient && window.ApiClient.uploadImage) {
+        try {
+          const apiRes = await window.ApiClient.uploadImage(rawFile);
+          if (apiRes.success && apiRes.url) {
+            return { success: true, url: apiRes.url, storagePath: apiRes.url };
+          }
+        } catch(apiErr) {}
+      }
       const reader = new FileReader();
       return new Promise((resolve) => {
         reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
