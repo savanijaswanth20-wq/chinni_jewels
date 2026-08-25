@@ -342,7 +342,7 @@
           this.onerror = null;
           this.src = 'assets/featured_product.png';
         };
-        let finalUrl = featured.imageUrl;
+        let finalUrl = window.ApiClient ? window.ApiClient.resolveImageUrl(featured.imageUrl) : featured.imageUrl;
         if (finalUrl && !finalUrl.startsWith('data:') && !finalUrl.includes('v=')) {
           finalUrl += (finalUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
         }
@@ -364,7 +364,7 @@
     if (story.imageUrl) {
       const imgEl = document.querySelector('.brand-story-image img');
       if (imgEl) {
-        let finalUrl = story.imageUrl;
+        let finalUrl = window.ApiClient ? window.ApiClient.resolveImageUrl(story.imageUrl) : story.imageUrl;
         if (finalUrl.includes('brand_story_lifestyle.png')) {
           finalUrl = 'assets/brand_story_banner.jpg';
         }

@@ -89,9 +89,9 @@ async def upload_admin_image(request: Request, file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(content)
         
-    host = request.headers.get("host") or "chinnijewels-production.up.railway.app"
-    scheme = "https" if "localhost" not in host and "127.0.0.1" not in host else "http"
-    public_url = f"{scheme}://{host}/assets/uploads/{unique_name}"
+    railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "chinnijewels-production.up.railway.app"
+    railway_domain = railway_domain.replace("https://", "").replace("http://", "").strip("/")
+    public_url = f"https://{railway_domain}/assets/uploads/{unique_name}"
 
     return success_response({
         "url": public_url,

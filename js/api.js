@@ -135,6 +135,18 @@ class ApiClient {
       return { success: false, error: err.message };
     }
   }
+
+  static resolveImageUrl(url) {
+    if (!url) return 'assets/hero_gold_coin.png';
+    if (url.startsWith('data:')) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+    const cleanPath = url.replace(/^\/+/, '');
+    if (cleanPath.startsWith('assets/uploads/')) {
+      return `https://chinnijewels-production.up.railway.app/${cleanPath}`;
+    }
+    return url;
+  }
 }
 
 window.ApiClient = ApiClient;

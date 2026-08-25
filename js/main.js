@@ -785,6 +785,13 @@ function getCacheBustedImageUrl(product) {
   if (!product) return "assets/hero_gold_coin.png";
   let url = product.imageUrl || product.image_url || (product.images && product.images[0]) || "assets/hero_gold_coin.png";
   if (!url) return "assets/hero_gold_coin.png";
+
+  if (window.ApiClient && window.ApiClient.resolveImageUrl) {
+    url = window.ApiClient.resolveImageUrl(url);
+  } else if (url.startsWith('assets/uploads/') || url.startsWith('/assets/uploads/')) {
+    url = `https://chinnijewels-production.up.railway.app/${url.replace(/^\/+/, '')}`;
+  }
+
   if (url.startsWith('data:') || url.includes('v=')) {
     return url;
   }
