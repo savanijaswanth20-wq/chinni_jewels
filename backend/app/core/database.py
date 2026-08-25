@@ -6,6 +6,9 @@ db_url = settings.DATABASE_URL
 if "[YOUR-PASSWORD]" in db_url or "YOUR-PASSWORD" in db_url:
     db_url = "sqlite:///./gold_business.db"
 
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 if db_url.startswith("postgresql"):
     try:
         import psycopg2
