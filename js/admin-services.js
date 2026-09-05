@@ -404,7 +404,7 @@ class AdminDataService {
   }
 
   async uploadProductImage(productId, file) {
-    return await this.uploadFile('product-images', file, productId);
+    return await this.uploadFile('images', file, productId);
   }
 
   async saveProduct(productId, productData, imageFiles = []) {

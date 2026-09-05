@@ -56,7 +56,7 @@ class StorageService:
         Falls back to local file storage if Supabase is unconfigured or unreachable.
         """
         ext = cls.validate_file(filename, len(content))
-        target_bucket = bucket or settings.SUPABASE_STORAGE_BUCKET or "products"
+        target_bucket = bucket or settings.SUPABASE_STORAGE_BUCKET or "images"
         content_type = content_type or CONTENT_TYPE_MAP.get(ext, "image/jpeg")
 
         # Sanitize filename
@@ -134,7 +134,7 @@ class StorageService:
         Delete an image from Supabase Storage or local disk.
         Accepts either a full URL or storage path.
         """
-        target_bucket = bucket or settings.SUPABASE_STORAGE_BUCKET or "products"
+        target_bucket = bucket or settings.SUPABASE_STORAGE_BUCKET or "images"
         supabase_url = (settings.SUPABASE_URL or "").rstrip("/")
         auth_key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY
 

@@ -45,7 +45,7 @@ def test_upload_image_supabase_success():
             )
             assert res["success"] is True
             assert res["provider"] == "supabase"
-            assert "storage/v1/object/public/products/" in res["url"]
+            assert "storage/v1/object/public/images/" in res["url"]
             assert res["url"].startswith("http")
 
     asyncio.run(run())

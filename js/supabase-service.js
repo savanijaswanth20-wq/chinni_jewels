@@ -224,7 +224,7 @@ class SupabaseDataService {
       const uploadedUrls = [];
 
       for (const file of imageFiles) {
-        const uploadRes = await this.uploadFile('products', file, targetId);
+        const uploadRes = await this.uploadFile('images', file, targetId);
         if (uploadRes.success) {
           uploadedUrls.push(uploadRes.url);
           if (!primaryImageUrl || imageFiles.indexOf(file) === 0) {
@@ -608,7 +608,7 @@ class SupabaseDataService {
       const timestamp = Date.now();
       const storagePath = `products/${productId}/${timestamp}-${cleanName}`;
 
-      let targetBucket = bucketName || 'product-images';
+      let targetBucket = bucketName || 'images';
       let uploadResult = await this.db.storage
         .from(targetBucket)
         .upload(storagePath, rawFile, { cacheControl: '3600', upsert: true });

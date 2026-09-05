@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     SUPABASE_S3_REGION: str = "ap-south-1"
     SUPABASE_S3_ACCESS_KEY_ID: str = ""
     SUPABASE_S3_SECRET_ACCESS_KEY: str = ""
-    SUPABASE_STORAGE_BUCKET: str = "products"
+    SUPABASE_STORAGE_BUCKET: str = "images"
     
     # SECURITY: Set JWT_SECRET_KEY via environment variable in production.
     # A random fallback is generated for local development only.
