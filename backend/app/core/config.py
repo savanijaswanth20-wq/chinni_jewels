@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     
+    # Supabase S3 & Storage Configuration
+    SUPABASE_S3_ENDPOINT: str = "https://znyozgmomnfpzhgojwim.storage.supabase.co/storage/v1/s3"
+    SUPABASE_S3_REGION: str = "ap-south-1"
+    SUPABASE_S3_ACCESS_KEY_ID: str = ""
+    SUPABASE_S3_SECRET_ACCESS_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "products"
+    
     # SECURITY: Set JWT_SECRET_KEY via environment variable in production.
     # A random fallback is generated for local development only.
     JWT_SECRET_KEY: str = ""
@@ -56,6 +63,20 @@ class Settings(BaseSettings):
         if v and v.strip():
             return v
         return os.getenv("SUPABASE_SECRET_KEY") or ""
+
+    @field_validator("SUPABASE_S3_ACCESS_KEY_ID", mode="before")
+    @classmethod
+    def set_s3_access_key(cls, v):
+        if v and str(v).strip():
+            return str(v).strip()
+        return os.getenv("AWS_ACCESS_KEY_ID") or ""
+
+    @field_validator("SUPABASE_S3_SECRET_ACCESS_KEY", mode="before")
+    @classmethod
+    def set_s3_secret_key(cls, v):
+        if v and str(v).strip():
+            return str(v).strip()
+        return os.getenv("AWS_SECRET_ACCESS_KEY") or ""
 
     @field_validator("WHATSAPP_CLOUD_API_TOKEN", mode="before")
     @classmethod
