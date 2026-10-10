@@ -78,10 +78,8 @@ ON CONFLICT (id) DO UPDATE SET
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_path TEXT;
 
--- 3. Enable RLS on storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
--- 4. Clean up any existing policies for "product-images" to prevent conflicts
+-- 3. Storage objects table already has RLS enabled by default in Supabase.
+-- Clean up any existing policies for "product-images" to prevent conflicts
 DROP POLICY IF EXISTS "Public Read product-images Objects" ON storage.objects;
 DROP POLICY IF EXISTS "Public Access product-images Objects" ON storage.objects;
 DROP POLICY IF EXISTS "Public Read product-images" ON storage.objects;
