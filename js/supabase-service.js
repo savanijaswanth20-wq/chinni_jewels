@@ -224,10 +224,16 @@ class SupabaseDataService {
       const uploadedUrls = [];
 
       for (const file of imageFiles) {
-        const uploadRes = await this.uploadFile('images', file, targetId);
+        const uploadRes = await this.uploadFile('product-images', file, targetId);
         if (uploadRes.success) {
           uploadedUrls.push(uploadRes.url);
           if (!primaryImageUrl || imageFiles.indexOf(file) === 0) {
+            // Clean up previous image in storage if updating an existing product
+            if (oldStoragePath) {
+              await this.deleteStorageFile(oldStoragePath);
+            } else if (existingData && existingData.image_url) {
+              await this.deleteStorageFile(existingData.image_url);
+            }
             primaryImageUrl = uploadRes.url;
             primaryStoragePath = uploadRes.storagePath;
           }
@@ -349,6 +355,54 @@ class SupabaseDataService {
     } catch (err) {
       console.error("[SupabaseService] saveProduct error:", err);
       return { success: false, error: err.message || "Failed to save product in database" };
+    }
+  }
+
+  async deleteProduct(productId) {
+    if (!this.db) return { success: false, error: "Database unavailable" };
+    try {
+      // 1. Fetch product to locate image_path and image_url for Supabase Storage cleanup
+      let storagePathToDelete = null;
+      let imageUrlToDelete = null;
+      try {
+        const { data: prod } = await this.db.from('products').select('*').eq('id', productId).maybeSingle();
+        if (prod) {
+          storagePathToDelete = prod.image_path;
+          imageUrlToDelete = prod.image_url;
+        }
+      } catch (fetchErr) {
+        console.warn("[SupabaseService] Error finding product for image deletion:", fetchErr);
+      }
+
+      // 2. Delete image from product-images bucket
+      if (storagePathToDelete) {
+        await this.deleteStorageFile(storagePathToDelete);
+      } else if (imageUrlToDelete) {
+        await this.deleteStorageFile(imageUrlToDelete);
+      }
+
+      // 3. Delete from product_images table if exists
+      try {
+        await this.db.from('product_images').delete().eq('product_id', productId);
+      } catch (piErr) {}
+
+      // 4. Delete from inventory table if exists
+      try {
+        await this.db.from('inventory').delete().eq('product_id', productId);
+      } catch (invErr) {}
+
+      // 5. Delete product row from products table
+      const { error } = await this.db.from('products').delete().eq('id', productId);
+      if (error) throw error;
+
+      // 6. Refresh products list and notify listeners
+      const refreshed = await this.getProducts();
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+
+      return { success: true, message: "Product and associated image deleted successfully." };
+    } catch (err) {
+      console.error("[SupabaseService] deleteProduct error:", err);
+      return { success: false, error: err.message || "Failed to delete product from database" };
     }
   }
 
@@ -582,23 +636,46 @@ class SupabaseDataService {
   }
 
   // 6. STORAGE FILE UPLOADER (UNIQUE TIMESTAMPS FOR CROSS-DEVICE CACHE SAFE URLS)
-  async uploadFile(bucketName, rawFile, productId = 'general') {
+  async uploadFile(bucketName = 'product-images', rawFile, productId = 'general', onProgress = null) {
     if (!rawFile) return { success: false, error: "No file provided" };
 
-    // STEP 4 Validation: JPG, JPEG, PNG, WebP only (no SVG)
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (rawFile.type && !allowedTypes.includes(rawFile.type.toLowerCase())) {
-      return { success: false, error: "Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP." };
+    // Format Validation: JPEG, PNG, WebP only
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const ext = (rawFile.name || '').split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+    const fileType = (rawFile.type || '').toLowerCase();
+    const isMimeValid = fileType ? allowedMimeTypes.includes(fileType) : false;
+    const isExtValid = allowedExts.includes(ext);
+
+    if (!isMimeValid && !isExtValid) {
+      return {
+        success: false,
+        error: "Invalid image format. Only JPEG, PNG, and WebP are accepted."
+      };
     }
 
-    if (rawFile.size > 5 * 1024 * 1024) {
-      return { success: false, error: "Image file exceeds maximum limit of 5MB." };
+    // Size limit: 5 MB (5,242,880 bytes)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (rawFile.size > MAX_SIZE) {
+      const sizeMb = (rawFile.size / (1024 * 1024)).toFixed(2);
+      return {
+        success: false,
+        error: `Image file exceeds maximum limit of 5 MB (current size: ${sizeMb} MB).`
+      };
+    }
+
+    if (typeof onProgress === 'function') {
+      onProgress(20, "Validating file and connecting to Supabase Storage...");
     }
 
     if (!this.db) {
       const reader = new FileReader();
       return new Promise((resolve) => {
-        reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
+        reader.onload = (e) => {
+          if (typeof onProgress === 'function') onProgress(100, "Ready (local preview)");
+          resolve({ success: true, url: e.target.result, isFallback: true });
+        };
         reader.readAsDataURL(rawFile);
       });
     }
@@ -607,14 +684,26 @@ class SupabaseDataService {
       const cleanName = rawFile.name ? rawFile.name.replace(/[^a-zA-Z0-9.-]/g, '_') : 'image.jpg';
       const timestamp = Date.now();
       const storagePath = `products/${productId}/${timestamp}-${cleanName}`;
+      const targetBucket = bucketName || 'product-images';
 
-      let targetBucket = bucketName || 'images';
-      let uploadResult = await this.db.storage
+      if (typeof onProgress === 'function') {
+        onProgress(45, `Uploading to Supabase bucket "${targetBucket}"...`);
+      }
+
+      const uploadResult = await this.db.storage
         .from(targetBucket)
-        .upload(storagePath, rawFile, { cacheControl: '3600', upsert: true });
+        .upload(storagePath, rawFile, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: fileType || `image/${ext === 'jpg' ? 'jpeg' : ext}`
+        });
 
       if (uploadResult.error) {
         throw uploadResult.error;
+      }
+
+      if (typeof onProgress === 'function') {
+        onProgress(85, "Retrieving public image URL...");
       }
 
       // Get Public URL
@@ -630,27 +719,37 @@ class SupabaseDataService {
           file_name: cleanName,
           storage_path: storagePath,
           public_url: publicUrl,
-          file_type: rawFile.type,
+          file_type: rawFile.type || `image/${ext}`,
           file_size: rawFile.size
         }]);
       } catch(mErr) {}
 
-      return { success: true, url: publicUrl, storagePath };
+      if (typeof onProgress === 'function') {
+        onProgress(100, "Upload completed successfully!");
+      }
+
+      return { success: true, url: publicUrl, storagePath, bucket: targetBucket };
     } catch (err) {
       console.warn("[SupabaseService] Storage upload fallback notice:", err.message);
       if (window.ApiClient && window.ApiClient.uploadImage) {
         try {
+          if (typeof onProgress === 'function') onProgress(60, "Uploading via backend proxy...");
           const apiRes = await window.ApiClient.uploadImage(rawFile);
           if (apiRes.success && apiRes.url) {
-            return { success: true, url: apiRes.url, storagePath: apiRes.url };
+            if (typeof onProgress === 'function') onProgress(100, "Uploaded via backend!");
+            return {
+              success: true,
+              url: apiRes.url,
+              storagePath: apiRes.storage_path || apiRes.url,
+              bucket: 'product-images'
+            };
           }
         } catch(apiErr) {}
       }
-      const reader = new FileReader();
-      return new Promise((resolve) => {
-        reader.onload = (e) => resolve({ success: true, url: e.target.result, isFallback: true });
-        reader.readAsDataURL(rawFile);
-      });
+      return {
+        success: false,
+        error: err.message || "Failed to upload image to Supabase Storage bucket 'product-images'."
+      };
     }
   }
 
@@ -660,21 +759,29 @@ class SupabaseDataService {
       return { success: true, isLocalAsset: true };
     }
     try {
+      let bucket = 'product-images';
+      let storagePath = null;
+
       if (url.includes('/storage/v1/object/public/')) {
         const parts = url.split('/storage/v1/object/public/');
         if (parts.length > 1) {
           const pathParts = parts[1].split('/');
-          const bucket = pathParts[0];
-          const storagePath = pathParts.slice(1).join('/').split('?')[0]; // Remove query params
-          if (storagePath) {
-            console.log(`[SupabaseService] Cleaning up old storage file in bucket "${bucket}": ${storagePath}`);
-            const { error } = await this.db.storage.from(bucket).remove([storagePath]);
-            if (error) throw error;
-            return { success: true };
-          }
+          bucket = pathParts[0];
+          storagePath = pathParts.slice(1).join('/').split('?')[0]; // Remove query params
         }
+      } else if (!url.startsWith('http')) {
+        // Direct storagePath provided, e.g. "products/prod-123/12345-image.jpg"
+        storagePath = url.split('?')[0];
       }
-      return { success: false, error: "Not a valid Supabase storage URL" };
+
+      if (storagePath) {
+        console.log(`[SupabaseService] Cleaning up storage file in bucket "${bucket}": ${storagePath}`);
+        const { error } = await this.db.storage.from(bucket).remove([storagePath]);
+        if (error) throw error;
+        return { success: true, path: storagePath, bucket };
+      }
+
+      return { success: false, error: "Not a valid Supabase storage URL or path" };
     } catch (err) {
       console.warn("[SupabaseService] Error deleting file:", err.message);
       return { success: false, error: err.message };

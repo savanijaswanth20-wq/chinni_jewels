@@ -372,11 +372,11 @@ class AdminDataService {
     });
   }
 
-  async uploadFile(bucketName, rawFile, productId = 'general') {
+  async uploadFile(bucketName = 'product-images', rawFile, productId = 'general', onProgress = null) {
     if (!rawFile) return { success: false, error: "No file provided" };
     const file = await this.compressImage(rawFile);
     if (window.SupabaseService) {
-      return await window.SupabaseService.uploadFile(bucketName, file, productId);
+      return await window.SupabaseService.uploadFile(bucketName || 'product-images', file, productId, onProgress);
     }
     try {
       const dataUrl = await this.fileToDataUrl(file);
@@ -403,8 +403,15 @@ class AdminDataService {
     }
   }
 
-  async uploadProductImage(productId, file) {
-    return await this.uploadFile('images', file, productId);
+  async uploadProductImage(productId, file, onProgress = null) {
+    return await this.uploadFile('product-images', file, productId, onProgress);
+  }
+
+  async deleteProduct(productId) {
+    if (window.SupabaseService && window.SupabaseService.deleteProduct) {
+      return await window.SupabaseService.deleteProduct(productId);
+    }
+    return { success: true };
   }
 
   async saveProduct(productId, productData, imageFiles = []) {

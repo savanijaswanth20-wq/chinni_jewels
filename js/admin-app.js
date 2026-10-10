@@ -395,48 +395,100 @@ class AdminApp {
     const closeXBtn = document.querySelector('#product-modal-close-x');
     if (closeXBtn) closeXBtn.addEventListener('click', () => this.closeModal('product-modal'));
 
-    // Product Image Upload Trigger
+    // Product Image Upload Trigger & Controls
     const prodUploadBtn = document.querySelector('#btn-trigger-product-upload');
     const prodFileInput = document.querySelector('#product-file-upload');
     const prodUrlInput = document.querySelector('#pm-image-url-input');
     const prodThumb = document.querySelector('#pm-image-preview-thumb');
+    const prodClearBtn = document.querySelector('#pm-clear-image-btn');
 
     if (prodUploadBtn && prodFileInput) {
-      prodUploadBtn.addEventListener('click', () => prodFileInput.click());
+      prodUploadBtn.addEventListener('click', () => {
+        this.hideImageError();
+        prodFileInput.click();
+      });
+
       prodFileInput.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
-        if (file) {
-          // Validate file size and format
-          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-          if (file.type && !allowedTypes.includes(file.type.toLowerCase())) {
-            alert("Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP.");
-            this.showToast("Upload failed: Invalid format");
-            prodFileInput.value = '';
-            return;
-          }
-          if (file.size > 5 * 1024 * 1024) {
-            alert("Image file exceeds maximum limit of 5MB.");
-            this.showToast("Upload failed: File too large");
-            prodFileInput.value = '';
-            return;
-          }
+        if (!file) return;
 
-          this.selectedProductFile = file;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const dataUrl = ev.target.result;
-            if (prodUrlInput) prodUrlInput.value = dataUrl;
-            if (prodThumb) prodThumb.src = dataUrl;
-            this.showToast("Product photo selected!");
-          };
-          reader.readAsDataURL(file);
+        this.hideImageError();
+
+        // 1. Validate file format: only JPEG, PNG, WebP
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const ext = (file.name || '').split('.').pop().toLowerCase();
+        const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+        const fileType = (file.type || '').toLowerCase();
+        const isMimeValid = fileType ? allowedMimeTypes.includes(fileType) : false;
+        const isExtValid = allowedExts.includes(ext);
+
+        if (!isMimeValid && !isExtValid) {
+          const errMsg = `Unsupported format "${ext.toUpperCase()}". Please upload a JPEG, PNG, or WebP image.`;
+          this.showImageError(errMsg);
+          this.showToast(errMsg);
+          prodFileInput.value = '';
+          return;
+        }
+
+        // 2. Validate file size: maximum 5 MB (5,242,880 bytes)
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+          const sizeStr = this.formatBytes(file.size);
+          const errMsg = `File size (${sizeStr}) exceeds the 5 MB limit. Please select an image under 5 MB.`;
+          this.showImageError(errMsg);
+          this.showToast(errMsg);
+          prodFileInput.value = '';
+          return;
+        }
+
+        // 3. Store valid file & render immediate preview
+        this.selectedProductFile = file;
+
+        // Show metadata badge
+        const badge = document.querySelector('#pm-file-info-badge');
+        const nameTxt = document.querySelector('#pm-file-name-txt');
+        const sizeTxt = document.querySelector('#pm-file-size-txt');
+        const typeTxt = document.querySelector('#pm-file-type-txt');
+
+        if (badge && nameTxt && sizeTxt && typeTxt) {
+          nameTxt.textContent = file.name;
+          sizeTxt.textContent = this.formatBytes(file.size);
+          typeTxt.textContent = (ext || 'img').toUpperCase();
+          badge.style.display = 'inline-flex';
+        }
+
+        if (prodClearBtn) prodClearBtn.style.display = 'inline-flex';
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target.result;
+          if (prodThumb) prodThumb.src = dataUrl;
+          if (prodUrlInput) prodUrlInput.value = ''; // Clear URL text input when file is selected
+          this.showToast(`Selected "${file.name}" (${this.formatBytes(file.size)})`);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (prodClearBtn) {
+      prodClearBtn.addEventListener('click', () => {
+        this.resetImagePreviewUI();
+        if (prodUrlInput && prodThumb) {
+          prodThumb.src = prodUrlInput.value.trim() || 'assets/hero_gold_coin.png';
         }
       });
     }
 
     if (prodUrlInput && prodThumb) {
       prodUrlInput.addEventListener('input', () => {
-        this.selectedProductFile = null; // Clear any selected upload file so URL takes precedence
+        this.selectedProductFile = null;
+        this.hideImageError();
+        const badge = document.querySelector('#pm-file-info-badge');
+        if (badge) badge.style.display = 'none';
+        if (prodClearBtn) prodClearBtn.style.display = 'none';
+        const fileInput = document.querySelector('#product-file-upload');
+        if (fileInput) fileInput.value = '';
         prodThumb.src = prodUrlInput.value.trim() || 'assets/hero_gold_coin.png';
       });
     }
@@ -445,20 +497,84 @@ class AdminApp {
     const aiProductBtn = document.querySelector('#btn-ai-enhance-product');
     if (aiProductBtn) {
       aiProductBtn.addEventListener('click', () => {
-        const currentSrc = prodUrlInput?.value.trim() || 'assets/hero_gold_coin.png';
+        const currentSrc = prodThumb?.src || prodUrlInput?.value.trim() || 'assets/hero_gold_coin.png';
         if (window.AIEditor) {
           window.AIEditor.openWithImage(currentSrc, prodThumb, (enhancedFile, dataUrl) => {
-            if (prodUrlInput) prodUrlInput.value = dataUrl;
             if (prodThumb) prodThumb.src = dataUrl;
-            this.selectedProductFile = enhancedFile; // Store the enhanced file for upload
+            this.selectedProductFile = enhancedFile;
+            if (prodClearBtn) prodClearBtn.style.display = 'inline-flex';
+            const badge = document.querySelector('#pm-file-info-badge');
+            const nameTxt = document.querySelector('#pm-file-name-txt');
+            const sizeTxt = document.querySelector('#pm-file-size-txt');
+            const typeTxt = document.querySelector('#pm-file-type-txt');
+            if (badge && nameTxt && sizeTxt && typeTxt && enhancedFile) {
+              nameTxt.textContent = enhancedFile.name || 'enhanced.png';
+              sizeTxt.textContent = this.formatBytes(enhancedFile.size || 0);
+              typeTxt.textContent = 'WEBP/PNG';
+              badge.style.display = 'inline-flex';
+            }
           });
         }
       });
     }
   }
 
-  openAddProductModal() {
+  formatBytes(bytes, decimals = 1) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
+  showImageError(msg) {
+    const errorBox = document.querySelector('#pm-image-error-box');
+    const errorTxt = document.querySelector('#pm-image-error-text');
+    if (errorBox && errorTxt) {
+      errorTxt.textContent = msg;
+      errorBox.style.display = 'flex';
+    }
+  }
+
+  hideImageError() {
+    const errorBox = document.querySelector('#pm-image-error-box');
+    if (errorBox) errorBox.style.display = 'none';
+  }
+
+  setUploadProgress(percent, statusText) {
+    const container = document.querySelector('#pm-upload-progress-container');
+    const bar = document.querySelector('#pm-upload-progress-bar');
+    const percentEl = document.querySelector('#pm-upload-percent-text');
+    const statusEl = document.querySelector('#pm-upload-status-text');
+
+    if (container) container.style.display = 'block';
+    if (bar) bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    if (percentEl) percentEl.textContent = `${Math.round(percent)}%`;
+    if (statusEl && statusText) statusEl.textContent = statusText;
+  }
+
+  hideUploadProgress() {
+    const container = document.querySelector('#pm-upload-progress-container');
+    const bar = document.querySelector('#pm-upload-progress-bar');
+    if (container) container.style.display = 'none';
+    if (bar) bar.style.width = '0%';
+  }
+
+  resetImagePreviewUI() {
     this.selectedProductFile = null;
+    const fileInput = document.querySelector('#product-file-upload');
+    if (fileInput) fileInput.value = '';
+    const badge = document.querySelector('#pm-file-info-badge');
+    if (badge) badge.style.display = 'none';
+    const clearBtn = document.querySelector('#pm-clear-image-btn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    this.hideImageError();
+    this.hideUploadProgress();
+  }
+
+  openAddProductModal() {
+    this.resetImagePreviewUI();
     document.querySelector('#product-modal-title').textContent = "Add Product";
     document.querySelector('#pm-id').value = "";
     document.querySelector('#pm-name').value = "";
@@ -471,7 +587,7 @@ class AdminApp {
   }
 
   openEditProductModal(prod) {
-    this.selectedProductFile = null;
+    this.resetImagePreviewUI();
     document.querySelector('#product-modal-title').textContent = "Edit Product Name, Price & Image";
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
@@ -489,6 +605,16 @@ class AdminApp {
     const prod = this.products.find(p => p.id === id);
     if (!prod) return;
 
+    // Delete image from product-images Supabase Storage bucket
+    const imgUrlOrPath = prod.image_path || prod.image_url || prod.imageUrl;
+    if (imgUrlOrPath && window.AdminService && window.AdminService.deleteOldStorageFile) {
+      try {
+        await window.AdminService.deleteOldStorageFile(imgUrlOrPath);
+      } catch (delErr) {
+        console.warn("Storage deletion warning for product:", delErr);
+      }
+    }
+
     this.products = this.products.filter(p => p.id !== id);
     localStorage.setItem('chinni_products', JSON.stringify(this.products));
     this.renderProductsTable(this.products);
@@ -497,9 +623,11 @@ class AdminApp {
     if (window.AdminService && window.AdminService.deleteProduct) {
       try {
         await window.AdminService.deleteProduct(id);
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Supabase database deletion warning:", err);
+      }
     }
-    this.showToast(`Product "${prod.name}" deleted successfully.`);
+    this.showToast(`Product "${prod.name}" and image deleted successfully.`);
   }
 
   async handleSaveProduct() {
@@ -509,12 +637,14 @@ class AdminApp {
     const priceEl = document.querySelector('#pm-price');
     const price = priceEl ? (parseInt(priceEl.value, 10) || 0) : 0;
 
+    this.hideImageError();
+
     if (!name) {
-      alert("Please enter a product name.");
+      this.showImageError("Please enter a product name.");
       return;
     }
     if (!price || price <= 0) {
-      alert("Please enter a valid price.");
+      this.showImageError("Please enter a valid price greater than zero.");
       return;
     }
 
@@ -523,24 +653,38 @@ class AdminApp {
     saveBtn.textContent = "Saving...";
 
     let finalImageUrl = imageUrl;
+    let finalStoragePath = null;
     let uploadSuccess = false;
     let oldImageUrl = null;
+    let oldStoragePath = null;
 
     if (id) {
       const existing = this.products.find(p => p.id === id);
       if (existing) {
-        oldImageUrl = existing.image_url;
+        oldImageUrl = existing.image_url || existing.imageUrl;
+        oldStoragePath = existing.image_path || null;
       }
     }
 
     try {
       if (this.selectedProductFile) {
-        const uploadProductId = id || 'new_' + Date.now();
+        const uploadProductId = id || 'prod_' + Date.now();
+        this.setUploadProgress(15, "Connecting to Supabase Storage (product-images)...");
         saveBtn.textContent = "Uploading image...";
-        const uploadRes = await window.AdminService.uploadProductImage(uploadProductId, this.selectedProductFile);
+
+        const uploadRes = await window.AdminService.uploadProductImage(
+          uploadProductId,
+          this.selectedProductFile,
+          (percent, status) => {
+            this.setUploadProgress(percent, status);
+          }
+        );
+
         if (uploadRes.success && uploadRes.url) {
           finalImageUrl = uploadRes.url;
+          finalStoragePath = uploadRes.storagePath || null;
           uploadSuccess = true;
+          this.setUploadProgress(85, "Image uploaded. Updating products table...");
         } else {
           throw new Error(uploadRes.error || "Image upload failed.");
         }
@@ -556,6 +700,7 @@ class AdminApp {
         name: name,
         image_url: finalImageUrl,
         imageUrl: finalImageUrl,
+        image_path: finalStoragePath || oldStoragePath || '',
         price: price,
         price_inr: price,
         selling_price: price,
@@ -593,6 +738,17 @@ class AdminApp {
         }
       }
 
+      // If replacing an existing product's image, clean up old image from product-images bucket
+      if (uploadSuccess && (oldStoragePath || oldImageUrl) && window.AdminService.deleteOldStorageFile) {
+        try {
+          await window.AdminService.deleteOldStorageFile(oldStoragePath || oldImageUrl);
+        } catch (delErr) {
+          console.warn("Could not delete previous storage image:", delErr);
+        }
+      }
+
+      this.setUploadProgress(100, "Saved successfully!");
+
       // 1. Save updated products list to LocalStorage
       localStorage.setItem('chinni_products', JSON.stringify(this.products));
 
@@ -602,21 +758,21 @@ class AdminApp {
       // 3. Dispatch global live update event across app & tabs
       window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
 
-      if (uploadSuccess && oldImageUrl && window.AdminService.deleteOldStorageFile) {
-        try {
-          await window.AdminService.deleteOldStorageFile(oldImageUrl);
-        } catch (delErr) {}
-      }
-
       this.selectedProductFile = null;
       sessionStorage.setItem('chinni_selected_product_name', name);
       sessionStorage.setItem('chinni_selected_product_image', finalImageUrl);
-      this.closeModal('product-modal');
-      this.showToast(`Product "${name}" photo & details updated successfully!`);
+
+      setTimeout(() => {
+        this.hideUploadProgress();
+        this.closeModal('product-modal');
+        this.showToast(`Product "${name}" photo & details updated successfully!`);
+      }, 400);
+
     } catch (err) {
       console.error("Save product error:", err);
-      alert("Failed to save product: " + err.message);
-      this.showToast("Save failed!");
+      this.showImageError(err.message || "Failed to upload image to Supabase Storage.");
+      this.showToast("Save failed: " + err.message);
+      this.hideUploadProgress();
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = "Save Product";

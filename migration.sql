@@ -93,60 +93,90 @@ FOR DELETE USING (
 );
 
 -- 6. Storage Security Policies for "product-images" Bucket
--- Drop old or conflicting policies if any exist
+-- Clean up any existing policies for "product-images" to prevent conflicts
 DROP POLICY IF EXISTS "Public Access product-images Objects" ON storage.objects;
+DROP POLICY IF EXISTS "Public Read product-images Objects" ON storage.objects;
+DROP POLICY IF EXISTS "Public Read product-images" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Upload product-images Objects" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Upload product-images" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Update product-images Objects" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Update product-images" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Delete product-images Objects" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Delete product-images" ON storage.objects;
 
--- Create Public SELECT Policy for product-images
-CREATE POLICY "Public Access product-images Objects" ON storage.objects
-FOR SELECT USING (bucket_id = 'product-images');
+-- Create Public SELECT Policy for product-images (Customers can only view images)
+CREATE POLICY "Public Read product-images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'product-images');
 
--- Create Admin Upload Policy
-CREATE POLICY "Admin Upload product-images Objects" ON storage.objects
-FOR INSERT WITH CHECK (
+-- Create Admin Upload Policy (Admin can upload product images)
+CREATE POLICY "Admin Upload product-images"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (
   bucket_id = 'product-images'
-  AND auth.role() = 'authenticated' AND (
+  AND (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE user_id = auth.uid() AND role IN ('admin', 'staff')
+      WHERE user_id = (SELECT auth.uid()) AND LOWER(role) IN ('admin', 'staff')
     )
     OR EXISTS (
       SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid() AND is_active = true
+      WHERE user_id = (SELECT auth.uid()) AND is_active = true
     )
   )
 );
 
--- Create Admin Update Policy
-CREATE POLICY "Admin Update product-images Objects" ON storage.objects
-FOR UPDATE USING (
+-- Create Admin Update Policy (Admin can replace/update images)
+CREATE POLICY "Admin Update product-images"
+ON storage.objects
+FOR UPDATE
+TO authenticated
+USING (
   bucket_id = 'product-images'
-  AND auth.role() = 'authenticated' AND (
+  AND (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE user_id = auth.uid() AND role IN ('admin', 'staff')
+      WHERE user_id = (SELECT auth.uid()) AND LOWER(role) IN ('admin', 'staff')
     )
     OR EXISTS (
       SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid() AND is_active = true
+      WHERE user_id = (SELECT auth.uid()) AND is_active = true
+    )
+  )
+)
+WITH CHECK (
+  bucket_id = 'product-images'
+  AND (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE user_id = (SELECT auth.uid()) AND LOWER(role) IN ('admin', 'staff')
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.admin_users
+      WHERE user_id = (SELECT auth.uid()) AND is_active = true
     )
   )
 );
 
--- Create Admin Delete Policy
-CREATE POLICY "Admin Delete product-images Objects" ON storage.objects
-FOR DELETE USING (
+-- Create Admin Delete Policy (Admin can delete images)
+CREATE POLICY "Admin Delete product-images"
+ON storage.objects
+FOR DELETE
+TO authenticated
+USING (
   bucket_id = 'product-images'
-  AND auth.role() = 'authenticated' AND (
+  AND (
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE user_id = auth.uid() AND role IN ('admin', 'staff')
+      WHERE user_id = (SELECT auth.uid()) AND LOWER(role) IN ('admin', 'staff')
     )
     OR EXISTS (
       SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid() AND is_active = true
+      WHERE user_id = (SELECT auth.uid()) AND is_active = true
     )
   )
 );

@@ -40,7 +40,7 @@ def test_upload_image_supabase_success():
 
         with patch.object(settings, "SUPABASE_URL", "https://povomkepfcyfgqxdajym.supabase.co"), \
              patch.object(settings, "SUPABASE_ANON_KEY", "test-anon-key"), \
-             patch.object(settings, "SUPABASE_STORAGE_BUCKET", "images"), \
+             patch.object(settings, "SUPABASE_STORAGE_BUCKET", "product-images"), \
              patch("app.services.storage_service.httpx.AsyncClient.post", return_value=mock_resp):
             res = await StorageService.upload_image(
                 content=fake_content,
@@ -49,7 +49,7 @@ def test_upload_image_supabase_success():
             )
             assert res["success"] is True
             assert res["provider"] == "supabase"
-            assert "storage/v1/object/public/images/" in res["url"]
+            assert "storage/v1/object/public/product-images/" in res["url"]
             assert res["url"].startswith("http")
 
     asyncio.run(run())
@@ -72,3 +72,21 @@ def test_upload_image_fallback_to_local():
             assert "/assets/uploads/" in res["url"]
 
     asyncio.run(run())
+
+
+def test_delete_image_supabase_success():
+    async def run():
+        mock_resp = AsyncMock()
+        mock_resp.status_code = 200
+
+        with patch.object(settings, "SUPABASE_URL", "https://povomkepfcyfgqxdajym.supabase.co"), \
+             patch.object(settings, "SUPABASE_ANON_KEY", "test-anon-key"), \
+             patch.object(settings, "SUPABASE_STORAGE_BUCKET", "product-images"), \
+             patch("app.services.storage_service.httpx.AsyncClient.delete", return_value=mock_resp):
+            deleted = await StorageService.delete_image(
+                target="https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/product-images/products/test.png"
+            )
+            assert deleted is True
+
+    asyncio.run(run())
+
