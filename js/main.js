@@ -789,7 +789,10 @@ function getCacheBustedImageUrl(product) {
   if (window.ApiClient && window.ApiClient.resolveImageUrl) {
     url = window.ApiClient.resolveImageUrl(url);
   } else if (url.startsWith('assets/uploads/') || url.startsWith('/assets/uploads/')) {
-    url = `https://chinnijewels-production.up.railway.app/${url.replace(/^\/+/, '')}`;
+    const clean = url.replace(/^\/+/, '');
+    url = (typeof window !== 'undefined' && window.location && window.location.origin)
+      ? `${window.location.origin}/${clean}`
+      : `/${clean}`;
   }
 
   if (url.startsWith('data:') || url.includes('v=')) {

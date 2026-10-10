@@ -115,9 +115,9 @@ class StorageService:
         with open(file_path, "wb") as f:
             f.write(content)
 
-        railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "chinnijewels-production.up.railway.app"
-        railway_domain = railway_domain.replace("https://", "").replace("http://", "").strip("/")
-        public_url = f"https://{railway_domain}/assets/uploads/{unique_name}"
+        domain = os.environ.get("WEB_URL") or os.environ.get("VERCEL_URL") or os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "chinnijewels-production.up.railway.app"
+        domain = domain.replace("https://", "").replace("http://", "").strip("/")
+        public_url = f"https://{domain}/assets/uploads/{unique_name}"
 
         logger.info(f"Saved image locally as fallback: {file_path}")
         return {

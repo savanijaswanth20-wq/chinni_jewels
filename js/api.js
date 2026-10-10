@@ -6,10 +6,10 @@
 class ApiClient {
   static get BASE_URL() {
     if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      if (window.location.hostname.includes('vercel.app')) {
-        return 'https://chinnijewels-production.up.railway.app/api';
-      }
       return `${window.location.origin}/api`;
+    }
+    if (typeof process !== 'undefined' && process.env && process.env.BACKEND_URL) {
+      return `${process.env.BACKEND_URL.replace(/\/+$/, '')}/api`;
     }
     return 'http://localhost:8000/api';
   }
@@ -143,7 +143,10 @@ class ApiClient {
 
     const cleanPath = url.replace(/^\/+/, '');
     if (cleanPath.startsWith('assets/uploads/')) {
-      return `https://chinnijewels-production.up.railway.app/${cleanPath}`;
+      if (typeof window !== 'undefined' && window.location && window.location.origin) {
+        return `${window.location.origin}/${cleanPath}`;
+      }
+      return `/${cleanPath}`;
     }
     return url;
   }

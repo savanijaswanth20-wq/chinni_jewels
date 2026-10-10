@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     WHATSAPP_CLOUD_API_PHONE_ID: str = ""
     WHATSAPP_CLOUD_API_VERSION: str = "v18.0"
     SITE_BASE_URL: str = "http://127.0.0.1:8000"
+    WEB_URL: str = ""
+    APP_URL: str = ""
     CORS_ORIGINS: Union[List[str], str] = ["*"]
     
     ENVIRONMENT: str = "development"
@@ -104,6 +106,23 @@ class Settings(BaseSettings):
                     return [v]
             return [i.strip() for i in v.split(",")]
         return v
+
+    @field_validator("SITE_BASE_URL", mode="before")
+    @classmethod
+    def set_site_base_url(cls, v):
+        if v and v.strip() and v != "http://127.0.0.1:8000":
+            return v
+        return os.getenv("WEB_URL") or os.getenv("SITE_BASE_URL") or "http://127.0.0.1:8000"
+
+    @field_validator("WEB_URL", mode="before")
+    @classmethod
+    def set_web_url(cls, v):
+        return v or os.getenv("WEB_URL") or ""
+
+    @field_validator("APP_URL", mode="before")
+    @classmethod
+    def set_app_url(cls, v):
+        return v or os.getenv("APP_URL") or ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

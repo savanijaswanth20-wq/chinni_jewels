@@ -1,5 +1,6 @@
 import "./App.css";
 import Confetti from "./Confetti";
+import { Analytics } from "@vercel/analytics/react";
 
 const shareMessage = "I just ran my first container using Docker";
 const shareLink = "https://docker.com/";
@@ -52,6 +53,7 @@ const App = () => {
           </a>
         </div>
       </header>
+      <Analytics />
     </div>
   );
 };

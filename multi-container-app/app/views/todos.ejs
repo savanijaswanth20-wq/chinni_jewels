@@ -24,7 +24,7 @@
         </div>
             <div class="row m-1 p-3">
                 <div class="col col-11 mx-auto">
-                    <form method="POST" action="/" autocomplete="off">
+                    <form method="POST" action="<%= (typeof basePath !== 'undefined' && basePath) ? (basePath + '/') : '/' %>" autocomplete="off">
                         <div class="row m-1 p-3">
                             <div class="col col-11 mx-auto">
                                 <div class="row bg-white rounded shadow-sm p-2 add-todo-wrapper align-items-center justify-content-center">
@@ -56,7 +56,7 @@
                                                 </div>
                                                 <a href="javascript:;" onclick="this.children[0].submit()"
                                                     class="text-danger">
-                                                    <form method="POST" action="/todo/destroy">
+                                                    <form method="POST" action="<%= (typeof basePath !== 'undefined' && basePath) ? (basePath + '/todo/destroy') : '/todo/destroy' %>">
                                                         <input type="hidden" name="_key" value="<%= todo._id %>" />
                                                     </form>
                                                     <i class="fa fa-trash-o"></i>

@@ -1,3 +1,3 @@
 module.exports = {
-    mongoProdURI: 'mongodb://todo-database:27017/todoapp',
+    mongoProdURI: process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://todo-database:27017/todoapp',
 };
