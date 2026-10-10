@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     
     # Supabase S3 & Storage Configuration
-    SUPABASE_S3_ENDPOINT: str = "https://znyozgmomnfpzhgojwim.storage.supabase.co/storage/v1/s3"
+    SUPABASE_S3_ENDPOINT: str = "https://povomkepfcyfgqxdajym.storage.supabase.co/storage/v1/s3"
     SUPABASE_S3_REGION: str = "ap-south-1"
     SUPABASE_S3_ACCESS_KEY_ID: str = ""
     SUPABASE_S3_SECRET_ACCESS_KEY: str = ""

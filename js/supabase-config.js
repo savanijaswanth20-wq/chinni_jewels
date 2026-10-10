@@ -3,8 +3,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 (function initSupabaseClient() {
-  const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://znyozgmomnfpzhgojwim.supabase.co';
-  const SUPABASE_KEY = window.ENV_SUPABASE_KEY || window.ENV_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_fbi7Qw-kD1Tkbohkpl0Vlw_lzSQL4B0';
+  const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://povomkepfcyfgqxdajym.supabase.co';
+  const SUPABASE_KEY = window.ENV_SUPABASE_KEY || window.ENV_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable__xQrnIt8GqlUWYC7ibq8dQ_Upg1uEbf';
 
   if (typeof supabase !== 'undefined' && supabase.createClient) {
     window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
