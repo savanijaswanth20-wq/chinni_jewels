@@ -21,8 +21,9 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     }
 }
 
-// Frontend route
+// Frontend & Connect routes
 const FrontRouter = require('./routes/front');
+const ConnectRouter = require('./routes/connect');
 
 // Set ejs template engine
 app.set('view engine', 'ejs');
@@ -39,6 +40,10 @@ if (db) {
         .then(() => console.log(`Mongodb Connected`))
         .catch(error => console.warn(`Mongodb connection skipped/failed:`, error.message));
 }
+
+// Mount Vercel Connect routes
+app.use('/dashboard/connect', ConnectRouter);
+app.use('/api/connect', ConnectRouter);
 
 // Mount routes at both /dashboard and root / to support direct and path-prefix rewrites
 app.use('/dashboard', FrontRouter);
