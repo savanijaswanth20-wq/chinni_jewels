@@ -6,14 +6,16 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements and install
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Set Python path to include backend
+# Set Python environment variables
 ENV PYTHONPATH=/app/backend
+ENV PYTHONUNBUFFERED=1
 
 # Copy backend source code
 COPY backend /app/backend
@@ -26,5 +28,8 @@ COPY js /app/js
 
 EXPOSE 8000
 
-# Run uvicorn on $PORT provided by Railway (fallback to 8000)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8000}/docs || exit 1
+
+# Run uvicorn on $PORT (fallback to 8000)
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

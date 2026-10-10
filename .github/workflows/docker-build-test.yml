@@ -5,11 +5,14 @@ on:
     branches: [ main, develop ]
     paths:
       - 'backend/**'
+      - 'Dockerfile'
+      - '.dockerignore'
       - '.github/workflows/docker-build-test.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'backend/**'
+      - 'Dockerfile'
 
 env:
   REGISTRY: ghcr.io
@@ -76,7 +79,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./backend/Dockerfile
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
