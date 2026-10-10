@@ -10,21 +10,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements and install
-COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Set Python environment variables
-ENV PYTHONPATH=/app/backend
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Copy backend source code
-COPY backend /app/backend
+COPY backend/app /app/app
+COPY backend/tests /app/tests
 
 # Copy static frontend files for FastAPI static mounting
-COPY index.html admin.html checkout.html product.html stock.html success.html /app/
-COPY assets /app/assets
-COPY css /app/css
-COPY js /app/js
+COPY index.html admin.html checkout.html product.html stock.html success.html /app/static/
+COPY assets /app/static/assets
+COPY css /app/static/css
+COPY js /app/static/js
 
 EXPOSE 8000
 
