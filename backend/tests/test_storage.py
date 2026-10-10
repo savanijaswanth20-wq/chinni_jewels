@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import patch, AsyncMock
 from fastapi import HTTPException
 from app.services.storage_service import StorageService
+from app.core.config import settings
 
 
 def test_validate_file_valid():
@@ -37,7 +38,10 @@ def test_upload_image_supabase_success():
         mock_resp.status_code = 200
         mock_resp.text = '{"Key":"products/uploads/test.jpg"}'
 
-        with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        with patch.object(settings, "SUPABASE_URL", "https://povomkepfcyfgqxdajym.supabase.co"), \
+             patch.object(settings, "SUPABASE_ANON_KEY", "test-anon-key"), \
+             patch.object(settings, "SUPABASE_STORAGE_BUCKET", "images"), \
+             patch("app.services.storage_service.httpx.AsyncClient.post", return_value=mock_resp):
             res = await StorageService.upload_image(
                 content=fake_content,
                 filename="necklace.jpg",
@@ -55,7 +59,9 @@ def test_upload_image_fallback_to_local():
     async def run():
         fake_content = b"fake-png-content"
 
-        with patch("httpx.AsyncClient.post", side_effect=Exception("Connection failed")):
+        with patch.object(settings, "SUPABASE_URL", "https://povomkepfcyfgqxdajym.supabase.co"), \
+             patch.object(settings, "SUPABASE_ANON_KEY", "test-anon-key"), \
+             patch("app.services.storage_service.httpx.AsyncClient.post", side_effect=Exception("Connection failed")):
             res = await StorageService.upload_image(
                 content=fake_content,
                 filename="earring.png",
