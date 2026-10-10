@@ -4,7 +4,15 @@ import re
 from contextlib import asynccontextmanager
 
 # Self-register backend root directory into sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if backend_root not in sys.path:
+    sys.path.insert(0, backend_root)
+
+if "backend" not in sys.modules:
+    import types
+    backend_shim = types.ModuleType("backend")
+    backend_shim.__path__ = [backend_root]
+    sys.modules["backend"] = backend_shim
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
