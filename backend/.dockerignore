@@ -1,16 +1,28 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Version Control & IDE
+.git/
+.vscode/
+.temp/
+
+# Environment files
+.env
+.env.local
+.env.*
+
+# Python Cache & Envs
+__pycache__/
+*.py[cod]
+*$py.class
 .Python
 env/
 venv/
 .venv/
 ENV/
+
+# Databases
 *.db
 *.sqlite3
+
+# Test caches
 .pytest_cache/
 .coverage
 htmlcov/
-.env
-.env.local

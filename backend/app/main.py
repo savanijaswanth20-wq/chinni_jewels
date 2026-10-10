@@ -12,31 +12,41 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
-from app.routers import auth, categories, products, gold_rates, inventory, orders, customers, admin
+from app.routers import auth, categories, products, gold_rates, inventory, orders, customers, admin, todos
 from app.utils.seed import seed_database
 
 from sqlalchemy import text
 
 # Initialize database tables & perform safe column additions
 def run_db_migrations():
-    Base.metadata.create_all(bind=engine)
-    with engine.connect() as conn:
-        # SAFETY NOTE (#1): These values are strictly hardcoded below.
-        # NEVER use dynamic/user-supplied values here — raw SQL injection risk.
-        cols_to_add = [
-            ("orders", "payment_preference", "VARCHAR DEFAULT 'UPI'"),
-            ("order_items", "product_image_url", "VARCHAR"),
-            ("order_items", "gold_rate", "FLOAT DEFAULT 0.0"),
-            ("order_items", "gold_value", "FLOAT DEFAULT 0.0"),
-            ("products", "price", "FLOAT DEFAULT 0.0"),
-            ("products", "image_url", "VARCHAR")
-        ]
-        for tbl, col, col_def in cols_to_add:
-            try:
-                conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_def};"))
-            except Exception:
-                pass
-        conn.commit()
+    import time
+    for attempt in range(5):
+        try:
+            Base.metadata.create_all(bind=engine)
+            with engine.connect() as conn:
+                # SAFETY NOTE (#1): These values are strictly hardcoded below.
+                # NEVER use dynamic/user-supplied values here — raw SQL injection risk.
+                cols_to_add = [
+                    ("orders", "payment_preference", "VARCHAR DEFAULT 'UPI'"),
+                    ("order_items", "product_image_url", "VARCHAR"),
+                    ("order_items", "gold_rate", "FLOAT DEFAULT 0.0"),
+                    ("order_items", "gold_value", "FLOAT DEFAULT 0.0"),
+                    ("products", "price", "FLOAT DEFAULT 0.0"),
+                    ("products", "image_url", "VARCHAR")
+                ]
+                for tbl, col, col_def in cols_to_add:
+                    try:
+                        conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_def};"))
+                    except Exception:
+                        pass
+                conn.commit()
+            return
+        except Exception as e:
+            if attempt < 4:
+                time.sleep(1.5)
+            else:
+                import logging
+                logging.getLogger(__name__).warning(f"Database initialization warning: {e}")
 
 run_db_migrations()
 
@@ -79,6 +89,7 @@ app.include_router(inventory.router, prefix=settings.API_V1_STR)
 app.include_router(orders.router, prefix=settings.API_V1_STR)
 app.include_router(customers.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(todos.router)
 
 # Serve Frontend static directories (assets, css, js)
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))

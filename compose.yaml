@@ -1,0 +1,130 @@
+# ==============================================================================
+# CHINNI JEWELS — Multi-Container Docker Compose Orchestration
+# ==============================================================================
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Primary Database Service (PostgreSQL)
+  # ----------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: chinni_postgres_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-chinni_jewels}
+    ports:
+      - "5433:5432" # Mapped to host 5433 to prevent conflict with local 5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-chinni_jewels}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - chinni_network
+
+  # ----------------------------------------------------------------------------
+  # Optional MySQL Database Service (activate with: docker compose --profile mysql up)
+  # ----------------------------------------------------------------------------
+  mysql_db:
+    image: mysql:8.0
+    container_name: chinni_mysql_db
+    profiles: ["mysql"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-chinni_jewels}
+      MYSQL_USER: ${MYSQL_USER:-chinni_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mysql_password}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - chinni_network
+
+  # ----------------------------------------------------------------------------
+  # 2. Backend Application Service (FastAPI + Uvicorn)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chinni_backend_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - PORT=8000
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/chinni_jewels}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=chinni_jewels
+      - DB_USER=postgres
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/assets/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - chinni_network
+
+  # ----------------------------------------------------------------------------
+  # 3. Frontend Web Service (Nginx Alpine Reverse Proxy)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: chinni_frontend_web
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - chinni_network
+
+# ------------------------------------------------------------------------------
+# Persistent Volume Storage
+# ------------------------------------------------------------------------------
+volumes:
+  db_data:
+    driver: local
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+# ------------------------------------------------------------------------------
+# Isolated Bridge Network
+# ------------------------------------------------------------------------------
+networks:
+  chinni_network:
+    driver: bridge
