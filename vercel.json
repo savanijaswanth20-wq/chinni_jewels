@@ -3,7 +3,8 @@
   "cleanUrls": true,
   "services": {
     "web": {
-      "root": "frontend"
+      "root": "frontend",
+      "framework": "vite"
     },
     "backend": {
       "root": "backend",
