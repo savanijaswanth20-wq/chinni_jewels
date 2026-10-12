@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Admin Dashboard Controller
+   CHINNI ONE GRAMGOLD — Admin Dashboard Controller
    Focused on: Product Names & Images, Shipping Price, Hero Section, & AI Studio
    ═══════════════════════════════════════════════════════════ */
 
@@ -187,7 +187,7 @@ class AdminApp {
     if (!tbody) return;
 
     let products = [];
-    // 1. Check local storage first for instant display
+    // 1. Check local storage only as temporary offline cache while fetching
     try {
       const localProds = localStorage.getItem('chinni_products');
       if (localProds) {
@@ -198,15 +198,15 @@ class AdminApp {
       }
     } catch(e) {}
 
-    // Render local/cached products immediately so user never sees empty screen
+    // Render cached products immediately for instant UI responsiveness
     if (products.length > 0) {
       this.products = products;
       this.renderProductsTable(products);
     } else {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products from Supabase...</td></tr>`;
     }
 
-    // 2. Fetch remote products from Supabase/Backend to update local cache
+    // 2. Fetch authoritative products from Supabase (Single Source of Truth)
     try {
       if (window.AdminService && window.AdminService.getProducts) {
         const res = await window.AdminService.getProducts();
@@ -218,24 +218,31 @@ class AdminApp {
         }
 
         if (remoteProducts.length > 0) {
-          // Merge local modifications if present
-          const localMap = new Map((this.products || []).map(p => [p.id, p]));
-          const merged = remoteProducts.map(rp => {
-            const loc = localMap.get(rp.id);
-            if (!loc) return rp;
-            const img = loc.image_url || loc.imageUrl || rp.image_url || rp.imageUrl;
-            return { ...rp, ...loc, image_url: img, imageUrl: img };
-          });
-          const remoteIds = new Set(remoteProducts.map(rp => rp.id));
-          const localOnly = (this.products || []).filter(p => !remoteIds.has(p.id));
-          const finalMerged = [...merged, ...localOnly];
-          this.products = finalMerged;
-          localStorage.setItem('chinni_products', JSON.stringify(finalMerged));
-          this.renderProductsTable(finalMerged);
+          // SUPABASE IS AUTHORITATIVE: replace products directly, do NOT let localStorage override
+          this.products = remoteProducts;
+          try {
+            localStorage.setItem('chinni_products', JSON.stringify(remoteProducts));
+          } catch(sErr) {}
+          this.renderProductsTable(this.products);
+        } else if (res && !res.success) {
+          console.error("[AdminApp] Supabase products fetch error:", res.error);
         }
       }
     } catch (e) {
-      console.warn("Could not fetch remote products, fallback to local cache", e);
+      console.error("[AdminApp] Could not fetch products from Supabase:", e);
+    }
+
+    // 3. Supabase Realtime Subscription so all open devices update automatically
+    if (window.SupabaseService && window.SupabaseService.subscribeToProducts && !this.subscribedToProducts) {
+      this.subscribedToProducts = true;
+      window.SupabaseService.subscribeToProducts((updatedList) => {
+        console.log("[AdminApp] Realtime product update received:", updatedList);
+        if (Array.isArray(updatedList) && updatedList.length > 0) {
+          this.products = updatedList;
+          try { localStorage.setItem('chinni_products', JSON.stringify(updatedList)); } catch(e) {}
+          this.renderProductsTable(this.products);
+        }
+      });
     }
 
     if (!Array.isArray(this.products) || this.products.length === 0) {
@@ -307,7 +314,6 @@ class AdminApp {
           active: true
         }
       ];
-      localStorage.setItem('chinni_products', JSON.stringify(this.products));
       this.renderProductsTable(this.products);
     }
   }
@@ -602,36 +608,56 @@ class AdminApp {
   }
 
   async handleDeleteProduct(id) {
-    const prod = this.products.find(p => p.id === id);
+    const prod = (this.products || []).find(p => p.id === id);
     if (!prod) return;
 
-    // Delete image from product-images Supabase Storage bucket
-    const imgUrlOrPath = prod.image_path || prod.image_url || prod.imageUrl;
-    if (imgUrlOrPath && window.AdminService && window.AdminService.deleteOldStorageFile) {
-      try {
-        await window.AdminService.deleteOldStorageFile(imgUrlOrPath);
-      } catch (delErr) {
-        console.warn("Storage deletion warning for product:", delErr);
-      }
+    if (!confirm(`Are you sure you want to delete product "${prod.name}"? This will permanently delete it from the Supabase database.`)) {
+      return;
     }
 
-    this.products = this.products.filter(p => p.id !== id);
-    localStorage.setItem('chinni_products', JSON.stringify(this.products));
-    this.renderProductsTable(this.products);
-    window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
-
-    if (window.AdminService && window.AdminService.deleteProduct) {
-      try {
-        await window.AdminService.deleteProduct(id);
-      } catch (err) {
-        console.warn("Supabase database deletion warning:", err);
+    try {
+      // 1. Delete product from Supabase database
+      let delRes = null;
+      if (window.AdminService && window.AdminService.deleteProduct) {
+        delRes = await window.AdminService.deleteProduct(id);
+      } else if (window.SupabaseService && window.SupabaseService.deleteProduct) {
+        delRes = await window.SupabaseService.deleteProduct(id);
       }
+
+      if (!delRes || !delRes.success) {
+        const delErr = (delRes && delRes.error) ? delRes.error : "Failed to delete product from Supabase database.";
+        console.error("[AdminApp] Database deletion error:", delErr);
+        this.showToast("Delete failed: " + delErr);
+        return; // STOP! DO NOT REMOVE FROM UI OR LOCAL STORAGE ON FAILURE
+      }
+
+      // 2. Delete image from product-images Supabase Storage bucket
+      const imgUrlOrPath = prod.image_path || prod.image_url || prod.imageUrl;
+      if (imgUrlOrPath && window.AdminService && window.AdminService.deleteOldStorageFile) {
+        try {
+          await window.AdminService.deleteOldStorageFile(imgUrlOrPath);
+        } catch (delErr) {
+          console.warn("[AdminApp] Storage deletion warning for product:", delErr);
+        }
+      }
+
+      // 3. Remove from local list & refresh offline cache
+      this.products = (this.products || []).filter(p => p.id !== id);
+      try {
+        localStorage.setItem('chinni_products', JSON.stringify(this.products));
+      } catch(sErr) {}
+      this.renderProductsTable(this.products);
+      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
+
+      this.showToast(`Product "${prod.name}" deleted successfully.`);
+    } catch (err) {
+      console.error("[AdminApp] Delete product exception:", err);
+      this.showToast("Delete failed: " + err.message);
     }
-    this.showToast(`Product "${prod.name}" and image deleted successfully.`);
   }
 
   async handleSaveProduct() {
-    const id = document.querySelector('#pm-id').value;
+    const id = document.querySelector('#pm-id').value.trim();
     const name = document.querySelector('#pm-name').value.trim();
     const imageUrl = document.querySelector('#pm-image-url-input').value.trim() || 'assets/hero_gold_coin.png';
     const priceEl = document.querySelector('#pm-price');
@@ -659,7 +685,7 @@ class AdminApp {
     let oldStoragePath = null;
 
     if (id) {
-      const existing = this.products.find(p => p.id === id);
+      const existing = (this.products || []).find(p => p.id === id);
       if (existing) {
         oldImageUrl = existing.image_url || existing.imageUrl;
         oldStoragePath = existing.image_path || null;
@@ -667,34 +693,39 @@ class AdminApp {
     }
 
     try {
+      // 1. If an image file was selected, upload it to Supabase Storage (product-images bucket)
       if (this.selectedProductFile) {
-        const uploadProductId = id || 'prod_' + Date.now();
-        this.setUploadProgress(15, "Connecting to Supabase Storage (product-images)...");
+        // Target product ID for unique upload storage path
+        const uploadTargetId = id || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'prod_' + Date.now());
+        this.setUploadProgress(20, "Uploading image to Supabase Storage (product-images)...");
         saveBtn.textContent = "Uploading image...";
 
         const uploadRes = await window.AdminService.uploadProductImage(
-          uploadProductId,
+          uploadTargetId,
           this.selectedProductFile,
           (percent, status) => {
             this.setUploadProgress(percent, status);
           }
         );
 
-        if (uploadRes.success && uploadRes.url) {
-          finalImageUrl = uploadRes.url;
-          finalStoragePath = uploadRes.storagePath || null;
-          uploadSuccess = true;
-          this.setUploadProgress(85, "Image uploaded. Updating products table...");
-        } else {
-          throw new Error(uploadRes.error || "Image upload failed.");
+        if (!uploadRes || !uploadRes.success || !uploadRes.url) {
+          const uploadErr = (uploadRes && uploadRes.error) ? uploadRes.error : "Failed to upload image to Supabase Storage.";
+          console.error("[AdminApp] Storage upload error:", uploadErr);
+          this.showImageError(uploadErr);
+          this.showToast("Save failed: " + uploadErr);
+          this.hideUploadProgress();
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Save Product";
+          return; // STOP! DO NOT PROCEED OR PRETEND SUCCESS
         }
+
+        finalImageUrl = uploadRes.url;
+        finalStoragePath = uploadRes.storagePath || null;
+        uploadSuccess = true;
+        this.setUploadProgress(70, "Image uploaded. Saving to Supabase database...");
       }
 
       saveBtn.textContent = "Saving to database...";
-      
-      if (finalImageUrl && !finalImageUrl.startsWith('data:') && !finalImageUrl.includes('v=')) {
-        finalImageUrl += (finalImageUrl.includes('?') ? '&' : '?') + `v=${Date.now()}`;
-      }
 
       const payload = {
         name: name,
@@ -709,33 +740,26 @@ class AdminApp {
         updated_at: new Date().toISOString()
       };
 
-      if (id) {
-        const existing = this.products.find(p => p.id === id);
-        if (existing) {
-          Object.assign(existing, payload);
-        }
-        if (window.AdminService && window.AdminService.saveProduct) {
-          try {
-            await window.AdminService.saveProduct(id, payload);
-          } catch (apiErr) {
-            console.warn("Supabase saveProduct warning:", apiErr);
-          }
-        }
+      // 2. Call AdminService.saveProduct() / SupabaseService.saveProduct()
+      let saveRes = null;
+      if (window.AdminService && window.AdminService.saveProduct) {
+        saveRes = await window.AdminService.saveProduct(id || null, payload);
+      } else if (window.SupabaseService && window.SupabaseService.saveProduct) {
+        saveRes = await window.SupabaseService.saveProduct(id || null, payload);
       } else {
-        const targetId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'p_' + Date.now();
-        const newProduct = {
-          id: targetId,
-          slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          ...payload
-        };
-        this.products.push(newProduct);
-        if (window.AdminService && window.AdminService.saveProduct) {
-          try {
-            await window.AdminService.saveProduct(null, newProduct);
-          } catch (apiErr) {
-            console.warn("Supabase saveProduct creation warning:", apiErr);
-          }
-        }
+        throw new Error("Product save service is unavailable.");
+      }
+
+      // Check returned result from Supabase
+      if (!saveRes || !saveRes.success) {
+        const dbErr = (saveRes && saveRes.error) ? saveRes.error : "Database save failed.";
+        console.error("[AdminApp] Database save error:", dbErr);
+        this.showImageError(dbErr);
+        this.showToast("Save failed: " + dbErr);
+        this.hideUploadProgress();
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Product";
+        return; // STOP! DO NOT UPDATE UI/LOCALSTORAGE AS THOUGH THE OPERATION SUCCEEDED
       }
 
       // If replacing an existing product's image, clean up old image from product-images bucket
@@ -743,19 +767,34 @@ class AdminApp {
         try {
           await window.AdminService.deleteOldStorageFile(oldStoragePath || oldImageUrl);
         } catch (delErr) {
-          console.warn("Could not delete previous storage image:", delErr);
+          console.warn("[AdminApp] Could not delete previous storage image:", delErr);
         }
       }
 
       this.setUploadProgress(100, "Saved successfully!");
 
-      // 1. Save updated products list to LocalStorage
-      localStorage.setItem('chinni_products', JSON.stringify(this.products));
+      // 3. Only show "Product saved successfully" after BOTH database and image upload succeed!
+      // Fetch fresh products from Supabase (Single Source of Truth)
+      try {
+        const refreshed = await window.AdminService.getProducts();
+        if (refreshed && refreshed.success && Array.isArray(refreshed.data)) {
+          this.products = refreshed.data;
+          try { localStorage.setItem('chinni_products', JSON.stringify(this.products)); } catch(e) {}
+        } else {
+          const targetId = saveRes.id || id;
+          const existingIdx = (this.products || []).findIndex(p => p.id === targetId);
+          if (existingIdx >= 0) {
+            this.products[existingIdx] = { ...this.products[existingIdx], ...payload, id: targetId };
+          } else {
+            this.products.push({ id: targetId, ...payload });
+          }
+          try { localStorage.setItem('chinni_products', JSON.stringify(this.products)); } catch(e) {}
+        }
+      } catch (reloadErr) {
+        console.warn("[AdminApp] Could not refresh products from Supabase:", reloadErr);
+      }
 
-      // 2. Render updated products table immediately
       this.renderProductsTable(this.products);
-
-      // 3. Dispatch global live update event across app & tabs
       window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: this.products }));
 
       this.selectedProductFile = null;
@@ -765,12 +804,12 @@ class AdminApp {
       setTimeout(() => {
         this.hideUploadProgress();
         this.closeModal('product-modal');
-        this.showToast(`Product "${name}" photo & details updated successfully!`);
+        this.showToast("Product saved successfully");
       }, 400);
 
     } catch (err) {
-      console.error("Save product error:", err);
-      this.showImageError(err.message || "Failed to upload image to Supabase Storage.");
+      console.error("[AdminApp] Save product error:", err);
+      this.showImageError(err.message || "Failed to save product.");
       this.showToast("Save failed: " + err.message);
       this.hideUploadProgress();
     } finally {

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Live Website Content Sync & Maintenance Guard
+   CHINNI ONE GRAMGOLD — Live Website Content Sync & Maintenance Guard
    Dynamically binds Firestore content to customer-facing pages
    ═══════════════════════════════════════════════════════════ */
 
@@ -77,60 +77,48 @@
       }
     });
 
-    // 4. Products Collection Sync
-    if (window.ApiClient) {
-      window.ApiClient.getProducts().then(res => {
-        let productsToSync = [];
-        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-          productsToSync = res.data;
-        }
+    // 4. Products Collection Sync — SUPABASE IS SINGLE AUTHORITATIVE SOURCE OF TRUTH
+    function fetchAndSyncProducts() {
+      const fetcher = (window.SupabaseService && window.SupabaseService.getProducts)
+        ? window.SupabaseService.getProducts()
+        : (window.ApiClient ? window.ApiClient.getProducts() : null);
 
-        const localProds = localStorage.getItem('chinni_products');
-        if (localProds) {
-          try {
-            const parsedLocal = JSON.parse(localProds);
-            if (Array.isArray(parsedLocal) && parsedLocal.length > 0) {
-              if (productsToSync.length > 0) {
-                const localMap = new Map(parsedLocal.map(p => [p.id, p]));
-                productsToSync = productsToSync.map(rp => {
-                  const loc = localMap.get(rp.id);
-                  if (!loc) return rp;
-                  const img = loc.image_url || loc.imageUrl || rp.image_url || rp.imageUrl;
-                  return { ...rp, ...loc, image_url: img, imageUrl: img };
-                });
-                const remoteIds = new Set(productsToSync.map(p => p.id));
-                parsedLocal.forEach(lp => {
-                  if (!remoteIds.has(lp.id)) productsToSync.push(lp);
-                });
-                try { localStorage.setItem('chinni_products', JSON.stringify(productsToSync)); } catch(sErr) {}
-              } else {
-                productsToSync = parsedLocal;
-              }
-
-            }
-          } catch(e) {}
-        }
-
-        if (productsToSync.length > 0) {
-          syncProductsUI(productsToSync);
-        }
-      }).catch(() => {});
+      if (fetcher) {
+        fetcher.then(res => {
+          if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+            console.log("[ContentSync] Authoritative products retrieved from Supabase:", res.data.length);
+            // SUPABASE IS AUTHORITATIVE: Use remote Supabase products directly!
+            // Do NOT let local storage override newer Supabase records!
+            try {
+              localStorage.setItem('chinni_products', JSON.stringify(res.data));
+            } catch(sErr) {}
+            syncProductsUI(res.data);
+          }
+        }).catch(err => {
+          console.error("[ContentSync] Error fetching products from Supabase:", err);
+        });
+      }
     }
 
-    window.addEventListener('cj_products_changed', (e) => {
-      if (e.detail) syncProductsUI(e.detail);
-    });
+    fetchAndSyncProducts();
 
     // 5. Supabase Realtime Subscription for Live Cross-Device Product Image Sync
     if (window.SupabaseService && window.SupabaseService.subscribeToProducts) {
       window.SupabaseService.subscribeToProducts((updatedProducts) => {
         console.log("[ContentSync] Realtime cross-device product image sync received!", updatedProducts);
-        syncProductsUI(updatedProducts);
+        if (Array.isArray(updatedProducts) && updatedProducts.length > 0) {
+          try {
+            localStorage.setItem('chinni_products', JSON.stringify(updatedProducts));
+          } catch(e) {}
+          syncProductsUI(updatedProducts);
+        }
       });
     }
 
     window.addEventListener('cj_products_changed', (e) => {
-      if (e.detail) syncProductsUI(e.detail);
+      if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
+        syncProductsUI(e.detail);
+      }
     });
   }
 
@@ -155,7 +143,7 @@
             <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #f4d068 0%, #d4af37 50%, #a3821a 100%); border-radius: 16px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; color: #000; font-size: 2rem; font-weight: 800; box-shadow: 0 4px 25px rgba(212, 175, 55, 0.4);">
               C
             </div>
-            <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CHINNI ONE GRAM GOLD</h1>
+            <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #f4d068 0%, #d4af37 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CHINNI ONE GRAMGOLD</h1>
             <h2 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">Under Scheduled Maintenance</h2>
             <p style="color: #9aa1b1; font-size: 0.9rem; line-height: 1.6; margin-bottom: 2rem;">
               We are currently updating our 1 Gram Gold collection and live gold rates. We will be back online shortly. Thank you for your patience.
@@ -389,7 +377,7 @@
     if (brand.whatsapp) {
       // Update global WhatsApp button links
       document.querySelectorAll('[data-wa-general]').forEach(btn => {
-        const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAM GOLD.`;
+        const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAMGOLD.`;
         btn.href = `https://wa.me/${brand.whatsapp}?text=${encodeURIComponent(msg)}`;
       });
     }

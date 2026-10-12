@@ -375,32 +375,21 @@ class AdminDataService {
   async uploadFile(bucketName = 'product-images', rawFile, productId = 'general', onProgress = null) {
     if (!rawFile) return { success: false, error: "No file provided" };
     const file = await this.compressImage(rawFile);
-    if (window.SupabaseService) {
+    if (window.SupabaseService && window.SupabaseService.uploadFile) {
       return await window.SupabaseService.uploadFile(bucketName || 'product-images', file, productId, onProgress);
     }
-    try {
-      const dataUrl = await this.fileToDataUrl(file);
-      return { success: true, url: dataUrl, isFallback: true };
-    } catch (e) {
-      return { success: false, error: "Storage service unavailable." };
-    }
+    console.error("[AdminService] uploadFile error: Supabase Storage service is unavailable.");
+    return { success: false, error: "Supabase Storage service is unavailable." };
   }
 
   /**
    * Safely delete old image after new image upload succeeds
    */
   async deleteOldStorageFile(oldUrl) {
-    if (window.SupabaseService) {
+    if (window.SupabaseService && window.SupabaseService.deleteStorageFile) {
       return await window.SupabaseService.deleteStorageFile(oldUrl);
     }
-    if (!oldUrl || !this.storage || !oldUrl.includes('firebasestorage.googleapis.com')) return;
-    try {
-      const storageRef = this.storage.refFromURL(oldUrl.split('?')[0]);
-      await storageRef.delete();
-      console.log(`[AdminService] Cleaned up old storage image: ${oldUrl}`);
-    } catch (e) {
-      console.warn("[AdminService] Safe cleanup warning for old image:", e.message);
-    }
+    return { success: false, error: "Supabase service unavailable" };
   }
 
   async uploadProductImage(productId, file, onProgress = null) {
@@ -411,74 +400,16 @@ class AdminDataService {
     if (window.SupabaseService && window.SupabaseService.deleteProduct) {
       return await window.SupabaseService.deleteProduct(productId);
     }
-    return { success: true };
+    console.error("[AdminService] deleteProduct error: Supabase service unavailable.");
+    return { success: false, error: "Supabase service unavailable." };
   }
 
   async saveProduct(productId, productData, imageFiles = []) {
-    if (window.SupabaseService) {
+    if (window.SupabaseService && window.SupabaseService.saveProduct) {
       return await window.SupabaseService.saveProduct(productId, productData, imageFiles);
     }
-    try {
-      if (!this.db) throw new Error("Firestore not initialized");
-      
-      const isNew = !productId;
-      const docRef = isNew ? this.db.collection("products").doc() : this.db.collection("products").doc(productId);
-      const targetId = docRef.id;
-
-      // Handle image uploads & preserve existing images
-      let images = Array.isArray(productData.images) ? [...productData.images] : (productData.imageUrl ? [productData.imageUrl] : []);
-      for (const file of imageFiles) {
-        const uploadRes = await this.uploadProductImage(targetId, file);
-        if (uploadRes.success) {
-          images.push(uploadRes.url);
-        }
-      }
-      images = [...new Set(images.filter(Boolean))];
-
-      const payload = {
-        name: productData.name,
-        sku: productData.sku || `CJ-24K-${Math.floor(100 + Math.random() * 900)}`,
-        slug: productData.slug || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        categoryId: productData.categoryId || "all",
-        categoryName: productData.categoryName || "General",
-        description: productData.description || "",
-        weightGrams: Number(productData.weightGrams) || 1.0,
-        purity: productData.purity || "24K / 999",
-        makingCharge: Number(productData.makingCharge) || 280,
-        gstPercentage: Number(productData.gstPercentage) || 3,
-        stockQuantity: Number(productData.stockQuantity) || 0,
-        lowStockThreshold: Number(productData.lowStockThreshold) || 5,
-        isFeatured: Boolean(productData.isFeatured),
-        isActive: productData.isActive !== false,
-        images: images.length ? images : ["assets/hero_gold_coin.png"],
-        imageUrl: images[0] || "assets/hero_gold_coin.png",
-        updatedAt: new Date().toISOString()
-      };
-
-      if (isNew) {
-        payload.createdAt = new Date().toISOString();
-        await docRef.set(payload);
-
-        // Initialize inventory doc
-        await this.db.collection("inventory").doc(targetId).set({
-          productId: targetId,
-          totalQuantity: payload.stockQuantity,
-          availableQuantity: payload.stockQuantity,
-          reservedQuantity: 0,
-          soldQuantity: 0,
-          damagedQuantity: 0,
-          updatedAt: new Date().toISOString()
-        });
-      } else {
-        await docRef.update(payload);
-      }
-
-      await this.logAudit(isNew ? "CREATE_PRODUCT" : "UPDATE_PRODUCT", "PRODUCT", targetId, null, payload);
-
-      return { success: true, id: targetId, message: `Product ${isNew ? 'created' : 'updated'} successfully.` };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
+    console.error("[AdminService] saveProduct error: Supabase service unavailable.");
+    return { success: false, error: "Supabase service unavailable." };
   }
 
   async updateProduct(productId, productData) {

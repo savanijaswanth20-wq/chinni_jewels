@@ -77,60 +77,48 @@
       }
     });
 
-    // 4. Products Collection Sync
-    if (window.ApiClient) {
-      window.ApiClient.getProducts().then(res => {
-        let productsToSync = [];
-        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-          productsToSync = res.data;
-        }
+    // 4. Products Collection Sync — SUPABASE IS SINGLE AUTHORITATIVE SOURCE OF TRUTH
+    function fetchAndSyncProducts() {
+      const fetcher = (window.SupabaseService && window.SupabaseService.getProducts)
+        ? window.SupabaseService.getProducts()
+        : (window.ApiClient ? window.ApiClient.getProducts() : null);
 
-        const localProds = localStorage.getItem('chinni_products');
-        if (localProds) {
-          try {
-            const parsedLocal = JSON.parse(localProds);
-            if (Array.isArray(parsedLocal) && parsedLocal.length > 0) {
-              if (productsToSync.length > 0) {
-                const localMap = new Map(parsedLocal.map(p => [p.id, p]));
-                productsToSync = productsToSync.map(rp => {
-                  const loc = localMap.get(rp.id);
-                  if (!loc) return rp;
-                  const img = loc.image_url || loc.imageUrl || rp.image_url || rp.imageUrl;
-                  return { ...rp, ...loc, image_url: img, imageUrl: img };
-                });
-                const remoteIds = new Set(productsToSync.map(p => p.id));
-                parsedLocal.forEach(lp => {
-                  if (!remoteIds.has(lp.id)) productsToSync.push(lp);
-                });
-                try { localStorage.setItem('chinni_products', JSON.stringify(productsToSync)); } catch(sErr) {}
-              } else {
-                productsToSync = parsedLocal;
-              }
-
-            }
-          } catch(e) {}
-        }
-
-        if (productsToSync.length > 0) {
-          syncProductsUI(productsToSync);
-        }
-      }).catch(() => {});
+      if (fetcher) {
+        fetcher.then(res => {
+          if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+            console.log("[ContentSync] Authoritative products retrieved from Supabase:", res.data.length);
+            // SUPABASE IS AUTHORITATIVE: Use remote Supabase products directly!
+            // Do NOT let local storage override newer Supabase records!
+            try {
+              localStorage.setItem('chinni_products', JSON.stringify(res.data));
+            } catch(sErr) {}
+            syncProductsUI(res.data);
+          }
+        }).catch(err => {
+          console.error("[ContentSync] Error fetching products from Supabase:", err);
+        });
+      }
     }
 
-    window.addEventListener('cj_products_changed', (e) => {
-      if (e.detail) syncProductsUI(e.detail);
-    });
+    fetchAndSyncProducts();
 
     // 5. Supabase Realtime Subscription for Live Cross-Device Product Image Sync
     if (window.SupabaseService && window.SupabaseService.subscribeToProducts) {
       window.SupabaseService.subscribeToProducts((updatedProducts) => {
         console.log("[ContentSync] Realtime cross-device product image sync received!", updatedProducts);
-        syncProductsUI(updatedProducts);
+        if (Array.isArray(updatedProducts) && updatedProducts.length > 0) {
+          try {
+            localStorage.setItem('chinni_products', JSON.stringify(updatedProducts));
+          } catch(e) {}
+          syncProductsUI(updatedProducts);
+        }
       });
     }
 
     window.addEventListener('cj_products_changed', (e) => {
-      if (e.detail) syncProductsUI(e.detail);
+      if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
+        syncProductsUI(e.detail);
+      }
     });
   }
 

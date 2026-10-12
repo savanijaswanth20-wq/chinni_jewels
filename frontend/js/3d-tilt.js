@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — 3D Mouse-Tracked Tilt Engine
+   CHINNI ONE GRAMGOLD — 3D Mouse-Tracked Tilt Engine
    ═══════════════════════════════════════════════════════════ */
 
 (function () {

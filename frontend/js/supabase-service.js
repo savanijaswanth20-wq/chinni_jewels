@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Supabase Reusable Service Architecture
+   CHINNI ONE GRAMGOLD — Supabase Reusable Service Architecture
    Encapsulates PostgreSQL CRUD, Auth, Storage, and Realtime
    ═══════════════════════════════════════════════════════════ */
 
@@ -23,8 +23,8 @@ class SupabaseDataService {
     // Verify Admin Owner Credentials (flexible email/pass handling)
     if (cleanEmail.includes('savanijaswanth') || cleanEmail.includes('admin') || cleanEmail.startsWith('savanijaswanth20')) {
       if (cleanPass === 'Admine@123' || cleanPass === 'Admin@123' || cleanPass === 'Admine123' || cleanPass.toLowerCase() === 'admin' || cleanPass === 'AdminSecret2026!') {
-        const user = { id: 'admin-owner-uid', email: cleanEmail || 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAM GOLD Owner', isDefaultAdmin: true };
-        const profile = { fullName: 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: cleanEmail || 'savanijaswanth20@gmail.com' };
+        const user = { id: 'admin-owner-uid', email: cleanEmail || 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAMGOLD Owner', isDefaultAdmin: true };
+        const profile = { fullName: 'CHINNI ONE GRAMGOLD Owner', role: 'ADMIN', email: cleanEmail || 'savanijaswanth20@gmail.com' };
         sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
         localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
         return { success: true, user, profile };
@@ -45,8 +45,8 @@ class SupabaseDataService {
     }
 
     // Default fallback grant for owner login
-    const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAM GOLD Owner', isDefaultAdmin: true };
-    const profile = { fullName: 'CHINNI ONE GRAM GOLD Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
+    const user = { id: 'admin-owner-uid', email: 'savanijaswanth20@gmail.com', displayName: 'CHINNI ONE GRAMGOLD Owner', isDefaultAdmin: true };
+    const profile = { fullName: 'CHINNI ONE GRAMGOLD Owner', role: 'ADMIN', email: 'savanijaswanth20@gmail.com' };
     sessionStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
     localStorage.setItem('chinni_admin_session', JSON.stringify({ user, profile }));
     return { success: true, user, profile };
@@ -67,7 +67,7 @@ class SupabaseDataService {
       if (savedSession) {
         const { user, profile } = JSON.parse(savedSession);
         if (user) {
-          callback(user, profile || { role: 'ADMIN', fullName: 'CHINNI ONE GRAM GOLD Owner' });
+          callback(user, profile || { role: 'ADMIN', fullName: 'CHINNI ONE GRAMGOLD Owner' });
         }
       }
     } catch(e) {}
@@ -100,13 +100,26 @@ class SupabaseDataService {
 
   // 2. PRODUCTS & REALTIME SYNC
   async getProducts() {
-    if (!this.db) return { success: false, data: window.allFirestoreProducts || [] };
+    if (!this.db) {
+      let cached = [];
+      try {
+        const c = localStorage.getItem('chinni_products');
+        if (c) cached = JSON.parse(c);
+      } catch(e) {}
+      return { success: false, data: cached.length ? cached : (window.allFirestoreProducts || []) };
+    }
+
     try {
       const { data, error } = await this.db
         .from('products')
-        .select('*, product_images(*)');
+        .select('*, product_images(*)')
+        .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[SupabaseService] getProducts database error:", error);
+        throw error;
+      }
+
       const formatted = (data || []).map(p => {
         let mainImg = p.image_url;
         if (!mainImg && p.product_images && p.product_images.length) {
@@ -132,10 +145,11 @@ class SupabaseDataService {
           purity: p.purity || '24K',
           sellingPrice: Number(p.selling_price) || 9520,
           selling_price: Number(p.selling_price) || 9520,
-          price: Number(p.selling_price) || 9520,
-          price_inr: Number(p.selling_price) || 9520,
-          makingCharge: Number(p.making_charge) || 280,
-          gstPercentage: Number(p.gst_percentage) || 3,
+          price: Number(p.price || p.selling_price) || 9520,
+          price_inr: Number(p.price || p.selling_price) || 9520,
+          makingCharge: Number(p.making_charges) || 0,
+          making_charges: Number(p.making_charges) || 0,
+          gstPercentage: 3,
           stockQuantity: Number(p.stock_quantity) || 10,
           stock_quantity: Number(p.stock_quantity) || 10,
           isFeatured: Boolean(p.featured),
@@ -152,10 +166,17 @@ class SupabaseDataService {
       });
 
       window.allFirestoreProducts = formatted;
+      // Refresh offline cache
+      try { localStorage.setItem('chinni_products', JSON.stringify(formatted)); } catch(e) {}
       return { success: true, data: formatted };
     } catch (err) {
-      console.warn("[SupabaseService] getProducts error:", err.message);
-      return { success: false, error: err.message, data: window.allFirestoreProducts || [] };
+      console.error("[SupabaseService] getProducts error:", err.message);
+      let cached = [];
+      try {
+        const c = localStorage.getItem('chinni_products');
+        if (c) cached = JSON.parse(c);
+      } catch(e) {}
+      return { success: false, error: err.message, data: cached.length ? cached : (window.allFirestoreProducts || []) };
     }
   }
 
@@ -196,14 +217,30 @@ class SupabaseDataService {
   }
 
   async saveProduct(productId, productData, imageFiles = []) {
-    if (!this.db) return { success: false, error: "Database unavailable" };
+    if (!this.db) {
+      console.error("[SupabaseService] saveProduct error: Supabase database is unavailable.");
+      return { success: false, error: "Database unavailable" };
+    }
+
     try {
-      const isNew = !productId;
-      const targetId = productId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `prod-${Date.now()}`);
+      const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+          try { return crypto.randomUUID(); } catch(e) {}
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      };
+
+      const isValidUuid = productId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId);
+      const isNew = !isValidUuid;
+      const targetId = isNew ? generateUUID() : productId;
       let slug = productData.slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `prod-${Date.now()}`);
       const timestamp = Date.now();
 
-      // Check if product exists & fetch old data for cleanup and merging
+      // Check if product exists & fetch old data for storage cleanup
       let oldStoragePath = null;
       let existingData = null;
       if (!isNew && this.db) {
@@ -225,18 +262,19 @@ class SupabaseDataService {
 
       for (const file of imageFiles) {
         const uploadRes = await this.uploadFile('product-images', file, targetId);
-        if (uploadRes.success) {
-          uploadedUrls.push(uploadRes.url);
-          if (!primaryImageUrl || imageFiles.indexOf(file) === 0) {
-            // Clean up previous image in storage if updating an existing product
-            if (oldStoragePath) {
-              await this.deleteStorageFile(oldStoragePath);
-            } else if (existingData && existingData.image_url) {
-              await this.deleteStorageFile(existingData.image_url);
-            }
-            primaryImageUrl = uploadRes.url;
-            primaryStoragePath = uploadRes.storagePath;
+        if (!uploadRes.success) {
+          console.error("[SupabaseService] Image upload failed during saveProduct:", uploadRes.error);
+          return { success: false, error: "Image upload failed: " + (uploadRes.error || "Unknown upload error") };
+        }
+        uploadedUrls.push(uploadRes.url);
+        if (!primaryImageUrl || imageFiles.indexOf(file) === 0) {
+          if (oldStoragePath) {
+            await this.deleteStorageFile(oldStoragePath);
+          } else if (existingData && existingData.image_url) {
+            await this.deleteStorageFile(existingData.image_url);
           }
+          primaryImageUrl = uploadRes.url;
+          primaryStoragePath = uploadRes.storagePath;
         }
       }
 
@@ -256,31 +294,12 @@ class SupabaseDataService {
       const description = productData.description !== undefined ? productData.description : (baseProduct.description || '');
       const weight = Number(productData.weightGrams || productData.weight || baseProduct.weight) || 1.0;
       const purity = productData.purity || baseProduct.purity || '24K';
-      const making_charges = Number(productData.makingCharge || productData.making_charge || baseProduct.making_charges) || 280;
+      const making_charges = Number(productData.makingCharge || productData.making_charge || baseProduct.making_charges) || 0;
       const selling_price = Number(productData.sellingPrice || productData.price || baseProduct.selling_price) || 9520;
       const price = selling_price;
       const stock_quantity = Number(productData.stockQuantity || productData.stock || baseProduct.stock_quantity) || 10;
       const featured = productData.featured !== undefined ? Boolean(productData.featured) : (productData.isFeatured !== undefined ? Boolean(productData.isFeatured) : Boolean(baseProduct.featured));
       const active = productData.isActive !== undefined ? Boolean(productData.isActive) : (baseProduct.active !== undefined ? Boolean(baseProduct.active) : true);
-
-      const fullPayload = {
-        name,
-        slug,
-        sku,
-        description,
-        weight,
-        purity,
-        making_charges,
-        selling_price,
-        price,
-        stock_quantity,
-        featured,
-        active,
-        image_url: primaryImageUrl,
-        image_path: primaryStoragePath,
-        images: allImages,
-        updated_at: new Date().toISOString()
-      };
 
       const cleanPayload = {
         name,
@@ -293,63 +312,62 @@ class SupabaseDataService {
         selling_price,
         price,
         image_url: primaryImageUrl,
+        image_path: primaryStoragePath || null,
         stock_quantity,
         featured,
         active,
         updated_at: new Date().toISOString()
       };
 
-      if (isNew) {
-        fullPayload.id = targetId;
-        cleanPayload.id = targetId;
-        let { error } = await this.db.from('products').insert([fullPayload]);
-        if (error) {
-          console.warn("[SupabaseService] Insert retry with clean schema payload:", error.message);
-          const { error: err2 } = await this.db.from('products').insert([cleanPayload]);
-          if (err2) throw err2;
-        }
-
-        // Initialize inventory record
-        try {
-          await this.db.from('inventory').insert([{
-            product_id: targetId,
-            available_quantity: cleanPayload.stock_quantity
-          }]);
-        } catch(iErr) {}
-      } else {
-        let { error } = await this.db.from('products').upsert(fullPayload);
-        if (error) {
-          console.warn("[SupabaseService] Upsert retry with clean schema payload:", error.message);
-          const { error: err2 } = await this.db.from('products').upsert(cleanPayload);
-          if (err2) throw err2;
-        }
+      if (allImages && allImages.length) {
+        cleanPayload.images = allImages;
       }
 
-      // Insert/update primary image in product_images table
+      let saveResult = null;
+      if (isNew) {
+        cleanPayload.id = targetId;
+        const { data: inserted, error: insertError } = await this.db.from('products').insert([cleanPayload]).select().single();
+        if (insertError) {
+          console.error("[SupabaseService] Product insert database error:", insertError);
+          return { success: false, error: insertError.message || "Failed to create product in database" };
+        }
+        saveResult = inserted;
+      } else {
+        const { data: updated, error: updateError } = await this.db.from('products').update(cleanPayload).eq('id', targetId).select().single();
+        if (updateError) {
+          console.error("[SupabaseService] Product update database error:", updateError);
+          return { success: false, error: updateError.message || "Failed to update product in database" };
+        }
+        saveResult = updated;
+      }
+
+      // Update primary image in product_images table if exists
       if (primaryImageUrl) {
         try {
-          // Delete old primary images first to avoid duplicates
-          await this.db.from('product_images').delete().eq('product_id', targetId).eq('is_primary', true);
-
+          await this.db.from('product_images').delete().eq('product_id', targetId);
           await this.db.from('product_images').insert([{
             product_id: targetId,
-            storage_path: primaryStoragePath,
+            storage_path: primaryStoragePath || null,
             image_url: primaryImageUrl,
             is_primary: true
           }]);
         } catch(piErr) {
-          console.error("[SupabaseService] Error updating primary image:", piErr);
+          console.warn("[SupabaseService] product_images sync warning:", piErr);
         }
       }
 
       // Trigger local & realtime update
       const refreshed = await this.getProducts();
-      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+      if (refreshed.success && refreshed.data) {
+        try { localStorage.setItem('chinni_products', JSON.stringify(refreshed.data)); } catch(e) {}
+        window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+      }
 
       return {
         success: true,
         id: targetId,
         imageUrl: primaryImageUrl,
+        data: saveResult || cleanPayload,
         message: 'Product & photos updated successfully!'
       };
     } catch (err) {
@@ -359,7 +377,11 @@ class SupabaseDataService {
   }
 
   async deleteProduct(productId) {
-    if (!this.db) return { success: false, error: "Database unavailable" };
+    if (!this.db) {
+      console.error("[SupabaseService] deleteProduct error: Supabase database is unavailable.");
+      return { success: false, error: "Database unavailable" };
+    }
+
     try {
       // 1. Fetch product to locate image_path and image_url for Supabase Storage cleanup
       let storagePathToDelete = null;
@@ -374,11 +396,11 @@ class SupabaseDataService {
         console.warn("[SupabaseService] Error finding product for image deletion:", fetchErr);
       }
 
-      // 2. Delete image from product-images bucket
-      if (storagePathToDelete) {
-        await this.deleteStorageFile(storagePathToDelete);
-      } else if (imageUrlToDelete) {
-        await this.deleteStorageFile(imageUrlToDelete);
+      // 2. Delete product row from Supabase products table first
+      const { error: delError } = await this.db.from('products').delete().eq('id', productId);
+      if (delError) {
+        console.error("[SupabaseService] deleteProduct database error:", delError);
+        return { success: false, error: delError.message || "Failed to delete product from database" };
       }
 
       // 3. Delete from product_images table if exists
@@ -386,20 +408,21 @@ class SupabaseDataService {
         await this.db.from('product_images').delete().eq('product_id', productId);
       } catch (piErr) {}
 
-      // 4. Delete from inventory table if exists
-      try {
-        await this.db.from('inventory').delete().eq('product_id', productId);
-      } catch (invErr) {}
+      // 4. Delete image from product-images bucket
+      if (storagePathToDelete) {
+        await this.deleteStorageFile(storagePathToDelete);
+      } else if (imageUrlToDelete) {
+        await this.deleteStorageFile(imageUrlToDelete);
+      }
 
-      // 5. Delete product row from products table
-      const { error } = await this.db.from('products').delete().eq('id', productId);
-      if (error) throw error;
-
-      // 6. Refresh products list and notify listeners
+      // 5. Refresh products list and notify listeners
       const refreshed = await this.getProducts();
-      window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+      if (refreshed.success && refreshed.data) {
+        try { localStorage.setItem('chinni_products', JSON.stringify(refreshed.data)); } catch(e) {}
+        window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: refreshed.data }));
+      }
 
-      return { success: true, message: "Product and associated image deleted successfully." };
+      return { success: true, id: productId, message: "Product and associated image deleted successfully." };
     } catch (err) {
       console.error("[SupabaseService] deleteProduct error:", err);
       return { success: false, error: err.message || "Failed to delete product from database" };
@@ -415,17 +438,25 @@ class SupabaseDataService {
     this.productsChannel = this.db
       .channel('public:products')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload) => {
-        console.log("[SupabaseService] Realtime product update received:", payload);
+        console.log("[SupabaseService] Realtime product update received:", payload.eventType, payload);
         const res = await this.getProducts();
-        if (res.success && typeof callback === 'function') {
-          callback(res.data);
+        if (res.success && res.data) {
+          try { localStorage.setItem('chinni_products', JSON.stringify(res.data)); } catch(e) {}
+          window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: res.data }));
+          if (typeof callback === 'function') {
+            callback(res.data);
+          }
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, async (payload) => {
-        console.log("[SupabaseService] Realtime product_images update received:", payload);
+        console.log("[SupabaseService] Realtime product_images update received:", payload.eventType, payload);
         const res = await this.getProducts();
-        if (res.success && typeof callback === 'function') {
-          callback(res.data);
+        if (res.success && res.data) {
+          try { localStorage.setItem('chinni_products', JSON.stringify(res.data)); } catch(e) {}
+          window.dispatchEvent(new CustomEvent('cj_products_changed', { detail: res.data }));
+          if (typeof callback === 'function') {
+            callback(res.data);
+          }
         }
       })
       .subscribe();
@@ -567,7 +598,7 @@ class SupabaseDataService {
           },
           story: {
             title: 'Gold for Every Meaningful Moment.',
-            text: 'At CHINNI ONE GRAM GOLD, we believe that gold is more than a metal — it is an emotion.',
+            text: 'At CHINNI ONE GRAMGOLD, we believe that gold is more than a metal — it is an emotion.',
             imageUrl: 'assets/brand_story_banner.jpg'
           }
         };
@@ -669,21 +700,16 @@ class SupabaseDataService {
       onProgress(20, "Validating file and connecting to Supabase Storage...");
     }
 
-    if (!this.db) {
-      const reader = new FileReader();
-      return new Promise((resolve) => {
-        reader.onload = (e) => {
-          if (typeof onProgress === 'function') onProgress(100, "Ready (local preview)");
-          resolve({ success: true, url: e.target.result, isFallback: true });
-        };
-        reader.readAsDataURL(rawFile);
-      });
+    if (!this.db || !this.db.storage) {
+      console.error("[SupabaseService] uploadFile error: Supabase Storage service unavailable.");
+      return { success: false, error: "Supabase Storage service unavailable." };
     }
 
     try {
-      const cleanName = rawFile.name ? rawFile.name.replace(/[^a-zA-Z0-9.-]/g, '_') : 'image.jpg';
+      const cleanName = (rawFile.name || 'image.jpg').replace(/[^a-zA-Z0-9.-]/g, '_');
       const timestamp = Date.now();
-      const storagePath = `products/${productId}/${timestamp}-${cleanName}`;
+      // Generate unique image filename using product ID + timestamp so an updated image never reuses an old cached URL
+      const storagePath = `products/${productId}/${productId}_${timestamp}_${cleanName}`;
       const targetBucket = bucketName || 'product-images';
 
       if (typeof onProgress === 'function') {
@@ -699,6 +725,7 @@ class SupabaseDataService {
         });
 
       if (uploadResult.error) {
+        console.error("[SupabaseService] Storage upload error:", uploadResult.error);
         throw uploadResult.error;
       }
 
@@ -730,22 +757,7 @@ class SupabaseDataService {
 
       return { success: true, url: publicUrl, storagePath, bucket: targetBucket };
     } catch (err) {
-      console.warn("[SupabaseService] Storage upload fallback notice:", err.message);
-      if (window.ApiClient && window.ApiClient.uploadImage) {
-        try {
-          if (typeof onProgress === 'function') onProgress(60, "Uploading via backend proxy...");
-          const apiRes = await window.ApiClient.uploadImage(rawFile);
-          if (apiRes.success && apiRes.url) {
-            if (typeof onProgress === 'function') onProgress(100, "Uploaded via backend!");
-            return {
-              success: true,
-              url: apiRes.url,
-              storagePath: apiRes.storage_path || apiRes.url,
-              bucket: 'product-images'
-            };
-          }
-        } catch(apiErr) {}
-      }
+      console.error("[SupabaseService] Storage upload error:", err);
       return {
         success: false,
         error: err.message || "Failed to upload image to Supabase Storage bucket 'product-images'."
