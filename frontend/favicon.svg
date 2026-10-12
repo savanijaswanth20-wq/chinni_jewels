@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9E498"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#AA771C"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#gold)" stroke="#805510" stroke-width="2"/>
+  <circle cx="32" cy="32" r="25" fill="none" stroke="#F9E498" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="32" y="38" font-family="'Cinzel', serif, Georgia" font-size="16" font-weight="bold" fill="#3D2B05" text-anchor="middle">1g</text>
+</svg>
