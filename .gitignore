@@ -13,8 +13,8 @@ ENV/
 node_modules/
 dist/
 .vercel
-
-.vercel
+_vercel
+**/_vercel
 .env*
 !.env.example
 

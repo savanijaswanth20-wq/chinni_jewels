@@ -431,14 +431,15 @@ function openSearchModal() {
       const products = window.allFirestoreProducts || [];
       const activeProduct = products.find(p => p.id === storedId || p.name === selectedName) || null;
 
-      const { goldVal, makingVal, gstVal, shippingFee, grandTotal } = computeProductTotals(activeProduct, qty);
+      const { currentPrice, goldVal, makingVal, gstVal, shippingFee, grandTotal } = computeProductTotals(activeProduct, qty);
 
       const set = (sel, val) => {
         const el = document.querySelector(sel);
         if (el) el.textContent = '₹' + val.toLocaleString('en-IN');
       };
 
-      set('.gold-value-price', goldVal);
+      set('.current-price', currentPrice);
+      set('.gold-value-price', currentPrice);
       set('.making-charges-price', makingVal);
       set('.gst-price', gstVal);
       set('.shipping-fee-price', shippingFee);
@@ -513,11 +514,12 @@ function openSearchModal() {
     }
 
     const productName = product ? product.name : (selectedName !== 'signature-gold-coin' ? selectedName : "Signature Gold Coin");
-    const { goldVal, makingVal, gstVal, grandTotal, weight, purity } = computeProductTotals(product, qty, rates24k);
+    const { currentPrice, goldVal, makingVal, gstVal, grandTotal, weight, purity } = computeProductTotals(product, qty, rates24k);
 
     const nameEl = document.querySelector('#checkout-prod-name');
     const metaEl = document.querySelector('#checkout-prod-meta');
     const qtyEl = document.querySelector('#checkout-prod-qty');
+    const currentPriceEl = document.querySelector('#checkout-current-price');
     const goldValEl = document.querySelector('#checkout-gold-val');
     const makingValEl = document.querySelector('#checkout-making-val');
     const gstEl = document.querySelector('#checkout-gst');
@@ -528,7 +530,8 @@ function openSearchModal() {
     if (nameEl) nameEl.textContent = productName;
     if (metaEl && product) metaEl.textContent = `${purity} · ${weight} Gram`;
     if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
-    if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
+    if (currentPriceEl) currentPriceEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
+    if (goldValEl) goldValEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
     if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
     if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
     if (shippingEl) shippingEl.textContent = '₹' + (getShippingFee()).toLocaleString('en-IN');
@@ -621,9 +624,7 @@ function openSearchModal() {
       `• *Product Image:* ${imgSrc}\n\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
       `*PRICE BREAKDOWN:*\n` +
-      `• *Gold Value:* ${goldVal}\n` +
-      `• *Making Charges:* ${makingVal}\n` +
-      `• *GST (3%):* ${gstVal}\n` +
+      `• *Current Price:* ${document.querySelector('#checkout-current-price')?.textContent || goldVal}\n` +
       `• *Shipping:* ${shippingVal}\n` +
       `• *GRAND TOTAL:* ${totalVal}\n\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
@@ -885,9 +886,17 @@ function computeProductTotals(product, qty = 1, rates24k = 9240) {
   const makingVal = Math.round(makingCharge * weight * qty);
   const subtotal = goldVal + makingVal;
   const gstVal = Math.round(subtotal * gstRate);
-  const grandTotal = subtotal + gstVal + shippingFee;
 
-  return { goldVal, makingVal, gstVal, shippingFee, grandTotal, weight, purity };
+  // If explicit selling price is defined for the product, use it; otherwise compute full product price
+  const explicitPrice = Number(product?.sellingPrice || product?.price || product?.selling_price);
+  const unitPrice = (explicitPrice && !isNaN(explicitPrice) && explicitPrice > 0)
+    ? explicitPrice
+    : (Math.round(goldRatePerGram * weight) + Math.round(makingCharge * weight) + Math.round((goldRatePerGram * weight + makingCharge * weight) * gstRate));
+
+  const currentPrice = Math.round(unitPrice * qty);
+  const grandTotal = currentPrice + shippingFee;
+
+  return { currentPrice, unitPrice, goldVal, makingVal, gstVal, shippingFee, grandTotal, weight, purity };
 }
 
 /**
@@ -1135,10 +1144,13 @@ window.renderProductPageDetails = function(products) {
 
   // Dynamic Price Breakdown
   const qty = parseInt(sessionStorage.getItem('chinni_selected_qty')) || (document.querySelector('.qty-input') ? (parseInt(document.querySelector('.qty-input').value) || 1) : 1);
-  const { goldVal, makingVal, gstVal, shippingFee, grandTotal, weight } = computeProductTotals(activeProduct, qty);
+  const { currentPrice, goldVal, makingVal, gstVal, shippingFee, grandTotal, weight } = computeProductTotals(activeProduct, qty);
+
+  const currentPriceEl = document.querySelector('.current-price');
+  if (currentPriceEl) currentPriceEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
 
   const goldValEl = document.querySelector('.gold-value-price');
-  if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
+  if (goldValEl) goldValEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
 
   const makingEl = document.querySelector('.making-charges-price');
   if (makingEl) makingEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
@@ -1231,14 +1243,16 @@ window.renderCheckoutSummary = function(products) {
     const qtyEl = document.querySelector('#checkout-prod-qty');
     if (qtyEl) qtyEl.textContent = `Qty: ${qty}`;
 
-    const { goldVal, makingVal, gstVal, grandTotal } = computeProductTotals(activeProduct, qty);
+    const { currentPrice, goldVal, makingVal, gstVal, grandTotal } = computeProductTotals(activeProduct, qty);
 
+    const currentPriceEl = document.querySelector('#checkout-current-price');
     const goldValEl = document.querySelector('#checkout-gold-val');
     const makingValEl = document.querySelector('#checkout-making-val');
     const gstEl = document.querySelector('#checkout-gst');
     const totalEl = document.querySelector('#checkout-total');
 
-    if (goldValEl) goldValEl.textContent = '₹' + goldVal.toLocaleString('en-IN');
+    if (currentPriceEl) currentPriceEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
+    if (goldValEl) goldValEl.textContent = '₹' + currentPrice.toLocaleString('en-IN');
     if (makingValEl) makingValEl.textContent = '₹' + makingVal.toLocaleString('en-IN');
     if (gstEl) gstEl.textContent = '₹' + gstVal.toLocaleString('en-IN');
     if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
