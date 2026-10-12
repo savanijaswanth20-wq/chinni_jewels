@@ -2,30 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "services": {
-    "web": {
-      "root": ".",
-      "framework": "container",
-      "runtime": "container",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "backend",
-          "format": "url",
-          "env": "BACKEND_URL"
-        }
-      ]
-    },
     "backend": {
       "root": "backend",
       "framework": "fastapi",
-      "entrypoint": "app/main.py",
+      "entrypoint": "main.py",
       "bindings": [
-        {
-          "type": "service",
-          "service": "web",
-          "format": "url",
-          "env": "WEB_URL"
-        },
         {
           "type": "service",
           "service": "app",
@@ -43,12 +24,6 @@
           "service": "backend",
           "format": "url",
           "env": "BACKEND_URL"
-        },
-        {
-          "type": "service",
-          "service": "web",
-          "format": "url",
-          "env": "WEB_URL"
         }
       ]
     },
@@ -68,12 +43,6 @@
       "source": "/api/(.*)",
       "destination": {
         "service": "backend"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "service": "web"
       }
     }
   ],

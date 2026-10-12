@@ -8,9 +8,15 @@ logger = logging.getLogger(__name__)
 
 db_url = settings.DATABASE_URL or ""
 
+def _get_sqlite_fallback_url() -> str:
+    # In serverless environments like Vercel Lambda, root filesystem is read-only.
+    if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
+        return "sqlite:////tmp/gold_business.db"
+    return "sqlite:///./gold_business.db"
+
 # Filter out unconfigured password placeholders
 if "[YOUR-PASSWORD]" in db_url or "YOUR-PASSWORD" in db_url:
-    db_url = "sqlite:///./gold_business.db"
+    db_url = _get_sqlite_fallback_url()
 
 # Normalize PostgreSQL scheme
 if db_url.startswith("postgres://"):
@@ -26,15 +32,15 @@ if db_url.startswith("postgresql"):
         import psycopg2
     except ImportError:
         logger.warning("psycopg2 not installed, falling back to SQLite")
-        db_url = "sqlite:///./gold_business.db"
+        db_url = _get_sqlite_fallback_url()
 elif db_url.startswith("mysql"):
     try:
         import pymysql
     except ImportError:
         logger.warning("pymysql not installed, falling back to SQLite")
-        db_url = "sqlite:///./gold_business.db"
+        db_url = _get_sqlite_fallback_url()
 elif not db_url.startswith("sqlite"):
-    db_url = "sqlite:///./gold_business.db"
+    db_url = _get_sqlite_fallback_url()
 
 connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 
