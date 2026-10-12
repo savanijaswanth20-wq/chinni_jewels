@@ -116,11 +116,13 @@ if os.path.exists(js_dir):
 _SAFE_PAGE_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
 def serve_index():
     index_file = os.path.join(ROOT_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs"}
+    return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs", "status": "online"}
 
 @app.get("/{page_name}.html")
 def serve_html_page(page_name: str):
