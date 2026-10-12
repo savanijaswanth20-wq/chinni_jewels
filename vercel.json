@@ -2,10 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "services": {
-    "web": {
-      "root": "frontend",
-      "framework": "vite"
-    },
     "backend": {
       "root": "backend",
       "framework": "fastapi",
@@ -76,7 +72,7 @@
     {
       "source": "/(.*)",
       "destination": {
-        "service": "web"
+        "service": "backend"
       }
     }
   ],

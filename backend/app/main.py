@@ -100,10 +100,18 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(todos.router)
 
 # Serve Frontend static directories (assets, css, js)
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-assets_dir = os.path.join(ROOT_DIR, "assets")
-css_dir = os.path.join(ROOT_DIR, "css")
-js_dir = os.path.join(ROOT_DIR, "js")
+_CANDIDATE_DIRS = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),      # backend/ (/var/task on Vercel)
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), # project root (local dev)
+    os.getcwd(),                                                          # current working directory
+    "/var/task"                                                           # Vercel serverless task root
+]
+ROOT_DIR = next((d for d in _CANDIDATE_DIRS if os.path.exists(os.path.join(d, "index.html"))), _CANDIDATE_DIRS[0])
+
+# Locate static directories from candidate dirs
+assets_dir = next((os.path.join(d, "assets") for d in _CANDIDATE_DIRS if os.path.exists(os.path.join(d, "assets"))), os.path.join(ROOT_DIR, "assets"))
+css_dir = next((os.path.join(d, "css") for d in _CANDIDATE_DIRS if os.path.exists(os.path.join(d, "css"))), os.path.join(ROOT_DIR, "css"))
+js_dir = next((os.path.join(d, "js") for d in _CANDIDATE_DIRS if os.path.exists(os.path.join(d, "js"))), os.path.join(ROOT_DIR, "js"))
 
 if os.path.exists(assets_dir):
     app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
@@ -115,17 +123,46 @@ if os.path.exists(js_dir):
 # Allowed HTML page names (alphanumeric + hyphens/underscores only) (#16)
 _SAFE_PAGE_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
 
+@app.get("/")
+def serve_root():
+    for d in [ROOT_DIR] + _CANDIDATE_DIRS:
+        index_file = os.path.join(d, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+    return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs", "status": "online"}
+
+@app.get("/favicon.ico")
+def serve_favicon_ico():
+    for d in [ROOT_DIR] + _CANDIDATE_DIRS:
+        ico_path = os.path.join(d, "favicon.ico")
+        if os.path.exists(ico_path):
+            return FileResponse(ico_path)
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+@app.get("/favicon.svg")
+def serve_favicon_svg():
+    for d in [ROOT_DIR] + _CANDIDATE_DIRS:
+        svg_path = os.path.join(d, "favicon.svg")
+        if os.path.exists(svg_path):
+            return FileResponse(svg_path, media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
 @app.get("/api")
 @app.get("/api/")
 def api_status():
     return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs", "status": "online"}
 
 @app.get("/{page_name}.html")
+@app.get("/{page_name}")
 def serve_html_page(page_name: str):
-    # Path traversal guard: only allow safe page names (#16)
-    if not _SAFE_PAGE_RE.match(page_name):
+    clean_name = page_name[:-5] if page_name.endswith(".html") else page_name
+    if not _SAFE_PAGE_RE.match(clean_name):
         raise HTTPException(status_code=400, detail="Invalid page name")
-    file_path = os.path.join(ROOT_DIR, f"{page_name}.html")
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
+    for d in [ROOT_DIR] + _CANDIDATE_DIRS:
+        html_file = os.path.join(d, f"{clean_name}.html")
+        if os.path.exists(html_file):
+            return FileResponse(html_file)
+        exact_file = os.path.join(d, page_name)
+        if os.path.exists(exact_file) and os.path.isfile(exact_file):
+            return FileResponse(exact_file)
     raise HTTPException(status_code=404, detail="Page not found")
