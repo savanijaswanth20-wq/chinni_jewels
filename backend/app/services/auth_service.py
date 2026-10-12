@@ -3,7 +3,7 @@ import jwt
 import httpx
 from typing import Optional
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
@@ -90,12 +90,12 @@ class AuthService:
                 detail=f"Invalid token: {str(e)}"
             )
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security)) -> dict:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """Dependency to get and verify the current user from JWT"""
     token = credentials.credentials
     return await AuthService.verify_token(token)
 
-async def get_current_user_optional(credentials: Optional[HTTPAuthCredentials] = Depends(security)) -> Optional[dict]:
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[dict]:
     """Optional auth - returns user if token provided, None otherwise"""
     if credentials:
         token = credentials.credentials
