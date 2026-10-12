@@ -94,7 +94,7 @@
 
         <a class="nav-item" data-view="shipping">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          Shipping Price (₹150)
+          Shipping Price (<span id="nav-shipping-price">₹100</span>)
         </a>
 
         <a class="nav-item" data-view="hero">
@@ -212,13 +212,13 @@
                 <label style="font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">Shipping Price (₹)</label>
                 <div style="position: relative; max-width: 280px;">
                   <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--gold-light);">₹</span>
-                  <input type="number" id="input-shipping-price" class="form-control" value="150" min="0" step="1" style="padding-left: 32px; font-size: 1.1rem; font-weight: 700; color: #fff;" required />
+                  <input type="number" id="input-shipping-price" class="form-control" value="100" min="0" step="1" style="padding-left: 32px; font-size: 1.1rem; font-weight: 700; color: #fff;" required />
                 </div>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Default standard courier delivery fee across India.</p>
               </div>
 
               <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 1rem; margin: 1.5rem 0;">
-                <div style="font-size: 0.85rem; color: #fff; font-weight: 600; margin-bottom: 4px;">🚚 Active Shipping Rate: <span id="current-shipping-badge" style="color: var(--gold-light);">₹150</span></div>
+                <div style="font-size: 0.85rem; color: #fff; font-weight: 600; margin-bottom: 4px;">🚚 Active Shipping Rate: <span id="current-shipping-badge" style="color: var(--gold-light);">₹100</span></div>
                 <div style="font-size: 0.78rem; color: #9aa1b1;">This fee is automatically calculated into Grand Total at customer checkout and WhatsApp confirmation details.</div>
               </div>
 

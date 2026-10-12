@@ -598,7 +598,7 @@ function openSearchModal() {
     const makingVal = document.querySelector('#checkout-making-val')?.textContent || '₹280';
     const gstVal = document.querySelector('#checkout-gst')?.textContent || '₹286';
     const shippingVal = document.querySelector('#checkout-shipping-val')?.textContent || '₹' + (getShippingFee()).toLocaleString('en-IN');
-    const totalVal = document.querySelector('#checkout-total')?.textContent || '₹9,956';
+    const totalVal = document.querySelector('#checkout-total')?.textContent || '₹9,906';
 
     const imgEl = document.querySelector('#checkout-prod-img');
     let imgSrc = imgEl ? imgEl.src : '';
@@ -857,9 +857,14 @@ function calculateProductPrice(product, rate24k = 9240) {
 function getShippingFee() {
   const saved = localStorage.getItem('chinni_shipping_price');
   if (saved !== null && !isNaN(Number(saved))) {
-    return Number(saved);
+    const val = Number(saved);
+    if (val === 150) {
+      localStorage.setItem('chinni_shipping_price', '100');
+      return 100;
+    }
+    return val;
   }
-  return 150;
+  return 100;
 }
 
 /**

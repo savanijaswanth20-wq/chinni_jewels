@@ -918,10 +918,16 @@ class AdminApp {
   loadShippingData() {
     const input = document.querySelector('#input-shipping-price');
     const badge = document.querySelector('#current-shipping-badge');
-    const savedPrice = localStorage.getItem('chinni_shipping_price') || '150';
+    const navVal = document.querySelector('#nav-shipping-price');
+    let savedPrice = localStorage.getItem('chinni_shipping_price') || '100';
+    if (savedPrice === '150') {
+      savedPrice = '100';
+      localStorage.setItem('chinni_shipping_price', '100');
+    }
 
     if (input) input.value = savedPrice;
     if (badge) badge.textContent = `₹${savedPrice}`;
+    if (navVal) navVal.textContent = `₹${savedPrice}`;
   }
 
   bindShippingEvents() {
@@ -931,10 +937,12 @@ class AdminApp {
         e.preventDefault();
         const priceInput = document.querySelector('#input-shipping-price');
         const badge = document.querySelector('#current-shipping-badge');
-        const price = priceInput ? priceInput.value.trim() : '150';
+        const navVal = document.querySelector('#nav-shipping-price');
+        const price = priceInput ? priceInput.value.trim() : '100';
 
         localStorage.setItem('chinni_shipping_price', price);
         if (badge) badge.textContent = `₹${price}`;
+        if (navVal) navVal.textContent = `₹${price}`;
 
         this.showToast(`Shipping Price updated to ₹${price} successfully!`);
       });
