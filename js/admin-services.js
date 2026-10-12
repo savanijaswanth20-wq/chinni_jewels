@@ -396,6 +396,13 @@ class AdminDataService {
     return await this.uploadFile('product-images', file, productId, onProgress);
   }
 
+  async getProducts() {
+    if (window.SupabaseService && window.SupabaseService.getProducts) {
+      return await window.SupabaseService.getProducts();
+    }
+    return { success: false, data: [] };
+  }
+
   async deleteProduct(productId) {
     if (window.SupabaseService && window.SupabaseService.deleteProduct) {
       return await window.SupabaseService.deleteProduct(productId);

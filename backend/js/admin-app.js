@@ -7,11 +7,44 @@ class AdminApp {
   constructor() {
     this.currentView = 'products';
     this.products = [];
+    this.adminCategoryFilter = 'all';
     this.init();
   }
 
+  normalizeCategory(cat, name = '') {
+    const c = String(cat || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+    if (c === 'necklace' || c === 'necklaces') return 'necklace';
+    if (c === 'bangle' || c === 'bangles') return 'bangle';
+    if (c === 'earring' || c === 'earrings') return 'earrings';
+    if (c === 'ring' || c === 'rings') return 'ring';
+    if (c === 'chain' || c === 'chains') return 'chain';
+    if (c === 'bridal_set' || c === 'bridal' || c === 'bridal_sets' || c === 'bridalset') return 'bridal_set';
+
+    const n = String(name || '').toLowerCase();
+    if (n.includes('necklace')) return 'necklace';
+    if (n.includes('bangle')) return 'bangle';
+    if (n.includes('earring')) return 'earrings';
+    if (n.includes('ring') && !n.includes('earring')) return 'ring';
+    if (n.includes('chain')) return 'chain';
+    if (n.includes('bridal')) return 'bridal_set';
+    return c || '';
+  }
+
+  getCategoryLabel(cat, name = '') {
+    const norm = this.normalizeCategory(cat, name);
+    const map = {
+      necklace: 'Necklace',
+      bangle: 'Bangle',
+      earrings: 'Earrings',
+      ring: 'Ring',
+      chain: 'Chain',
+      bridal_set: 'Bridal Set'
+    };
+    return map[norm] || (cat ? (cat.charAt(0).toUpperCase() + cat.slice(1)) : 'Unassigned');
+  }
+
   init() {
-    console.log("[AdminApp] Initializing Admin Controller with AI Image Studio.");
+    console.log("[AdminApp] Initializing Admin Controller with Categories and Supabase sync.");
     this.bindAuth();
     this.bindNavigation();
     this.bindProductEvents();
@@ -322,16 +355,40 @@ class AdminApp {
     const tbody = document.querySelector('#products-table-tbody');
     if (!tbody) return;
 
-    if (!products || products.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No products found. Click "+ Add Product" above.</td></tr>`;
+    // Bind Category Filter Pills
+    const filterPills = document.querySelectorAll('.admin-filter-pill');
+    filterPills.forEach(pill => {
+      pill.onclick = () => {
+        filterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.adminCategoryFilter = pill.dataset.adminCategory || 'all';
+        this.renderProductsTable(this.products);
+      };
+    });
+
+    const activeFilter = this.adminCategoryFilter || 'all';
+    const listToRender = (products || []).filter(p => {
+      if (activeFilter === 'all') return true;
+      const cat = this.normalizeCategory(p.category || p.categoryId || p.categoryName, p.name);
+      return cat === activeFilter;
+    });
+
+    if (!listToRender || listToRender.length === 0) {
+      const msg = activeFilter === 'all' 
+        ? 'No products found. Click "+ Add Product" above.' 
+        : `No products found in "${this.getCategoryLabel(activeFilter)}" category. Click "+ Add Product" above.`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">${msg}</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = products.map(p => {
+    tbody.innerHTML = listToRender.map(p => {
       const rawImg = p.imageUrl || p.image_url || (p.images && p.images[0]) || 'assets/hero_gold_coin.png';
       const img = window.ApiClient ? window.ApiClient.resolveImageUrl(rawImg) : rawImg;
       const price = p.price || p.price_inr || p.selling_price || p.sellingPrice;
       const priceDisplay = price ? `₹${price.toLocaleString('en-IN')}` : '<span style="color:#9aa1b1;font-size:0.8rem;">Not set</span>';
+      const catLabel = this.getCategoryLabel(p.category || p.categoryId || p.categoryName, p.name);
+      const stock = p.stockQuantity !== undefined ? p.stockQuantity : (p.stock_quantity !== undefined ? p.stock_quantity : 10);
+
       return `
         <tr>
           <td>
@@ -342,7 +399,13 @@ class AdminApp {
             <div style="font-size: 0.75rem; color: var(--gold-light);">1 Gram Pure Gold</div>
           </td>
           <td>
+            <span class="badge-category">${catLabel}</span>
+          </td>
+          <td>
             <span style="font-weight: 700; color: var(--gold-light); font-size: 0.95rem;">${priceDisplay}</span>
+          </td>
+          <td>
+            <span style="font-weight: 700; color: ${stock > 0 ? '#34d399' : '#ff5252'}; font-size: 0.9rem;">${stock}</span>
           </td>
           <td>
             <span class="badge ${p.active !== false ? 'badge-success' : 'badge-warning'}">${p.active !== false ? 'ACTIVE' : 'INACTIVE'}</span>
@@ -584,8 +647,14 @@ class AdminApp {
     document.querySelector('#product-modal-title').textContent = "Add Product";
     document.querySelector('#pm-id').value = "";
     document.querySelector('#pm-name').value = "";
+    const catEl = document.querySelector('#pm-category');
+    if (catEl) catEl.value = (this.adminCategoryFilter && this.adminCategoryFilter !== 'all') ? this.adminCategoryFilter : "";
     const priceEl = document.querySelector('#pm-price');
     if (priceEl) priceEl.value = "";
+    const stockEl = document.querySelector('#pm-stock');
+    if (stockEl) stockEl.value = "10";
+    const descEl = document.querySelector('#pm-description');
+    if (descEl) descEl.value = "";
     document.querySelector('#pm-image-url-input').value = "assets/hero_gold_coin.png";
     const thumb = document.querySelector('#pm-image-preview-thumb');
     if (thumb) thumb.src = "assets/hero_gold_coin.png";
@@ -594,11 +663,20 @@ class AdminApp {
 
   openEditProductModal(prod) {
     this.resetImagePreviewUI();
-    document.querySelector('#product-modal-title').textContent = "Edit Product Name, Price & Image";
+    document.querySelector('#product-modal-title').textContent = "Edit Product";
     document.querySelector('#pm-id').value = prod.id || "";
     document.querySelector('#pm-name').value = prod.name || "";
+    const catEl = document.querySelector('#pm-category');
+    if (catEl) {
+      const norm = this.normalizeCategory(prod.category || prod.categoryId || prod.categoryName, prod.name);
+      catEl.value = norm || "";
+    }
     const priceEl = document.querySelector('#pm-price');
     if (priceEl) priceEl.value = prod.price || prod.price_inr || prod.selling_price || prod.sellingPrice || "";
+    const stockEl = document.querySelector('#pm-stock');
+    if (stockEl) stockEl.value = prod.stockQuantity !== undefined ? prod.stockQuantity : (prod.stock_quantity !== undefined ? prod.stock_quantity : 10);
+    const descEl = document.querySelector('#pm-description');
+    if (descEl) descEl.value = prod.description || "";
     const rawImg = prod.imageUrl || prod.image_url || prod.images?.[0] || "assets/hero_gold_coin.png";
     const img = window.ApiClient ? window.ApiClient.resolveImageUrl(rawImg) : rawImg;
     document.querySelector('#pm-image-url-input').value = img;
@@ -659,14 +737,24 @@ class AdminApp {
   async handleSaveProduct() {
     const id = document.querySelector('#pm-id').value.trim();
     const name = document.querySelector('#pm-name').value.trim();
+    const catEl = document.querySelector('#pm-category');
+    const category = catEl ? catEl.value.trim().toLowerCase() : '';
     const imageUrl = document.querySelector('#pm-image-url-input').value.trim() || 'assets/hero_gold_coin.png';
     const priceEl = document.querySelector('#pm-price');
     const price = priceEl ? (parseInt(priceEl.value, 10) || 0) : 0;
+    const stockEl = document.querySelector('#pm-stock');
+    const stock = stockEl ? (parseInt(stockEl.value, 10) || 0) : 10;
+    const descEl = document.querySelector('#pm-description');
+    const description = descEl ? descEl.value.trim() : '';
 
     this.hideImageError();
 
     if (!name) {
       this.showImageError("Please enter a product name.");
+      return;
+    }
+    if (!category) {
+      this.showImageError("Please select a Product Category.");
       return;
     }
     if (!price || price <= 0) {
@@ -729,6 +817,9 @@ class AdminApp {
 
       const payload = {
         name: name,
+        category: category,
+        categoryId: category,
+        categoryName: this.getCategoryLabel(category),
         image_url: finalImageUrl,
         imageUrl: finalImageUrl,
         image_path: finalStoragePath || oldStoragePath || '',
@@ -736,6 +827,9 @@ class AdminApp {
         price_inr: price,
         selling_price: price,
         sellingPrice: price,
+        stock_quantity: stock,
+        stockQuantity: stock,
+        description: description,
         active: true,
         updated_at: new Date().toISOString()
       };

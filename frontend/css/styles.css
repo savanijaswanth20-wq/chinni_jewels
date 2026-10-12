@@ -699,39 +699,112 @@ ul { list-style: none; }
   margin-top: 12px;
 }
 
-/* Filter Tabs */
+/* Filter Tabs - Luxury Minimal Pill Design */
 .filter-tabs {
   display: flex;
   justify-content: center;
-  gap: 4px;
-  margin-bottom: 56px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 50px;
   flex-wrap: wrap;
+  padding: 4px;
 }
 
 .filter-tab {
-  padding: 9px 22px;
+  padding: 10px 24px;
   font-family: var(--sans);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.15em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--mid);
-  border: var(--border-light);
+  color: #1f1f1f;
+  background: #ffffff;
+  border: 1px solid #e2e2e2;
   border-radius: 100px;
   cursor: pointer;
-  transition: var(--transition);
-  background: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .filter-tab:hover {
-  color: var(--black);
-  border-color: var(--gold);
+  color: #000000;
+  border-color: #b0b0b0;
+  background: #fbfbfb;
+  transform: translateY(-1px);
 }
 
 .filter-tab.active {
-  background: var(--black);
-  color: var(--white);
-  border-color: var(--black);
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  transform: translateY(0);
+}
+
+/* Empty Category Box */
+.collection-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 64px 24px;
+  background: #faf8f5;
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 16px;
+  color: #4a4a4a;
+  animation: fadeInCard 0.35s ease;
+}
+
+.collection-empty-state-title {
+  font-family: var(--serif, 'Playfair Display', serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.collection-empty-state-text {
+  font-size: 0.88rem;
+  color: #737373;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+@keyframes fadeInCard {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-tabs {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 6px 16px;
+    margin-left: -16px;
+    margin-right: -16px;
+    margin-bottom: 32px;
+    gap: 8px;
+  }
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .filter-tab {
+    padding: 9px 18px;
+    font-size: 0.68rem;
+  }
 }
 
 /* Product Grid */

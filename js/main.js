@@ -325,21 +325,40 @@ function openSearchModal() {
   if (!tabs.length) return;
 
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      const parentContainer = tab.closest('.filter-tabs');
+      if (parentContainer) {
+        parentContainer.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      } else {
+        tabs.forEach(t => t.classList.remove('active'));
+      }
       tab.classList.add('active');
 
-      const filter = tab.dataset.filter;
+      const filter = tab.dataset.filter || 'all';
+
+      // Collection Filtering (index.html)
+      if (typeof window.applyCollectionCategoryFilter === 'function' && 
+          (parentContainer?.id === 'collection-filter-tabs' || tab.closest('#collection'))) {
+        window.applyCollectionCategoryFilter(filter);
+        return;
+      }
 
       // Filter Grid Cards
       document.querySelectorAll('.product-card[data-category]').forEach(card => {
-        const match = filter === 'all' || card.dataset.category === filter;
+        const rawCat = card.dataset.category || '';
+        const name = card.querySelector('.product-card-name')?.textContent || '';
+        const norm = (typeof normalizeProductCategory === 'function') ? normalizeProductCategory(rawCat, name) : rawCat;
+        const match = filter === 'all' || norm === filter || rawCat === filter;
         card.style.display = match ? '' : 'none';
       });
 
       // Filter Table Rows (stock.html)
       document.querySelectorAll('.stock-table-row[data-category]').forEach(row => {
-        const match = filter === 'all' || row.dataset.category === filter;
+        const rawCat = row.dataset.category || '';
+        const name = row.querySelector('.stock-item-name')?.textContent || '';
+        const norm = (typeof normalizeProductCategory === 'function') ? normalizeProductCategory(rawCat, name) : rawCat;
+        const match = filter === 'all' || norm === filter || rawCat === filter;
         row.style.display = match ? '' : 'none';
       });
     });
@@ -867,45 +886,144 @@ function computeProductTotals(product, qty = 1, rates24k = 9240) {
 }
 
 /**
+ * Jewellery Categories Normalizer & Collection Filter Engine
+ */
+function normalizeProductCategory(cat, name = '') {
+  const c = String(cat || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+  if (c === 'necklace' || c === 'necklaces') return 'necklace';
+  if (c === 'bangle' || c === 'bangles') return 'bangle';
+  if (c === 'earring' || c === 'earrings') return 'earrings';
+  if (c === 'ring' || c === 'rings') return 'ring';
+  if (c === 'chain' || c === 'chains') return 'chain';
+  if (c === 'bridal_set' || c === 'bridal' || c === 'bridal_sets' || c === 'bridalset') return 'bridal_set';
+
+  // Auto-classify from product name if category is unassigned
+  const n = String(name || '').toLowerCase();
+  if (n.includes('necklace')) return 'necklace';
+  if (n.includes('bangle')) return 'bangle';
+  if (n.includes('earring')) return 'earrings';
+  if (n.includes('ring') && !n.includes('earring')) return 'ring';
+  if (n.includes('chain')) return 'chain';
+  if (n.includes('bridal')) return 'bridal_set';
+  return c || '';
+}
+
+window.currentCollectionFilter = 'all';
+
+window.applyCollectionCategoryFilter = function(filterKey = 'all') {
+  window.currentCollectionFilter = filterKey;
+  const container = document.querySelector('#collection .product-grid');
+  if (!container) return;
+
+  const products = window.lastLoadedCollectionProducts || window.allFirestoreProducts || [];
+
+  if (Array.isArray(products) && products.length > 0) {
+    const activeProducts = products.filter(p => p.active !== false && p.isActive !== false);
+    const filtered = activeProducts.filter(p => {
+      if (!filterKey || filterKey === 'all') return true;
+      const cat = normalizeProductCategory(p.category || p.categoryId || p.categoryName, p.name);
+      return cat === filterKey;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="collection-empty-state">
+          <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">✨</div>
+          <div class="collection-empty-state-title">No products available in this category yet.</div>
+          <p class="collection-empty-state-text">Explore our other collections or contact us directly on WhatsApp to inquire about customized one gram gold jewellery.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(p => {
+      const imgUrl = getCacheBustedImageUrl(p);
+      const price = (p.sellingPrice || p.price || p.selling_price) ? Number(p.sellingPrice || p.price || p.selling_price) : calculateProductPrice(p);
+      const cat = normalizeProductCategory(p.category || p.categoryId || p.categoryName, p.name);
+      const badgeText = p.badge || p.badgeTag || (p.isFeatured ? 'Bestseller' : '');
+      const badgeHtml = badgeText ? `<span class="product-card-badge">${badgeText}</span>` : '';
+
+      return `
+        <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}" style="animation: fadeInCard 0.35s ease;">
+          <div class="product-card-image">
+            <img src="${imgUrl}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
+            ${badgeHtml}
+            <button class="wishlist-btn" aria-label="Add to wishlist">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+          <div class="product-card-info">
+            <div class="product-card-meta">
+              <span>${p.purity || '24K'}</span>
+              <div class="product-card-meta-dot"></div>
+              <span>${p.purity ? p.purity : '999 Purity'}</span>
+            </div>
+            <h3 class="product-card-name">${p.name}</h3>
+            <p class="product-card-weight">${p.weightGrams || p.weight || 1.0} Gram</p>
+            <div class="product-card-price">₹${price.toLocaleString('en-IN')}</div>
+            <div class="product-card-actions">
+              <a href="product.html?id=${p.id}" class="btn btn-primary" onclick="sessionStorage.setItem('chinni_selected_product_id', '${p.id}'); sessionStorage.setItem('chinni_selected_product_name', '${p.name}'); sessionStorage.setItem('chinni_selected_product_image', '${imgUrl}');">View Product</a>
+              <a href="#" class="btn btn-outline" data-wa-order="${p.name}">Order</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    return;
+  }
+
+  // Fallback for static HTML cards
+  let visibleCount = 0;
+  container.querySelectorAll('.product-card').forEach(card => {
+    const rawCat = card.dataset.category || '';
+    const name = card.querySelector('.product-card-name')?.textContent || '';
+    const norm = normalizeProductCategory(rawCat, name);
+    const match = filterKey === 'all' || norm === filterKey || rawCat === filterKey;
+    if (match) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  const existingEmpty = container.querySelector('.collection-empty-state');
+  if (visibleCount === 0) {
+    if (!existingEmpty) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'collection-empty-state';
+      emptyDiv.innerHTML = `
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">✨</div>
+        <div class="collection-empty-state-title">No products available in this category yet.</div>
+        <p class="collection-empty-state-text">Explore our other collections or contact us directly on WhatsApp to inquire about customized one gram gold jewellery.</p>
+      `;
+      container.appendChild(emptyDiv);
+    }
+  } else if (existingEmpty) {
+    existingEmpty.remove();
+  }
+};
+
+/**
  * 1. Render Homepage Collection Grid (index.html)
  */
 window.renderCollectionProductsGrid = function(products) {
   const container = document.querySelector('#collection .product-grid');
-  if (!container || !products || !products.length) return;
+  if (!container) return;
 
-  container.innerHTML = products.map((p, idx) => {
-    const imgUrl = getCacheBustedImageUrl(p);
-    const price = (p.sellingPrice || p.price) ? Number(p.sellingPrice || p.price) : calculateProductPrice(p);
-    const cat = p.categoryId || (p.categoryName ? p.categoryName.toLowerCase() : 'coins');
-    const badgeText = p.badge || p.badgeTag || (p.isFeatured ? 'Bestseller' : '');
-    const badgeHtml = badgeText ? `<span class="product-card-badge">${badgeText}</span>` : '';
-
-    return `
-      <div class="product-card reveal visible" data-category="${cat}" data-product-id="${p.id}">
-        <div class="product-card-image">
-          <img src="${imgUrl}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='assets/hero_gold_coin.png';" />
-          ${badgeHtml}
-          <button class="wishlist-btn" aria-label="Add to wishlist">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          </button>
-        </div>
-        <div class="product-card-info">
-          <div class="product-card-meta">
-            <span>${p.purity || '24K'}</span>
-            <div class="product-card-meta-dot"></div>
-            <span>${p.purity ? p.purity : '999 Purity'}</span>
-          </div>
-          <h3 class="product-card-name">${p.name}</h3>
-          <p class="product-card-weight">${p.weightGrams || 1.0} Gram</p>
-          <div class="product-card-price">₹${price.toLocaleString('en-IN')}</div>
-          <div class="product-card-actions">
-            <a href="product.html?id=${p.id}" class="btn btn-primary" onclick="sessionStorage.setItem('chinni_selected_product_id', '${p.id}'); sessionStorage.setItem('chinni_selected_product_name', '${p.name}'); sessionStorage.setItem('chinni_selected_product_image', '${imgUrl}');">View Product</a>
-            <a href="#" class="btn btn-outline" data-wa-order="${p.name}">Order</a>
-          </div>
-        </div>
+  if (!products || !products.length) {
+    container.innerHTML = `
+      <div class="collection-empty-state">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">✨</div>
+        <div class="collection-empty-state-title">No products available yet.</div>
+        <p class="collection-empty-state-text">Check back soon for our newest arrivals.</p>
       </div>
     `;
-  }).join('');
+    return;
+  }
+
+  window.lastLoadedCollectionProducts = products;
+  window.applyCollectionCategoryFilter(window.currentCollectionFilter || 'all');
 };
 
 /**

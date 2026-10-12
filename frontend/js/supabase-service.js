@@ -152,6 +152,9 @@ class SupabaseDataService {
           gstPercentage: 3,
           stockQuantity: Number(p.stock_quantity) || 10,
           stock_quantity: Number(p.stock_quantity) || 10,
+          category: p.category || '',
+          categoryId: p.category || '',
+          categoryName: p.category || '',
           isFeatured: Boolean(p.featured),
           featured: Boolean(p.featured),
           isActive: p.active !== false,
@@ -201,6 +204,9 @@ class SupabaseDataService {
           name: data.name,
           slug: data.slug,
           sku: data.sku,
+          category: data.category || '',
+          categoryId: data.category || '',
+          categoryName: data.category || '',
           weightGrams: data.weight,
           weight: data.weight,
           purity: data.purity,
@@ -300,11 +306,29 @@ class SupabaseDataService {
       const stock_quantity = Number(productData.stockQuantity || productData.stock || baseProduct.stock_quantity) || 10;
       const featured = productData.featured !== undefined ? Boolean(productData.featured) : (productData.isFeatured !== undefined ? Boolean(productData.isFeatured) : Boolean(baseProduct.featured));
       const active = productData.isActive !== undefined ? Boolean(productData.isActive) : (baseProduct.active !== undefined ? Boolean(baseProduct.active) : true);
+      const rawCategory = productData.category !== undefined ? productData.category : (productData.categoryId !== undefined ? productData.categoryId : (baseProduct.category || ''));
+      let category = (rawCategory || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+      if (category.includes('necklace')) category = 'necklace';
+      else if (category.includes('bangle')) category = 'bangle';
+      else if (category.includes('earring')) category = 'earrings';
+      else if (category.includes('ring') && !category.includes('earring')) category = 'ring';
+      else if (category.includes('chain')) category = 'chain';
+      else if (category.includes('bridal')) category = 'bridal_set';
+      else if (!category && name) {
+        const n = name.toLowerCase();
+        if (n.includes('necklace')) category = 'necklace';
+        else if (n.includes('bangle')) category = 'bangle';
+        else if (n.includes('earring')) category = 'earrings';
+        else if (n.includes('ring') && !n.includes('earring')) category = 'ring';
+        else if (n.includes('chain')) category = 'chain';
+        else if (n.includes('bridal')) category = 'bridal_set';
+      }
 
       const cleanPayload = {
         name,
         slug,
         sku,
+        category,
         description,
         weight,
         purity,

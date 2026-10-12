@@ -160,9 +160,20 @@
             <div class="section-header">
               <div>
                 <div class="section-header-title">Product Names & Images</div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Update product names and jewelry pictures with built-in AI enhancement.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Update product names, categories and jewelry pictures with instant Supabase sync.</p>
               </div>
               <button class="btn btn-primary" id="btn-open-add-product-modal">+ Add Product</button>
+            </div>
+
+            <!-- Admin Category Filter Tabs -->
+            <div class="admin-category-filters" id="admin-category-filters">
+              <button type="button" class="admin-filter-pill active" data-admin-category="all">All</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="necklace">Necklace</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="bangle">Bangle</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="earrings">Earrings</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="ring">Ring</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="chain">Chain</button>
+              <button type="button" class="admin-filter-pill" data-admin-category="bridal_set">Bridal Set</button>
             </div>
             
             <div class="table-responsive">
@@ -171,13 +182,15 @@
                   <tr>
                     <th style="width: 70px;">Image</th>
                     <th>Product Name</th>
+                    <th>Category</th>
                     <th>Price</th>
+                    <th>Stock</th>
                     <th>Status</th>
                     <th style="text-align: right;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="products-table-tbody">
-                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products...</td></tr>
+                  <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading products from Supabase...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -352,15 +365,40 @@
           
           <div class="form-group">
             <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Product Name *</label>
-            <input type="text" id="pm-name" class="form-control" placeholder="e.g. Signature Gold Coin" required style="font-size: 1rem;" />
+            <input type="text" id="pm-name" class="form-control" placeholder="e.g. Signature Gold Necklace" required style="font-size: 1rem;" />
           </div>
 
           <div class="form-group">
-            <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Price (₹) *</label>
-            <div style="position: relative;">
-              <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--gold-light); pointer-events: none;">₹</span>
-              <input type="number" id="pm-price" class="form-control" placeholder="9520" min="0" step="1" required style="padding-left: 32px; font-size: 1rem; font-weight: 600; color: #fff;" />
+            <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Category *</label>
+            <select id="pm-category" class="form-control" required style="font-size: 0.95rem; background: #1a1d26; color: #fff; border-color: rgba(212,175,55,0.3);">
+              <option value="" disabled selected>Select Category...</option>
+              <option value="necklace">Necklace</option>
+              <option value="bangle">Bangle</option>
+              <option value="earrings">Earrings</option>
+              <option value="ring">Ring</option>
+              <option value="chain">Chain</option>
+              <option value="bridal_set">Bridal Set</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Price (₹) *</label>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--gold-light); pointer-events: none;">₹</span>
+                <input type="number" id="pm-price" class="form-control" placeholder="9520" min="0" step="1" required style="padding-left: 32px; font-size: 1rem; font-weight: 600; color: #fff;" />
+              </div>
             </div>
+
+            <div class="form-group">
+              <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Stock Quantity *</label>
+              <input type="number" id="pm-stock" class="form-control" placeholder="10" min="0" step="1" value="10" required style="font-size: 1rem; font-weight: 600; color: #fff;" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight: 600; color: #fff; margin-bottom: 0.4rem; display: block;">Description (Optional)</label>
+            <textarea id="pm-description" class="form-control" rows="2" placeholder="Crafted in 1 Gram pure gold..." style="font-size: 0.85rem; color: #fff;"></textarea>
           </div>
 
           <div class="form-group">
