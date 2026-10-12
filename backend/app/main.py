@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Production-Ready REST API for CHINNI ONE GRAM GOLD Business.",
+    description="Production-Ready REST API for CHINNI ONE GRAMGOLD Business.",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan
@@ -131,7 +131,7 @@ def serve_root():
         index_file = os.path.join(d, "index.html")
         if os.path.exists(index_file):
             return FileResponse(index_file)
-    return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs", "status": "online"}
+    return {"brand": "CHINNI ONE GRAMGOLD", "docs": "/docs", "status": "online"}
 
 @app.get("/favicon.ico")
 def serve_favicon_ico():
@@ -152,7 +152,7 @@ def serve_favicon_svg():
 @app.get("/api")
 @app.get("/api/")
 def api_status():
-    return {"brand": "CHINNI ONE GRAM GOLD", "docs": "/docs", "status": "online"}
+    return {"brand": "CHINNI ONE GRAMGOLD", "docs": "/docs", "status": "online"}
 
 @app.get("/{page_name}.html")
 @app.get("/{page_name}")

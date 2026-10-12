@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "CHINNI ONE GRAM GOLD API"
+    PROJECT_NAME: str = "CHINNI ONE GRAMGOLD API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
     

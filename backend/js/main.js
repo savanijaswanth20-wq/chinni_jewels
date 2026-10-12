@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Main JavaScript
+   CHINNI ONE GRAMGOLD — Main JavaScript
    ═══════════════════════════════════════════════════════════ */
 
 const WA_NUMBER = '919542124161';
@@ -175,7 +175,7 @@ document.addEventListener('click', (e) => {
   const waGenBtn = e.target.closest('[data-wa-general]');
   if (waGenBtn) {
     e.preventDefault();
-    const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAM GOLD. Please help me with pricing and availability.`;
+    const msg = `Hello! I'm interested in your 1 Gram Gold products at CHINNI ONE GRAMGOLD. Please help me with pricing and availability.`;
     window.open(waLink(msg), '_blank');
     return;
   }
@@ -591,7 +591,7 @@ function openSearchModal() {
     orderBtn.innerHTML = `Creating WhatsApp Order...`;
 
     let orderId = generateOrderId();
-    const messageText = `🪙 *NEW GOLD ORDER — CHINNI ONE GRAM GOLD*\n\n` +
+    const messageText = `🪙 *NEW GOLD ORDER — CHINNI ONE GRAMGOLD*\n\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
       `*ORDER ID:* ${orderId}\n\n` +
       `*PRODUCT DETAILS:*\n` +
@@ -765,7 +765,7 @@ function generateOrderId() {
     bulkOrderBtn.addEventListener('click', () => {
       const qty = document.querySelector('#bulk-qty')?.value || 1;
       const total = document.querySelector('#bulk-grand-total')?.textContent || '';
-      const msg = `👑 *BULK STOCK INQUIRY — CHINNI ONE GRAM GOLD*\n\n` +
+      const msg = `👑 *BULK STOCK INQUIRY — CHINNI ONE GRAMGOLD*\n\n` +
         `Quantity: *${qty} Grams* (24K Pure Gold Coins)\n` +
         `Estimated Total: *${total}*\n\n` +
         `Hello! I would like to place a bulk gold stock order. Please share availability and payment terms.`;

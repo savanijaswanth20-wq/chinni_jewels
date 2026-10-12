@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Supabase Client Configuration
+   CHINNI ONE GRAMGOLD — Supabase Client Configuration
    ═══════════════════════════════════════════════════════════ */
 
 (function initSupabaseClient() {

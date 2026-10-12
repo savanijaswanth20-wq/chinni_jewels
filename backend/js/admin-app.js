@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHINNI ONE GRAM GOLD — Admin Dashboard Controller
+   CHINNI ONE GRAMGOLD — Admin Dashboard Controller
    Focused on: Product Names & Images, Shipping Price, Hero Section, & AI Studio
    ═══════════════════════════════════════════════════════════ */
 
