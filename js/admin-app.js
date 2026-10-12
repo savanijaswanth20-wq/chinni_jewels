@@ -947,7 +947,7 @@ class AdminApp {
   getHeroDefaults() {
     return {
       badge: "Crafted in Pure Gold",
-      heading: "Pure Gold.\nSimply Yours.",
+      heading: "One Gram Gold.\nSimply Yours.",
       subtitle: "Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.",
       btnPrimary: "Explore Collection",
       btnSecondary: "Order on WhatsApp",
@@ -983,7 +983,7 @@ class AdminApp {
 
   updateHeroLivePreview() {
     const badgeVal = document.querySelector('#hero-input-badge')?.value || "Crafted in Pure Gold";
-    const headingVal = document.querySelector('#hero-input-heading')?.value || "Pure Gold.\nSimply Yours.";
+    const headingVal = document.querySelector('#hero-input-heading')?.value || "One Gram Gold.\nSimply Yours.";
     const subtitleVal = document.querySelector('#hero-input-subtitle')?.value || "";
     const btnPrimaryVal = document.querySelector('#hero-input-btn-primary')?.value || "Explore Collection";
     const btnSecondaryVal = document.querySelector('#hero-input-btn-secondary')?.value || "Order on WhatsApp";
@@ -1137,7 +1137,7 @@ class AdminApp {
 
         const heroData = {
           badge: document.querySelector('#hero-input-badge')?.value.trim() || "Crafted in Pure Gold",
-          heading: document.querySelector('#hero-input-heading')?.value.trim() || "Pure Gold.\nSimply Yours.",
+          heading: document.querySelector('#hero-input-heading')?.value.trim() || "One Gram Gold.\nSimply Yours.",
           subtitle: document.querySelector('#hero-input-subtitle')?.value.trim() || "",
           btnPrimary: document.querySelector('#hero-input-btn-primary')?.value.trim() || "Explore Collection",
           btnSecondary: document.querySelector('#hero-input-btn-secondary')?.value.trim() || "Order on WhatsApp",

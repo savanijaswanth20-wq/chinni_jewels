@@ -610,7 +610,7 @@ class SupabaseDataService {
         homepageData = localData || {
           hero: {
             badge: 'Crafted in Pure Gold',
-            heading: data.hero_title || 'Pure Gold.\nSimply Yours.',
+            heading: (data.hero_title ? data.hero_title.replace(/Pure Gold\./g, 'One Gram Gold.') : 'One Gram Gold.\nSimply Yours.'),
             subtitle: data.hero_subtitle || 'Discover our exquisite 1 Gram Gold collection, crafted for celebrations, gifting and timeless moments.',
             imageUrl: data.hero_image_url || 'assets/hero_gold_coin.png'
           },

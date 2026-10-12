@@ -14,13 +14,21 @@
       const localHero = localStorage.getItem('chinni_hero_settings');
       if (localHero) {
         const parsed = JSON.parse(localHero);
+        let updated = false;
         if (!parsed.mediaUrl || parsed.mediaUrl.includes('hero_gold_coin.png')) {
           parsed.mediaUrl = 'assets/showcase.mp4';
+          updated = true;
+        }
+        if (parsed.heading && parsed.heading.includes('Pure Gold.')) {
+          parsed.heading = parsed.heading.replace(/Pure Gold\./g, 'One Gram Gold.');
+          updated = true;
+        }
+        if (updated) {
           localStorage.setItem('chinni_hero_settings', JSON.stringify(parsed));
         }
         syncHeroSectionUI(parsed);
       } else {
-        syncHeroSectionUI({ mediaUrl: 'assets/showcase.mp4' });
+        syncHeroSectionUI({ heading: 'One Gram Gold.\nSimply Yours.', mediaUrl: 'assets/showcase.mp4' });
       }
     } catch(e) {}
 
@@ -203,11 +211,12 @@
     if (hero.heading) {
       const headingEl = document.querySelector('.hero-heading');
       if (headingEl) {
-        if (hero.heading.includes('\n')) {
-          const parts = hero.heading.split('\n');
+        const text = String(hero.heading).replace(/Pure Gold\./g, 'One Gram Gold.');
+        if (text.includes('\n')) {
+          const parts = text.split('\n');
           headingEl.innerHTML = parts[0] + '<br><em>' + parts.slice(1).join(' ') + '</em>';
         } else {
-          headingEl.innerHTML = hero.heading;
+          headingEl.innerHTML = text;
         }
       }
     }
