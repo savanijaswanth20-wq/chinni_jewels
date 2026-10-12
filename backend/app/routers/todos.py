@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from app.services.supabase_client import get_supabase
 from app.services.auth_service import get_current_user
@@ -13,8 +14,6 @@ class TodoUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     completed: Optional[bool] = None
-
-from typing import Optional
 
 @router.get("/")
 async def get_todos(user: dict = Depends(get_current_user)):
