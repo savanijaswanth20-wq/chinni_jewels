@@ -124,6 +124,8 @@ if os.path.exists(js_dir):
 _SAFE_PAGE_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
 
 @app.get("/")
+@app.get("/index")
+@app.get("/index.html")
 def serve_root():
     for d in [ROOT_DIR] + _CANDIDATE_DIRS:
         index_file = os.path.join(d, "index.html")

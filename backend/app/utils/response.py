@@ -1,5 +1,6 @@
 from typing import Any, Optional
 from pydantic import BaseModel
+from fastapi.encoders import jsonable_encoder
 
 class StandardResponse(BaseModel):
     success: bool
@@ -9,7 +10,7 @@ class StandardResponse(BaseModel):
 def success_response(data: Any) -> dict:
     return {
         "success": True,
-        "data": data,
+        "data": jsonable_encoder(data),
         "error": None
     }
 
@@ -20,6 +21,6 @@ def error_response(code: str, message: str, details: Any = None) -> dict:
         "error": {
             "code": code,
             "message": message,
-            "details": details
+            "details": jsonable_encoder(details) if details is not None else None
         }
     }

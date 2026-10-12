@@ -40,6 +40,12 @@
       }
     },
     {
+      "source": "/",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
       "source": "/api/(.*)",
       "destination": {
         "service": "backend"
@@ -70,7 +76,19 @@
       }
     },
     {
-      "source": "/(.*)",
+      "source": "/favicon.ico",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/favicon.svg",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/:path*",
       "destination": {
         "service": "backend"
       }
