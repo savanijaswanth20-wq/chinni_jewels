@@ -69,6 +69,15 @@
       }).catch(() => {});
     }
 
+    // 2.1 Contact Settings & Instagram Page Sync
+    if (window.SupabaseService && window.SupabaseService.getContactSettings) {
+      window.SupabaseService.getContactSettings().then(res => {
+        if (res.success && res.data) {
+          syncBrandingUI(res.data);
+        }
+      }).catch(() => {});
+    }
+
     // 3. Supabase Realtime Listener for Section Images (Instant Cross-Device Sync)
     if (window.SupabaseService && window.SupabaseService.subscribeToSettings) {
       window.SupabaseService.subscribeToSettings((newSettings) => {
@@ -397,6 +406,12 @@
 
     if (brand.address) {
       document.querySelectorAll('[data-brand-address]').forEach(el => el.textContent = brand.address);
+    }
+
+    if (brand.instagram) {
+      document.querySelectorAll('a[aria-label="Instagram"], [data-brand-instagram]').forEach(el => {
+        el.href = brand.instagram;
+      });
     }
   }
 

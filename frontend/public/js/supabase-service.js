@@ -824,6 +824,33 @@ class SupabaseDataService {
     }
   }
 
+  // 12. CONTACT SETTINGS & SOCIAL LINKS
+  async getContactSettings() {
+    const fallback = {
+      phone: '+91 95421 24161',
+      email: 'hello@chinnijewels.com',
+      address: 'Chinni Jewels Corporate Suite, Hyderabad, India',
+      instagram: 'https://www.instagram.com/chinni_jewels_official/?hl=en'
+    };
+    if (!this.db) {
+      return { success: true, data: fallback };
+    }
+    try {
+      const { data, error } = await this.db
+        .from('contact_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) {
+        return { success: true, data: fallback };
+      }
+      return { success: true, data: { ...fallback, ...data } };
+    } catch (err) {
+      return { success: true, data: fallback };
+    }
+  }
+
 }
 
 window.SupabaseService = new SupabaseDataService();

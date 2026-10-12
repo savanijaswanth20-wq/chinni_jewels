@@ -201,6 +201,7 @@ CREATE TABLE IF NOT EXISTS public.contact_settings (
     phone TEXT DEFAULT '+91 95421 24161',
     email TEXT DEFAULT 'hello@chinnijewels.com',
     address TEXT DEFAULT 'Chinni Jewels Corporate Suite, Hyderabad, India',
+    instagram TEXT DEFAULT 'https://www.instagram.com/chinni_jewels_official/?hl=en',
     map_url TEXT,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -367,6 +368,16 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.whatsapp_settings (id, phone_number, enabled) VALUES 
 ('main', '919542124161', true)
 ON CONFLICT (id) DO NOTHING;
+
+-- Initial Contact Settings
+INSERT INTO public.contact_settings (id, phone, email, address, instagram) VALUES
+('main', '+91 95421 24161', 'hello@chinnijewels.com', 'Chinni Jewels Corporate Suite, Hyderabad, India', 'https://www.instagram.com/chinni_jewels_official/?hl=en')
+ON CONFLICT (id) DO UPDATE SET instagram = EXCLUDED.instagram;
+
+-- Initial Social Links
+INSERT INTO public.social_links (platform, url, active) VALUES
+('instagram', 'https://www.instagram.com/chinni_jewels_official/?hl=en', true)
+ON CONFLICT DO NOTHING;
 
 -- Initial Categories
 INSERT INTO public.categories (id, name, slug, description) VALUES 
