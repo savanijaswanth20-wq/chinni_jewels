@@ -1,4 +1,8 @@
 {
+  "name": "chinni-jewels",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@supabase/server": "^1.9.1",
