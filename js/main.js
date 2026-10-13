@@ -1504,6 +1504,368 @@ if (window.allFirestoreProducts && window.allFirestoreProducts.length) {
   });
 })();
 
+/* ══════════════════════════════════════════════════════════
+   THE COLLECTION — AUTOPLAY HERO PRODUCT VIDEOS & CAROUSEL
+   ══════════════════════════════════════════════════════════ */
+(function initCollectionHeroVideos() {
+  let leftVideos = [];
+  let rightVideos = [];
+  let allVideos = [];
+  let leftIndex = 0;
+  let rightIndex = 0;
+  let rotationTimer = null;
+  let isSectionVisible = true;
+  let isLeftPrimaryActive = true;
+  let isRightPrimaryActive = true;
+
+  const defaultCollectionVideos = [
+    {
+      id: 'def-vid-1',
+      title: 'Royal Gold Necklace Collection',
+      category: 'necklace',
+      position: 'left',
+      is_active: true,
+      display_order: 1,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+      poster_url: 'assets/product_gold_pendant.png'
+    },
+    {
+      id: 'def-vid-2',
+      title: 'Filigree Craft Gold Earrings',
+      category: 'earrings',
+      position: 'left',
+      is_active: true,
+      display_order: 2,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+      poster_url: 'assets/featured_product.png'
+    },
+    {
+      id: 'def-vid-3',
+      title: '24K Hallmark Gold Chains',
+      category: 'chain',
+      position: 'left',
+      is_active: true,
+      display_order: 3,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+      poster_url: 'assets/hero_gold_coin.png'
+    },
+    {
+      id: 'def-vid-4',
+      title: 'Traditional Handcrafted Bangles',
+      category: 'bangle',
+      position: 'right',
+      is_active: true,
+      display_order: 1,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+      poster_url: 'assets/product_gold_bangle.png'
+    },
+    {
+      id: 'def-vid-5',
+      title: 'Timeless Pure Gold Rings',
+      category: 'ring',
+      position: 'right',
+      is_active: true,
+      display_order: 2,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+      poster_url: 'assets/product_gold_bar.png'
+    },
+    {
+      id: 'def-vid-6',
+      title: 'Auspicious Bridal Jewellery Set',
+      category: 'bridal_set',
+      position: 'right',
+      is_active: true,
+      display_order: 3,
+      video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+      poster_url: 'assets/product_gold_gift.png'
+    }
+  ];
+
+  function getCategoryLabel(cat) {
+    const map = {
+      necklace: 'NECKLACES',
+      bangle: 'BANGLES',
+      earrings: 'EARRINGS',
+      ring: 'RINGS',
+      chain: 'CHAINS',
+      bridal_set: 'BRIDAL SETS'
+    };
+    return map[cat] || (String(cat || 'JEWELLERY').toUpperCase());
+  }
+
+  function setupVideoElement(v) {
+    if (!v) return;
+    v.muted = true;
+    v.playsInline = true;
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+  }
+
+  function playVideoSafely(v) {
+    if (!v || !isSectionVisible) return;
+    setupVideoElement(v);
+    const p = v.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {
+        v.muted = true;
+        v.play().catch(() => {});
+      });
+    }
+  }
+
+  function transitionCardVideo(side, nextItem) {
+    if (!nextItem) return;
+    const isLeft = side === 'left';
+    const primaryId = isLeft ? 'collection-video-left-primary' : 'collection-video-right-primary';
+    const secondaryId = isLeft ? 'collection-video-left-secondary' : 'collection-video-right-secondary';
+    const categoryId = isLeft ? 'collection-left-category' : 'collection-right-category';
+    const titleId = isLeft ? 'collection-left-title' : 'collection-right-title';
+
+    const pEl = document.getElementById(primaryId);
+    const sEl = document.getElementById(secondaryId);
+    const catEl = document.getElementById(categoryId);
+    const titleEl = document.getElementById(titleId);
+
+    if (!pEl || !sEl) return;
+
+    const isPrimaryActive = isLeft ? isLeftPrimaryActive : isRightPrimaryActive;
+    const currentVideo = isPrimaryActive ? pEl : sEl;
+    const incomingVideo = isPrimaryActive ? sEl : pEl;
+
+    incomingVideo.poster = nextItem.poster_url || '';
+    if (incomingVideo.src !== nextItem.video_url) {
+      incomingVideo.src = nextItem.video_url;
+      incomingVideo.load();
+    }
+    setupVideoElement(incomingVideo);
+
+    const onCanPlay = () => {
+      incomingVideo.removeEventListener('loadeddata', onCanPlay);
+      playVideoSafely(incomingVideo);
+
+      incomingVideo.classList.remove('fade-layer');
+      incomingVideo.classList.add('active-layer');
+      currentVideo.classList.remove('active-layer');
+      currentVideo.classList.add('fade-layer');
+
+      if (isLeft) {
+        isLeftPrimaryActive = !isLeftPrimaryActive;
+      } else {
+        isRightPrimaryActive = !isRightPrimaryActive;
+      }
+
+      if (catEl) {
+        catEl.style.opacity = '0';
+        setTimeout(() => {
+          catEl.textContent = getCategoryLabel(nextItem.category);
+          catEl.style.opacity = '1';
+        }, 200);
+      }
+      if (titleEl) {
+        titleEl.style.opacity = '0';
+        setTimeout(() => {
+          titleEl.textContent = nextItem.title || 'Collection Showcase';
+          titleEl.style.opacity = '1';
+        }, 200);
+      }
+
+      setTimeout(() => {
+        try { currentVideo.pause(); } catch(e) {}
+      }, 900);
+    };
+
+    incomingVideo.addEventListener('loadeddata', onCanPlay, { once: true });
+    setTimeout(() => {
+      if (!incomingVideo.classList.contains('active-layer')) {
+        onCanPlay();
+      }
+    }, 600);
+  }
+
+  function advanceRotations() {
+    if (!isSectionVisible) return;
+
+    if (leftVideos.length > 1) {
+      leftIndex = (leftIndex + 1) % leftVideos.length;
+      transitionCardVideo('left', leftVideos[leftIndex]);
+    }
+
+    if (rightVideos.length > 1) {
+      rightIndex = (rightIndex + 1) % rightVideos.length;
+      transitionCardVideo('right', rightVideos[rightIndex]);
+    }
+  }
+
+  function renderMobileCarousel(items) {
+    const track = document.getElementById('collection-mobile-track');
+    const dotsWrap = document.getElementById('collection-carousel-dots');
+    if (!track || !items || !items.length) return;
+
+    track.innerHTML = '';
+    if (dotsWrap) dotsWrap.innerHTML = '';
+
+    items.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'collection-mobile-video-item';
+      card.dataset.index = idx;
+      card.innerHTML = `
+        <video
+          class="collection-mobile-video-el"
+          autoplay
+          muted
+          loop
+          playsinline
+          webkit-playsinline
+          preload="metadata"
+          poster="${item.poster_url || ''}"
+          src="${item.video_url || ''}"
+        ></video>
+        <div class="collection-video-gradient"></div>
+        <div class="collection-video-live-indicator">
+          <span class="collection-live-pulse"></span>
+          <span class="collection-live-text">PREVIEW</span>
+        </div>
+        <div class="collection-video-badge">
+          <span class="collection-video-category">${getCategoryLabel(item.category)}</span>
+          <span class="collection-video-title">${item.title || 'Collection Item'}</span>
+        </div>
+      `;
+      track.appendChild(card);
+
+      const v = card.querySelector('video');
+      setupVideoElement(v);
+      playVideoSafely(v);
+
+      if (dotsWrap) {
+        const dot = document.createElement('button');
+        dot.className = `collection-carousel-dot ${idx === 0 ? 'active' : ''}`;
+        dot.setAttribute('aria-label', `Slide ${idx + 1}`);
+        dot.addEventListener('click', () => {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        });
+        dotsWrap.appendChild(dot);
+      }
+    });
+
+    track.addEventListener('scroll', () => {
+      const cards = track.querySelectorAll('.collection-mobile-video-item');
+      const dots = dotsWrap ? dotsWrap.querySelectorAll('.collection-carousel-dot') : [];
+      let minDiff = Infinity;
+      let activeIdx = 0;
+      const trackCenter = track.scrollLeft + track.clientWidth / 2;
+
+      cards.forEach((c, i) => {
+        const cardCenter = c.offsetLeft + c.clientWidth / 2;
+        const diff = Math.abs(trackCenter - cardCenter);
+        if (diff < minDiff) {
+          minDiff = diff;
+          activeIdx = i;
+        }
+      });
+
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === activeIdx);
+      });
+    }, { passive: true });
+  }
+
+  function startRotationTimer() {
+    if (rotationTimer) clearInterval(rotationTimer);
+    rotationTimer = setInterval(advanceRotations, 7000);
+  }
+
+  function stopRotationTimer() {
+    if (rotationTimer) {
+      clearInterval(rotationTimer);
+      rotationTimer = null;
+    }
+  }
+
+  window.renderCollectionVideos = function(videos) {
+    if (!Array.isArray(videos) || videos.length === 0) {
+      videos = defaultCollectionVideos;
+    }
+
+    allVideos = videos.filter(v => v.is_active !== false);
+    if (!allVideos.length) allVideos = defaultCollectionVideos;
+
+    leftVideos = allVideos.filter(v => v.position === 'left' || v.position === 'both');
+    rightVideos = allVideos.filter(v => v.position === 'right' || v.position === 'both');
+
+    if (!leftVideos.length) leftVideos = allVideos;
+    if (!rightVideos.length) rightVideos = allVideos;
+
+    leftIndex = 0;
+    rightIndex = 0;
+
+    // Initialize Left Card
+    const leftItem = leftVideos[0];
+    const leftP = document.getElementById('collection-video-left-primary');
+    const leftCat = document.getElementById('collection-left-category');
+    const leftTitle = document.getElementById('collection-left-title');
+    if (leftP && leftItem) {
+      leftP.poster = leftItem.poster_url || '';
+      leftP.src = leftItem.video_url;
+      setupVideoElement(leftP);
+      playVideoSafely(leftP);
+      if (leftCat) leftCat.textContent = getCategoryLabel(leftItem.category);
+      if (leftTitle) leftTitle.textContent = leftItem.title || 'Collection Showcase';
+    }
+
+    // Initialize Right Card
+    const rightItem = rightVideos[0];
+    const rightP = document.getElementById('collection-video-right-primary');
+    const rightCat = document.getElementById('collection-right-category');
+    const rightTitle = document.getElementById('collection-right-title');
+    if (rightP && rightItem) {
+      rightP.poster = rightItem.poster_url || '';
+      rightP.src = rightItem.video_url;
+      setupVideoElement(rightP);
+      playVideoSafely(rightP);
+      if (rightCat) rightCat.textContent = getCategoryLabel(rightItem.category);
+      if (rightTitle) rightTitle.textContent = rightItem.title || 'Collection Showcase';
+    }
+
+    // Initialize Mobile Carousel
+    renderMobileCarousel(allVideos);
+
+    startRotationTimer();
+  };
+
+  // IntersectionObserver to auto-play / pause on viewport visibility
+  document.addEventListener('DOMContentLoaded', () => {
+    const collectionSec = document.getElementById('collection');
+    if (collectionSec && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          isSectionVisible = entry.isIntersecting;
+          const allCollectionVideos = collectionSec.querySelectorAll('video');
+          if (isSectionVisible) {
+            allCollectionVideos.forEach(v => {
+              if (v.classList.contains('active-layer') || v.classList.contains('collection-mobile-video-el')) {
+                playVideoSafely(v);
+              }
+            });
+            startRotationTimer();
+          } else {
+            allCollectionVideos.forEach(v => {
+              try { v.pause(); } catch(e) {}
+            });
+            stopRotationTimer();
+          }
+        });
+      }, { threshold: 0.1 });
+
+      observer.observe(collectionSec);
+    }
+
+    // Auto-init with defaults or cached
+    const initial = window.allCollectionVideos || defaultCollectionVideos;
+    window.renderCollectionVideos(initial);
+  });
+})();
+
 
 
 

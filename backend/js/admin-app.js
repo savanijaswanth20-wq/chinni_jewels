@@ -8,6 +8,9 @@ class AdminApp {
     this.currentView = 'products';
     this.products = [];
     this.adminCategoryFilter = 'all';
+    this.collectionVideos = [];
+    this.videoPositionFilter = 'all';
+    this.videoCategoryFilter = 'all';
     this.init();
   }
 
@@ -51,6 +54,7 @@ class AdminApp {
     this.bindShippingEvents();
     this.bindHeroEvents();
     this.bindAIStudioEvents();
+    this.bindCollectionVideoEvents();
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -189,7 +193,8 @@ class AdminApp {
       const titles = {
         products: "Product Name & Image Management",
         shipping: "Shipping Price Settings",
-        hero: "Hero Section Content & Image Editor"
+        hero: "Hero Section Content & Image Editor",
+        'collection-videos': "Collection Product Video Management"
       };
       titleEl.textContent = titles[viewName] || "Admin Dashboard";
     }
@@ -209,6 +214,8 @@ class AdminApp {
       this.loadShippingData();
     } else if (this.currentView === 'hero') {
       this.loadHeroData();
+    } else if (this.currentView === 'collection-videos') {
+      await this.loadCollectionVideosData();
     }
   }
 
@@ -1236,6 +1243,343 @@ class AdminApp {
       toast.style.transition = 'opacity 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     5. COLLECTION VIDEOS MANAGEMENT (SUPABASE STORAGE & DB)
+     ══════════════════════════════════════════════════════════ */
+  async loadCollectionVideosData() {
+    const tbody = document.querySelector('#collection-videos-table-tbody');
+    if (!tbody) return;
+
+    if (!this.collectionVideos.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading collection videos from Supabase...</td></tr>`;
+    }
+
+    const res = await window.SupabaseService.getCollectionVideos();
+    if (res && res.success && Array.isArray(res.data)) {
+      this.collectionVideos = res.data;
+      this.renderCollectionVideosTable();
+    } else {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">Failed to load videos. Check Supabase connection.</td></tr>`;
+    }
+  }
+
+  renderCollectionVideosTable() {
+    const tbody = document.querySelector('#collection-videos-table-tbody');
+    if (!tbody) return;
+
+    let filtered = this.collectionVideos.slice();
+
+    if (this.videoPositionFilter !== 'all') {
+      filtered = filtered.filter(v => v.position === this.videoPositionFilter || v.position === 'both');
+    }
+
+    if (this.videoCategoryFilter !== 'all') {
+      filtered = filtered.filter(v => this.normalizeCategory(v.category) === this.videoCategoryFilter);
+    }
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No collection videos found for selected filters. Click "+ Add Video" to upload one.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(v => {
+      const posClass = v.position === 'right' ? 'badge-position--right' : (v.position === 'both' ? 'badge-position--both' : 'badge-position--left');
+      const posLabel = v.position === 'right' ? 'Right Column' : (v.position === 'both' ? 'Both Columns' : 'Left Column');
+      const catLabel = this.getCategoryLabel(v.category, v.title);
+      const isChecked = v.is_active !== false ? 'checked' : '';
+
+      return `
+        <tr data-video-id="${v.id}">
+          <td>
+            <div class="video-preview-thumb-box">
+              <img src="${v.poster_url || 'assets/hero_gold_coin.png'}" alt="${v.title}" onerror="this.src='assets/hero_gold_coin.png'" />
+              <div class="video-preview-play-icon">▶</div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: #fff; font-size: 0.92rem;">${v.title}</div>
+            <div style="font-size: 0.72rem; color: #9aa1b1; word-break: break-all; margin-top: 2px;">${v.video_url}</div>
+          </td>
+          <td>
+            <span class="badge-category">${catLabel}</span>
+          </td>
+          <td>
+            <span class="badge-position ${posClass}">${posLabel}</span>
+          </td>
+          <td>
+            <label class="video-status-toggle">
+              <input type="checkbox" class="toggle-cv-active" data-id="${v.id}" ${isChecked} />
+              <span class="video-toggle-slider"></span>
+            </label>
+          </td>
+          <td style="text-align: right;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button type="button" class="btn btn-secondary btn-sm btn-edit-cv" data-id="${v.id}" title="Edit Video">
+                ✏️ Edit
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm btn-delete-cv" data-id="${v.id}" style="color: #ff5252; border-color: rgba(255,82,82,0.3);" title="Delete Video">
+                🗑️ Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Bind row actions
+    tbody.querySelectorAll('.toggle-cv-active').forEach(chk => {
+      chk.addEventListener('change', async () => {
+        const id = chk.dataset.id;
+        const isActive = chk.checked;
+        const res = await window.SupabaseService.toggleCollectionVideoActive(id, isActive);
+        if (res.success) {
+          this.showToast(`Video status updated to ${isActive ? 'Active' : 'Inactive'}!`);
+          const item = this.collectionVideos.find(x => x.id === id);
+          if (item) item.is_active = isActive;
+        } else {
+          this.showToast('Error updating status: ' + (res.error || 'Failed'));
+          chk.checked = !isActive;
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-edit-cv').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const item = this.collectionVideos.find(x => x.id === id);
+        if (item) this.openCollectionVideoModal(item);
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-cv').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const item = this.collectionVideos.find(x => x.id === id);
+        if (!item) return;
+
+        if (confirm(`Are you sure you want to delete the video "${item.title}"?`)) {
+          const res = await window.SupabaseService.deleteCollectionVideo(id, item.video_url, item.poster_url);
+          if (res.success) {
+            this.showToast('Collection video deleted successfully!');
+            this.collectionVideos = this.collectionVideos.filter(x => x.id !== id);
+            this.renderCollectionVideosTable();
+          } else {
+            this.showToast('Error deleting video: ' + (res.error || 'Failed'));
+          }
+        }
+      });
+    });
+  }
+
+  bindCollectionVideoEvents() {
+    // Open Add Modal
+    const addBtn = document.querySelector('#btn-open-add-video-modal');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.openCollectionVideoModal(null);
+      });
+    }
+
+    // Modal Close buttons
+    const closeX = document.querySelector('#collection-video-modal-close-x');
+    const cancelBtn = document.querySelector('#collection-video-modal-cancel-btn');
+    if (closeX) closeX.addEventListener('click', () => this.closeCollectionVideoModal());
+    if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeCollectionVideoModal());
+
+    // Position filter pills
+    document.querySelectorAll('#video-position-filters [data-video-pos-filter]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('#video-position-filters [data-video-pos-filter]').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.videoPositionFilter = pill.dataset.videoPosFilter;
+        this.renderCollectionVideosTable();
+      });
+    });
+
+    // Category filter pills
+    document.querySelectorAll('#video-category-filters [data-video-cat-filter]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('#video-category-filters [data-video-cat-filter]').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.videoCategoryFilter = pill.dataset.videoCatFilter;
+        this.renderCollectionVideosTable();
+      });
+    });
+
+    // Trigger video file upload
+    const triggerVideoBtn = document.querySelector('#btn-trigger-video-upload');
+    const videoFileInput = document.querySelector('#cv-video-file-input');
+    if (triggerVideoBtn && videoFileInput) {
+      triggerVideoBtn.addEventListener('click', () => videoFileInput.click());
+      videoFileInput.addEventListener('change', async () => {
+        const file = videoFileInput.files[0];
+        if (!file) return;
+
+        const progressWrap = document.querySelector('#cv-video-upload-progress');
+        const progressBar = document.querySelector('#cv-video-progress-bar');
+        const statusTxt = document.querySelector('#cv-video-status-txt');
+        const percentTxt = document.querySelector('#cv-video-percent-txt');
+
+        if (progressWrap) progressWrap.style.display = 'block';
+
+        const res = await window.SupabaseService.uploadCollectionMediaFile(file, (pct, msg) => {
+          if (progressBar) progressBar.style.width = pct + '%';
+          if (percentTxt) percentTxt.textContent = pct + '%';
+          if (statusTxt) statusTxt.textContent = msg;
+        });
+
+        if (res.success) {
+          const urlInput = document.querySelector('#cv-video-url');
+          if (urlInput) urlInput.value = res.url;
+          this.updateModalVideoPreview(res.url);
+          this.showToast('Video uploaded to Supabase Storage collection-videos successfully! 🎬');
+        } else {
+          alert('Upload failed: ' + (res.error || 'Unknown error'));
+        }
+
+        setTimeout(() => {
+          if (progressWrap) progressWrap.style.display = 'none';
+        }, 1500);
+      });
+    }
+
+    // Trigger poster image file upload
+    const triggerPosterBtn = document.querySelector('#btn-trigger-poster-upload');
+    const posterFileInput = document.querySelector('#cv-poster-file-input');
+    if (triggerPosterBtn && posterFileInput) {
+      triggerPosterBtn.addEventListener('click', () => posterFileInput.click());
+      posterFileInput.addEventListener('change', async () => {
+        const file = posterFileInput.files[0];
+        if (!file) return;
+
+        triggerPosterBtn.disabled = true;
+        triggerPosterBtn.textContent = 'Uploading poster...';
+
+        const res = await window.SupabaseService.uploadCollectionMediaFile(file);
+        triggerPosterBtn.disabled = false;
+        triggerPosterBtn.textContent = '📷 Choose Poster Image';
+
+        if (res.success) {
+          const posterInput = document.querySelector('#cv-poster-url');
+          const thumb = document.querySelector('#cv-poster-thumb');
+          if (posterInput) posterInput.value = res.url;
+          if (thumb) thumb.src = res.url;
+          this.showToast('Poster image uploaded successfully!');
+        } else {
+          alert('Poster upload failed: ' + (res.error || 'Unknown error'));
+        }
+      });
+    }
+
+    // Live preview video input change
+    const videoUrlInput = document.querySelector('#cv-video-url');
+    if (videoUrlInput) {
+      videoUrlInput.addEventListener('input', () => {
+        this.updateModalVideoPreview(videoUrlInput.value.trim());
+      });
+    }
+
+    // Modal submit save video
+    const saveBtn = document.querySelector('#btn-save-video-submit');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const form = document.querySelector('#collection-video-modal-form');
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const id = document.querySelector('#cv-id').value;
+        const title = document.querySelector('#cv-title').value.trim();
+        const category = document.querySelector('#cv-category').value;
+        const position = document.querySelector('#cv-position').value;
+        const video_url = document.querySelector('#cv-video-url').value.trim();
+        const poster_url = document.querySelector('#cv-poster-url').value.trim();
+        const is_active = document.querySelector('#cv-is-active').checked;
+        const display_order = parseInt(document.querySelector('#cv-display-order').value, 10) || 0;
+
+        if (!title || !video_url) {
+          alert("Please fill in Video Title and Video File/URL.");
+          return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving to Supabase...';
+
+        const res = await window.SupabaseService.saveCollectionVideo({
+          id,
+          title,
+          category,
+          position,
+          video_url,
+          poster_url,
+          is_active,
+          display_order
+        });
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Video';
+
+        if (res.success) {
+          this.showToast(id ? 'Video updated successfully! ✨' : 'New collection video added! ✨');
+          this.closeCollectionVideoModal();
+          await this.loadCollectionVideosData();
+        } else {
+          alert('Save failed: ' + (res.error || 'Failed to save video'));
+        }
+      });
+    }
+  }
+
+  updateModalVideoPreview(url) {
+    const videoEl = document.querySelector('#cv-modal-preview-video');
+    if (videoEl) {
+      if (url) {
+        videoEl.src = url;
+        videoEl.load();
+        videoEl.play().catch(() => {});
+      } else {
+        videoEl.removeAttribute('src');
+      }
+    }
+  }
+
+  openCollectionVideoModal(video = null) {
+    const modal = document.querySelector('#collection-video-modal');
+    const modalTitle = document.querySelector('#collection-video-modal-title');
+    if (!modal) return;
+
+    document.querySelector('#cv-id').value = video?.id || '';
+    document.querySelector('#cv-title').value = video?.title || '';
+    document.querySelector('#cv-category').value = video?.category || 'necklace';
+    document.querySelector('#cv-position').value = video?.position || 'left';
+    document.querySelector('#cv-video-url').value = video?.video_url || '';
+    document.querySelector('#cv-poster-url').value = video?.poster_url || '';
+    document.querySelector('#cv-is-active').checked = video ? (video.is_active !== false) : true;
+    document.querySelector('#cv-display-order').value = video?.display_order || 1;
+
+    const thumb = document.querySelector('#cv-poster-thumb');
+    if (thumb) thumb.src = video?.poster_url || 'assets/product_gold_pendant.png';
+
+    this.updateModalVideoPreview(video?.video_url || '');
+
+    if (modalTitle) {
+      modalTitle.textContent = video ? 'Edit Collection Video' : 'Add Collection Video';
+    }
+
+    modal.classList.add('active');
+  }
+
+  closeCollectionVideoModal() {
+    const modal = document.querySelector('#collection-video-modal');
+    if (modal) modal.classList.remove('active');
+    const previewVideo = document.querySelector('#cv-modal-preview-video');
+    if (previewVideo) {
+      try { previewVideo.pause(); } catch(e) {}
+    }
   }
 }
 

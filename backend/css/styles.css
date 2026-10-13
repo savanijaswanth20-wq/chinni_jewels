@@ -710,6 +710,291 @@ ul { list-style: none; }
   margin-top: 12px;
 }
 
+/* ══════════════════════════════════════════════════════════
+   THE COLLECTION — 3-COLUMN HERO LAYOUT & PRODUCT VIDEOS
+   ══════════════════════════════════════════════════════════ */
+.collection-hero-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  margin-bottom: 52px;
+  position: relative;
+  width: 100%;
+}
+
+.collection-header-center {
+  flex: 0 1 500px;
+  max-width: 500px;
+  text-align: center;
+  margin-bottom: 0 !important;
+  z-index: 2;
+}
+
+.collection-video-card {
+  flex: 0 0 280px;
+  width: 280px;
+  max-width: 290px;
+  position: relative;
+  z-index: 2;
+}
+
+.collection-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  height: 380px;
+  border-radius: 22px;
+  overflow: hidden;
+  background-color: #faf7f2;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06), 0 2px 10px rgba(212, 175, 55, 0.12);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+}
+
+.collection-video-frame:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.1), 0 4px 18px rgba(212, 175, 55, 0.22);
+  border-color: rgba(212, 175, 55, 0.65);
+}
+
+/* Video element with slow subtle zoom and smooth crossfade transitions */
+.collection-video-el {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+  pointer-events: none;
+  background-color: #faf7f2;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(1);
+}
+
+.collection-video-frame:hover .collection-video-el {
+  transform: scale(1.03);
+}
+
+.collection-video-el.active-layer {
+  opacity: 1;
+  z-index: 1;
+}
+
+.collection-video-el.fade-layer {
+  opacity: 0;
+  z-index: 0;
+}
+
+/* Subtle luxury gradient overlay at bottom of video */
+.collection-video-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(17, 17, 19, 0.88) 0%, rgba(17, 17, 19, 0.28) 45%, rgba(17, 17, 19, 0) 72%);
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 22px;
+}
+
+/* Video badge / category title */
+.collection-video-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.collection-video-category {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f4d068;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.collection-video-title {
+  font-family: var(--serif, 'Playfair Display', serif);
+  font-size: 0.96rem;
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Subtle live preview chip at top right */
+.collection-video-live-indicator {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(19, 21, 27, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  padding: 3px 8px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.collection-live-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+  animation: pulse-dot 2s infinite;
+}
+
+.collection-live-text {
+  font-family: var(--sans);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #f0f2f5;
+  text-transform: uppercase;
+}
+
+/* Mobile swipeable video carousel */
+.collection-mobile-carousel-wrap {
+  display: none;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  margin-top: 18px;
+  margin-bottom: 24px;
+}
+
+.collection-mobile-carousel-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 8px 16px;
+}
+
+.collection-mobile-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.collection-mobile-video-item {
+  flex: 0 0 82vw;
+  max-width: 310px;
+  scroll-snap-align: center;
+  position: relative;
+  aspect-ratio: 3 / 4;
+  height: 380px;
+  border-radius: 22px;
+  overflow: hidden;
+  background-color: #faf7f2;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.collection-mobile-video-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+  display: block;
+}
+
+.collection-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.collection-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.collection-carousel-dot.active {
+  background: var(--gold, #d4af37);
+  width: 22px;
+  border-radius: 10px;
+}
+
+/* Tablet & Responsive Sizing */
+@media (max-width: 1100px) {
+  .collection-hero-wrap {
+    gap: 24px;
+  }
+  .collection-video-card {
+    flex: 0 0 230px;
+    width: 230px;
+  }
+  .collection-video-frame {
+    height: 320px;
+  }
+}
+
+@media (max-width: 890px) {
+  .collection-hero-wrap {
+    gap: 16px;
+  }
+  .collection-video-card {
+    flex: 0 0 190px;
+    width: 190px;
+  }
+  .collection-video-frame {
+    height: 270px;
+    border-radius: 18px;
+  }
+  .collection-video-el {
+    border-radius: 18px;
+  }
+  .collection-video-title {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .collection-hero-wrap {
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+  .collection-video-card--left,
+  .collection-video-card--right {
+    display: none !important;
+  }
+  .collection-header-center {
+    flex: 1 1 100%;
+    max-width: 100%;
+    width: 100%;
+  }
+  .collection-mobile-carousel-wrap {
+    display: block;
+  }
+}
+
+
 /* Filter Tabs - Luxury Minimal Pill Design */
 .filter-tabs {
   display: flex;

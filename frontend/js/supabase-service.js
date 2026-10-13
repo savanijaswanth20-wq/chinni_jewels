@@ -851,6 +851,267 @@ class SupabaseDataService {
     }
   }
 
+  // 13. COLLECTION VIDEOS & MEDIA (THE COLLECTION SECTION)
+  async getCollectionVideos() {
+    const defaultVideos = [
+      {
+        id: 'def-vid-1',
+        title: 'Royal Gold Necklace Collection',
+        category: 'necklace',
+        position: 'left',
+        is_active: true,
+        display_order: 1,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+        poster_url: 'assets/product_gold_pendant.png'
+      },
+      {
+        id: 'def-vid-2',
+        title: 'Filigree Craft Gold Earrings',
+        category: 'earrings',
+        position: 'left',
+        is_active: true,
+        display_order: 2,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+        poster_url: 'assets/featured_product.png'
+      },
+      {
+        id: 'def-vid-3',
+        title: '24K Hallmark Gold Chains',
+        category: 'chain',
+        position: 'left',
+        is_active: true,
+        display_order: 3,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4',
+        poster_url: 'assets/hero_gold_coin.png'
+      },
+      {
+        id: 'def-vid-4',
+        title: 'Traditional Handcrafted Bangles',
+        category: 'bangle',
+        position: 'right',
+        is_active: true,
+        display_order: 1,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+        poster_url: 'assets/product_gold_bangle.png'
+      },
+      {
+        id: 'def-vid-5',
+        title: 'Timeless Pure Gold Rings',
+        category: 'ring',
+        position: 'right',
+        is_active: true,
+        display_order: 2,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+        poster_url: 'assets/product_gold_bar.png'
+      },
+      {
+        id: 'def-vid-6',
+        title: 'Auspicious Bridal Jewellery Set',
+        category: 'bridal_set',
+        position: 'right',
+        is_active: true,
+        display_order: 3,
+        video_url: 'https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4',
+        poster_url: 'assets/product_gold_gift.png'
+      }
+    ];
+
+    if (!this.db) {
+      return { success: true, data: defaultVideos };
+    }
+
+    try {
+      const { data, error } = await this.db
+        .from('collection_videos')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.warn("[SupabaseService] getCollectionVideos database notice:", error);
+        return { success: true, data: defaultVideos };
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        return { success: true, data };
+      }
+
+      return { success: true, data: defaultVideos };
+    } catch (err) {
+      console.warn("[SupabaseService] getCollectionVideos fallback:", err);
+      return { success: true, data: defaultVideos };
+    }
+  }
+
+  async saveCollectionVideo(videoData) {
+    if (!this.db) {
+      return { success: false, error: "Database not connected." };
+    }
+
+    try {
+      const payload = {
+        title: videoData.title || 'Collection Video',
+        category: videoData.category || 'necklace',
+        video_url: videoData.video_url || '',
+        poster_url: videoData.poster_url || null,
+        position: videoData.position || 'left',
+        is_active: videoData.is_active !== false,
+        display_order: parseInt(videoData.display_order, 10) || 0,
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+      if (videoData.id && !videoData.id.startsWith('def-vid')) {
+        result = await this.db
+          .from('collection_videos')
+          .update(payload)
+          .eq('id', videoData.id)
+          .select()
+          .single();
+      } else {
+        result = await this.db
+          .from('collection_videos')
+          .insert([payload])
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
+      window.dispatchEvent(new CustomEvent('cj_collection_videos_changed', { detail: result.data }));
+      return { success: true, data: result.data };
+    } catch (err) {
+      console.error("[SupabaseService] saveCollectionVideo error:", err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async deleteCollectionVideo(id, videoUrl, posterUrl) {
+    if (!this.db) return { success: false, error: "Database not connected." };
+
+    try {
+      if (videoUrl && videoUrl.includes('/collection-videos/')) {
+        await this.deleteStorageFile(videoUrl);
+      }
+      if (posterUrl && posterUrl.includes('/collection-videos/')) {
+        await this.deleteStorageFile(posterUrl);
+      }
+
+      const { error } = await this.db
+        .from('collection_videos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      window.dispatchEvent(new CustomEvent('cj_collection_videos_changed', { detail: { id, deleted: true } }));
+      return { success: true };
+    } catch (err) {
+      console.error("[SupabaseService] deleteCollectionVideo error:", err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async toggleCollectionVideoActive(id, isActive) {
+    if (!this.db) return { success: false, error: "Database not connected." };
+
+    try {
+      const { data, error } = await this.db
+        .from('collection_videos')
+        .update({ is_active: !!isActive, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      window.dispatchEvent(new CustomEvent('cj_collection_videos_changed', { detail: data }));
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  async uploadCollectionMediaFile(rawFile, onProgress) {
+    if (!rawFile) return { success: false, error: "No file provided" };
+    if (!this.db || !this.db.storage) {
+      return { success: false, error: "Supabase Storage unavailable" };
+    }
+
+    try {
+      const isVideo = rawFile.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(rawFile.name);
+      const isImage = rawFile.type.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(rawFile.name);
+
+      if (!isVideo && !isImage) {
+        return { success: false, error: "File must be MP4/WebM video or JPEG/PNG/WebP image." };
+      }
+
+      if (isVideo && rawFile.size > 52428800) {
+        return { success: false, error: "Video exceeds 50MB maximum size limit." };
+      }
+
+      if (isImage && rawFile.size > 10485760) {
+        return { success: false, error: "Poster image exceeds 10MB limit." };
+      }
+
+      if (typeof onProgress === 'function') onProgress(20, "Connecting to Supabase Storage bucket 'collection-videos'...");
+
+      const timestamp = Date.now();
+      const cleanName = (rawFile.name || 'media').replace(/[^a-zA-Z0-9.-]/g, '_');
+      const storagePath = `uploads/${timestamp}_${cleanName}`;
+
+      if (typeof onProgress === 'function') onProgress(50, "Uploading media file...");
+
+      const uploadResult = await this.db.storage
+        .from('collection-videos')
+        .upload(storagePath, rawFile, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: rawFile.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+        });
+
+      if (uploadResult.error) throw uploadResult.error;
+
+      if (typeof onProgress === 'function') onProgress(85, "Retrieving public URL...");
+
+      const { data: publicUrlData } = this.db.storage
+        .from('collection-videos')
+        .getPublicUrl(storagePath);
+
+      let publicUrl = publicUrlData.publicUrl;
+      publicUrl += (publicUrl.includes('?') ? '&' : '?') + `v=${timestamp}`;
+
+      if (typeof onProgress === 'function') onProgress(100, "Upload completed!");
+
+      return {
+        success: true,
+        url: publicUrl,
+        storagePath,
+        bucket: 'collection-videos',
+        isVideo,
+        isImage
+      };
+    } catch (err) {
+      console.error("[SupabaseService] uploadCollectionMediaFile error:", err);
+      return { success: false, error: err.message || "Failed to upload file to Supabase Storage." };
+    }
+  }
+
+  subscribeToCollectionVideos(callback) {
+    if (!this.db || !this.db.channel) return;
+    try {
+      this.db
+        .channel('realtime_collection_videos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'collection_videos' }, () => {
+          this.getCollectionVideos().then(res => {
+            if (res.success && typeof callback === 'function') {
+              callback(res.data);
+            }
+          });
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn("[SupabaseService] subscribeToCollectionVideos error:", err);
+    }
+  }
+
 }
 
 window.SupabaseService = new SupabaseDataService();

@@ -78,6 +78,33 @@
       }).catch(() => {});
     }
 
+    // 2.2 Live Collection Videos Sync from Supabase Database
+    if (window.SupabaseService && window.SupabaseService.getCollectionVideos) {
+      window.SupabaseService.getCollectionVideos().then(res => {
+        if (res.success && res.data) {
+          syncCollectionVideosUI(res.data);
+        }
+      }).catch(() => {});
+    }
+
+    // 2.3 Supabase Realtime Listener for Collection Videos
+    if (window.SupabaseService && window.SupabaseService.subscribeToCollectionVideos) {
+      window.SupabaseService.subscribeToCollectionVideos((newVideos) => {
+        if (newVideos && Array.isArray(newVideos)) {
+          console.log("[ContentSync] Realtime collection videos updated:", newVideos.length);
+          syncCollectionVideosUI(newVideos);
+        }
+      });
+    }
+
+    window.addEventListener('cj_collection_videos_changed', () => {
+      if (window.SupabaseService && window.SupabaseService.getCollectionVideos) {
+        window.SupabaseService.getCollectionVideos().then(res => {
+          if (res.success && res.data) syncCollectionVideosUI(res.data);
+        });
+      }
+    });
+
     // 3. Supabase Realtime Listener for Section Images (Instant Cross-Device Sync)
     if (window.SupabaseService && window.SupabaseService.subscribeToSettings) {
       window.SupabaseService.subscribeToSettings((newSettings) => {
@@ -424,6 +451,18 @@
     if (seo.description) {
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) metaDesc.setAttribute('content', seo.description);
+    }
+  }
+
+  /**
+   * Dynamically Render Collection Videos in The Collection hero area
+   */
+  function syncCollectionVideosUI(videos) {
+    if (!videos || !videos.length) return;
+    window.allCollectionVideos = videos;
+    window.dispatchEvent(new CustomEvent('collectionVideosUpdated', { detail: videos }));
+    if (typeof window.renderCollectionVideos === 'function') {
+      window.renderCollectionVideos(videos);
     }
   }
 

@@ -131,11 +131,143 @@
   <!-- ══ COLLECTION ══ -->
   <section class="collection" id="collection">
     <div class="container">
-      <div class="section-header reveal">
-        <span class="t-label">Our Selection</span>
-        <span class="gold-line gold-line--center"></span>
-        <h2 class="t-h2">The Collection</h2>
-        <p class="section-subtitle">Small in weight. Timeless in value.</p>
+      <!-- ══ THE COLLECTION 3-COLUMN HERO WITH AUTOPLAY PRODUCT VIDEOS ══ -->
+      <div class="collection-hero-wrap reveal">
+        
+        <!-- Left Product Video Campaign Card (Desktop & Tablet) -->
+        <div class="collection-video-card collection-video-card--left" id="collection-video-card-left">
+          <div class="collection-video-frame" id="collection-frame-left">
+            <video
+              id="collection-video-left-primary"
+              class="collection-video-el active-layer"
+              autoplay
+              muted
+              loop
+              playsinline
+              webkit-playsinline
+              preload="metadata"
+              poster="assets/product_gold_pendant.png"
+              src="https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4"
+            ></video>
+            <video
+              id="collection-video-left-secondary"
+              class="collection-video-el fade-layer"
+              muted
+              loop
+              playsinline
+              webkit-playsinline
+              preload="none"
+            ></video>
+            <div class="collection-video-gradient"></div>
+            <div class="collection-video-live-indicator">
+              <span class="collection-live-pulse"></span>
+              <span class="collection-live-text">PREVIEW</span>
+            </div>
+            <div class="collection-video-badge">
+              <span class="collection-video-category" id="collection-left-category">NECKLACES</span>
+              <span class="collection-video-title" id="collection-left-title">Royal Gold Necklace Collection</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Collection Brand Text -->
+        <div class="section-header collection-header-center">
+          <span class="t-label">Our Selection</span>
+          <span class="gold-line gold-line--center"></span>
+          <h2 class="t-h2">The Collection</h2>
+          <p class="section-subtitle">Small in weight. Timeless in value.</p>
+        </div>
+
+        <!-- Right Product Video Campaign Card (Desktop & Tablet) -->
+        <div class="collection-video-card collection-video-card--right" id="collection-video-card-right">
+          <div class="collection-video-frame" id="collection-frame-right">
+            <video
+              id="collection-video-right-primary"
+              class="collection-video-el active-layer"
+              autoplay
+              muted
+              loop
+              playsinline
+              webkit-playsinline
+              preload="metadata"
+              poster="assets/product_gold_bangle.png"
+              src="https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4"
+            ></video>
+            <video
+              id="collection-video-right-secondary"
+              class="collection-video-el fade-layer"
+              muted
+              loop
+              playsinline
+              webkit-playsinline
+              preload="none"
+            ></video>
+            <div class="collection-video-gradient"></div>
+            <div class="collection-video-live-indicator">
+              <span class="collection-live-pulse"></span>
+              <span class="collection-live-text">PREVIEW</span>
+            </div>
+            <div class="collection-video-badge">
+              <span class="collection-video-category" id="collection-right-category">BANGLES</span>
+              <span class="collection-video-title" id="collection-right-title">Traditional Handcrafted Bangles</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Touch-Swipeable Video Carousel (Rendered on mobile screens < 768px below text) -->
+        <div class="collection-mobile-carousel-wrap" id="collection-mobile-carousel">
+          <div class="collection-mobile-carousel-track" id="collection-mobile-track">
+            <div class="collection-mobile-video-item">
+              <video
+                class="collection-mobile-video-el"
+                autoplay
+                muted
+                loop
+                playsinline
+                webkit-playsinline
+                preload="metadata"
+                poster="assets/product_gold_pendant.png"
+                src="https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_necklace.mp4"
+              ></video>
+              <div class="collection-video-gradient"></div>
+              <div class="collection-video-live-indicator">
+                <span class="collection-live-pulse"></span>
+                <span class="collection-live-text">PREVIEW</span>
+              </div>
+              <div class="collection-video-badge">
+                <span class="collection-video-category">NECKLACES</span>
+                <span class="collection-video-title">Royal Gold Necklace Collection</span>
+              </div>
+            </div>
+            <div class="collection-mobile-video-item">
+              <video
+                class="collection-mobile-video-el"
+                autoplay
+                muted
+                loop
+                playsinline
+                webkit-playsinline
+                preload="metadata"
+                poster="assets/product_gold_bangle.png"
+                src="https://povomkepfcyfgqxdajym.supabase.co/storage/v1/object/public/collection-videos/showcase_bangles.mp4"
+              ></video>
+              <div class="collection-video-gradient"></div>
+              <div class="collection-video-live-indicator">
+                <span class="collection-live-pulse"></span>
+                <span class="collection-live-text">PREVIEW</span>
+              </div>
+              <div class="collection-video-badge">
+                <span class="collection-video-category">BANGLES</span>
+                <span class="collection-video-title">Traditional Handcrafted Bangles</span>
+              </div>
+            </div>
+          </div>
+          <div class="collection-carousel-dots" id="collection-carousel-dots">
+            <button class="collection-carousel-dot active" aria-label="Slide 1"></button>
+            <button class="collection-carousel-dot" aria-label="Slide 2"></button>
+          </div>
+        </div>
+
       </div>
 
       <div class="filter-tabs reveal reveal-delay-1" id="collection-filter-tabs">

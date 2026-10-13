@@ -411,4 +411,48 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.gold_rates;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.product_images;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.website_settings;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.collection_videos;
+
+-- ====================================================================
+-- 7. The Collection Hero Videos & Storage Setup
+-- ====================================================================
+
+CREATE TABLE IF NOT EXISTS public.collection_videos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    video_url TEXT NOT NULL,
+    poster_url TEXT,
+    position TEXT NOT NULL DEFAULT 'left' CHECK (position IN ('left', 'right', 'both')),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_collection_videos_pos_active ON public.collection_videos (position, is_active);
+CREATE INDEX IF NOT EXISTS idx_collection_videos_category ON public.collection_videos (category);
+
+ALTER TABLE public.collection_videos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public Read Active Collection Videos" ON public.collection_videos FOR SELECT USING (is_active = true);
+CREATE POLICY "Admin Full Access Collection Videos" ON public.collection_videos FOR ALL USING (true);
+CREATE POLICY "public_anon_all_collection_videos" ON public.collection_videos FOR ALL TO anon USING (true);
+
+-- Collection Videos Storage Bucket
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'collection-videos',
+    'collection-videos',
+    true,
+    52428800,
+    ARRAY['video/mp4', 'video/webm', 'video/quicktime', 'image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+CREATE POLICY "Public Read collection-videos" ON storage.objects FOR SELECT USING (bucket_id = 'collection-videos');
+CREATE POLICY "Public Upload collection-videos" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'collection-videos');
+CREATE POLICY "Public Update collection-videos" ON storage.objects FOR UPDATE USING (bucket_id = 'collection-videos');
+CREATE POLICY "Public Delete collection-videos" ON storage.objects FOR DELETE USING (bucket_id = 'collection-videos');
+
 
